@@ -1,4 +1,4 @@
-Las Venturas Mineground (mineground-plugin)
+Las Venturas Mineground
 =================
 [Las Venturas Mineground](http://mineground.com/), also known as Mineground, is a community based around Minecraft. This plugin will be the primary tool in creating a unique, stable and fully featured server to play on.
 
