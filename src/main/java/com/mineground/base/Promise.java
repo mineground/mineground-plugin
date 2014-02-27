@@ -73,8 +73,56 @@ import java.util.List;
 // will immediately be resolved or rejected based on the original outcome. When a promise gets
 // settled, all current handlers will be settled in order of their attaching.
 //
+// Promises have a convenience method for casting any class to a resolved promise of that type. This
+// could be useful for methods which should return a promise, but have no immediate need to be
+// asynchronous.
+//
+// -------------------------------------------------------------------------------------------------
+// Example: Using Promise.cast() to create an immediately resolved Promise.
+// -------------------------------------------------------------------------------------------------
+//
+// Promise<String> promise = Promise.cast("Hello, world");
+// promise.then(new PromiseResultHandler<String>() {
+//     public void onFulfilled(String result) {
+//         ... |result| will be set to "Hello, world" here. ...
+//     }
+//     public void onRejected(PromiseError error) { }
+// });
+//
+// -------------------------------------------------------------------------------------------------
+//
+// Promises have two additional convenience methods which will come in useful when your code
+// is dealing with multiple promises at the same time. These have slightly interesting semantics.
+//
+// Promise.race([promise1, promise2, ...])
+//
+//     Returns a promise which will be resolved when the first one of the passed promises resolves.
+//     When other promises resolve after that time, their values will be ignored.
+//
+// Promise.all([promise1, promise2, ...])
+//
+//     Returns a promise with a List of the return values, which will be resolved when ALL of the
+//     passed promises resolve. If a passed promise rejects, the returned promise will be rejected
+//     with the passed error as well. If one of the promises never settles, then the returned
+//     Promise will never settle either.
+//
+// -------------------------------------------------------------------------------------------------
+// Example: Using Promise.all() to output "Done" when all calculations have completed.
+// -------------------------------------------------------------------------------------------------
+//
+// List<Promise<Integer>> calculations = ...;
+// Promise.all(calculations).then(new PromiseResultHandler<List<Integer>>() {
+//     public void onFulfilled(Integer result) {
+//         System.out.println("Done! Received " + result.size() + " results.");
+//     }
+//     public void onRejected(PromiseError error) {
+//         ... one of the calculations failed, check |error.reason()| ...
+//     }
+// });
+//
+// -------------------------------------------------------------------------------------------------
+//
 // TODO: Can we somehow allow Promise.then() to return another promise, allowing chaining?
-// TODO: Implement Promise.all().
 //
 // @see http://www.html5rocks.com/en/tutorials/es6/promises/
 // @see http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/Future.html
@@ -159,7 +207,9 @@ public class Promise<SuccessValueType> {
     }
     
     // Returns a Promise which will be resolved once the first once of |promises| has been resolved.
-    public static <SuccessValueType> Promise<SuccessValueType> race(List<Promise<SuccessValueType>> promises) {
+    // We cannot reject the returned promise if either of the |promises| reject, because that would
+    // mean that we cannot resolve it anymore once another promise succeeds.
+    public static <SuccessValueType> Promise<SuccessValueType> race(final List<Promise<SuccessValueType>> promises) {
         final Promise<SuccessValueType> promise = new Promise<SuccessValueType>();
         
         PromiseResultHandler<SuccessValueType> handler = new PromiseResultHandler<SuccessValueType>() {
@@ -174,6 +224,31 @@ public class Promise<SuccessValueType> {
         
         for (Promise<SuccessValueType> contestant : promises)
             contestant.then(handler);
+        
+        return promise;
+    }
+    
+    // Returns a Promise which will be resolved once all of the |promises| have been resolved. If
+    // either of the |promises| rejects, the returned promise will also be rejected.
+    public static <SuccessValueType> Promise<List<SuccessValueType>> all(final List<Promise<SuccessValueType>> promises) {
+        final Promise<List<SuccessValueType>> promise = new Promise<List<SuccessValueType>>();
+        final int promisesSize = promises.size();
+        
+        PromiseResultHandler<SuccessValueType> handler = new PromiseResultHandler<SuccessValueType>() {
+            private List<SuccessValueType> mValues = new ArrayList<SuccessValueType>();
+            public void onFulfilled(SuccessValueType result) {
+                mValues.add(result);
+                if (mValues.size() == promisesSize)
+                    promise.resolve(mValues);
+            }
+
+            public void onRejected(PromiseError error) {
+                promise.reject(error);
+            }
+        };
+        
+        for (Promise<SuccessValueType> includedPromise : promises)
+            includedPromise.then(handler);
         
         return promise;
     }

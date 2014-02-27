@@ -16,7 +16,6 @@
 package com.mineground.base;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -186,6 +185,9 @@ public class PromiseTest extends TestCase {
             promise.then(new PromiseResultHandler<String>() {
                 public void onFulfilled(String result) {
                     assertEquals("testPromiseRace", result);
+                    
+                    // Note that this is correct because we will only invoke one promise, rather
+                    // than all five promises which are being initialized here.
                     assertEquals(0, mPromiseResultCount++);
                 }
                 public void onRejected(PromiseError error) {
@@ -208,7 +210,70 @@ public class PromiseTest extends TestCase {
         });
 
         assertEquals(mPromiseResultCount, 0);
+        assertTrue("There need to be at least three promises in |promises|.", promises.size() >= 3);
+
         promises.get(2).resolve("testPromiseRace");
+
         assertEquals(mPromiseResultCount, 2);
+    }
+    
+    // Tests that the |Promise.all()| method returns a promise which resolves when all of the passed
+    // in promises have successfully resolved.
+    public void testPromiseAllResolve() {
+        List<Promise<String>> promises = new ArrayList<Promise<String>>();
+        for (int i = 0; i < 5; ++i)
+            promises.add(Promise.cast("dummy value"));
+        
+        Promise<String> promise = new Promise<String>();
+        promise.then(new PromiseResultHandler<String>() {
+            public void onFulfilled(String result) {
+                assertEquals(0, mPromiseResultCount++);
+            }
+            public void onRejected(PromiseError error) {
+                fail("PromiseResultHandler::onRejected must not be invoked.");
+            }
+        });
+        
+        promises.add(promise);
+        
+        Promise<List<String>> total = Promise.all(promises);
+        total.then(new PromiseResultHandler<List<String>>() {
+            public void onFulfilled(List<String> result) {
+                assertTrue("Result set doesn't contain 'testPromiseAllResolve'.", result.contains("testPromiseAllResolve"));
+                assertTrue("Result set doesn't contain 'dummy value'.", result.contains("dummy value"));
+                assertEquals(1, mPromiseResultCount++);
+            }
+            public void onRejected(PromiseError error) {
+                fail("PromiseResultHandler::onRejected must not be invoked.");
+            }
+        });
+
+        promise.resolve("testPromiseAllResolve");
+        assertEquals(2, mPromiseResultCount);
+    }
+    
+    // Tests that the |Promise.all()| method returns a promise which will be rejected if any of the
+    // passed in promises gets rejected.
+    public void testPromiseAllReject() {
+        List<Promise<String>> promises = new ArrayList<Promise<String>>();
+        for (int i = 0; i < 5; ++i)
+            promises.add(Promise.cast("dummy value"));
+        
+        Promise<String> promise = new Promise<String>();
+        promises.add(promise);
+        
+        Promise<List<String>> total = Promise.all(promises);
+        total.then(new PromiseResultHandler<List<String>>() {
+            public void onFulfilled(List<String> result) {
+                fail("PromiseResultHandler::onFulfilled must not be invoked.");
+            }
+            public void onRejected(PromiseError error) {
+                assertEquals("testPromiseAllReject", error.reason());
+                ++mPromiseResultCount;
+            }
+        });
+
+        promise.reject(new PromiseError("testPromiseAllReject"));
+        assertEquals(1, mPromiseResultCount);
     }
 }
