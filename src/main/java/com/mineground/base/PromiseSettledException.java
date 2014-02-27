@@ -13,15 +13,13 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.mineground;
+package com.mineground.base;
 
-import org.junit.Test;
+// Exception which will be thrown when a Promise instance is being settled multiple times.
+public class PromiseSettledException extends RuntimeException {
+    private static final long serialVersionUID = -1632749887937726475L;
 
-import junit.framework.TestCase;
-
-public class DummyTest extends TestCase {
-    @Test
-    public void testDummy() {
-        assertEquals(1, 1);
+    public PromiseSettledException() {
+        super("Promises must not be settled multiple times.");
     }
 }
