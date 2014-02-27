@@ -16,6 +16,7 @@
 package com.mineground.base;
 
 import java.util.ArrayList;
+import java.util.List;
 
 // Promises are a tool for convenient asynchronous programming. The problem they solve is similar to
 // Java's native Future object, with the most notable difference being that promises have success
@@ -74,7 +75,6 @@ import java.util.ArrayList;
 //
 // TODO: Can we somehow allow Promise.then() to return another promise, allowing chaining?
 // TODO: Implement Promise.all().
-// TODO: Implement Promise.race().
 //
 // @see http://www.html5rocks.com/en/tutorials/es6/promises/
 // @see http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/Future.html
@@ -154,6 +154,26 @@ public class Promise<SuccessValueType> {
     public static <PromiseCastType> Promise<PromiseCastType> cast(PromiseCastType value) {
         Promise<PromiseCastType> promise = new Promise<PromiseCastType>();
         promise.resolve(value);
+        
+        return promise;
+    }
+    
+    // Returns a Promise which will be resolved once the first once of |promises| has been resolved.
+    public static <SuccessValueType> Promise<SuccessValueType> race(List<Promise<SuccessValueType>> promises) {
+        final Promise<SuccessValueType> promise = new Promise<SuccessValueType>();
+        
+        PromiseResultHandler<SuccessValueType> handler = new PromiseResultHandler<SuccessValueType>() {
+            private int mResolved = 0;
+            public void onFulfilled(SuccessValueType result) {
+                if (++mResolved == 1)
+                    promise.resolve(result);
+            }
+
+            public void onRejected(PromiseError error) { }
+        };
+        
+        for (Promise<SuccessValueType> contestant : promises)
+            contestant.then(handler);
         
         return promise;
     }

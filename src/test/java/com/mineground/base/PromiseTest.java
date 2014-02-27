@@ -15,6 +15,10 @@
 
 package com.mineground.base;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import junit.framework.TestCase;
 
 // Tests for the Promise, PromiseError, PromiseExecutor and PromiseResultHandler classes.
@@ -171,5 +175,40 @@ public class PromiseTest extends TestCase {
         });
 
         assertEquals(mPromiseResultCount, 1);
+    }
+    
+    // Tests that the |Promise.race()| method returns a promise which will be resolved once the
+    // first one of the passed promises resolves.
+    public void testPromiseRace() {
+        List<Promise<String>> promises = new ArrayList<Promise<String>>();
+        for (int i = 0; i < 5; ++i) {
+            Promise<String> promise = new Promise<String>();
+            promise.then(new PromiseResultHandler<String>() {
+                public void onFulfilled(String result) {
+                    assertEquals("testPromiseRace", result);
+                    assertEquals(0, mPromiseResultCount++);
+                }
+                public void onRejected(PromiseError error) {
+                    fail("PromiseResultHandler::onRejected must not be invoked.");
+                }
+            });
+            
+            promises.add(promise);
+        }
+        
+        Promise<String> winner = Promise.race(promises);
+        winner.then(new PromiseResultHandler<String>() {
+            public void onFulfilled(String result) {
+                assertEquals("testPromiseRace", result);
+                assertEquals(1, mPromiseResultCount++);
+            }
+            public void onRejected(PromiseError error) {
+                fail("PromiseResultHandler::onRejected must not be invoked.");
+            }
+        });
+
+        assertEquals(mPromiseResultCount, 0);
+        promises.get(2).resolve("testPromiseRace");
+        assertEquals(mPromiseResultCount, 2);
     }
 }
