@@ -155,4 +155,21 @@ public class PromiseTest extends TestCase {
         
         assertNotNull(exception);
     }
+    
+    // Tests that the |Promise.cast()| convenience method does indeed return a resolved promise
+    // holding the value type as intended.
+    public void testPromiseCastConvenienceMethod() {
+        Promise<String> promise = Promise.cast("testPromiseCastUtility");
+        promise.then(new PromiseResultHandler<String>() {
+            public void onFulfilled(String result) {
+                assertEquals("testPromiseCastUtility", result);
+                ++mPromiseResultCount;
+            }
+            public void onRejected(PromiseError error) {
+                fail("PromiseResultHandler::onRejected must not be invoked.");
+            }
+        });
+
+        assertEquals(mPromiseResultCount, 1);
+    }
 }

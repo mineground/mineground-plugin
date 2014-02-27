@@ -73,7 +73,6 @@ import java.util.ArrayList;
 // settled, all current handlers will be settled in order of their attaching.
 //
 // TODO: Can we somehow allow Promise.then() to return another promise, allowing chaining?
-// TODO: Implement Promise.cast().
 // TODO: Implement Promise.all().
 // TODO: Implement Promise.race().
 //
@@ -150,4 +149,12 @@ public class Promise<SuccessValueType> {
             handler.onRejected(error);
     }
 
+    // Casts |value| to a Promise which will immediately be resolved with PromiseCastType as the
+    // SuccessValueType. This is a utility function for quick returns in Promise-returning methods.
+    public static <PromiseCastType> Promise<PromiseCastType> cast(PromiseCastType value) {
+        Promise<PromiseCastType> promise = new Promise<PromiseCastType>();
+        promise.resolve(value);
+        
+        return promise;
+    }
 }
