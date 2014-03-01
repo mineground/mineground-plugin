@@ -17,9 +17,25 @@ package com.mineground;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
+
+// The Mineground class is the plugin which exposes our plugin to Bukkit. It has access to APIs for
+// most of Bukkit's internals, and decides the lifetime of the rest of the mode.
 public class Mineground extends JavaPlugin {
+    // The core event listener and dispatcher in use for Mineground. Consumers of any kind of event
+    // will be attached as observers to the event dispatcher.
+    private EventDispatcher mEventDispatcher;
+    
     @Override
     public void onEnable() {
-        System.out.println("enabled!");
+        mEventDispatcher = new EventDispatcher();
+        
+        // TODO: Add further Mineground initialization.
+        
+        mEventDispatcher.onMinegroundLoaded();
+    }
+    
+    @Override
+    public void onDisable() {
+        mEventDispatcher.onMinegroundUnloaded();
     }
 }
