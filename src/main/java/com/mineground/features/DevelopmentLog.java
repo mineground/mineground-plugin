@@ -15,6 +15,8 @@
 
 package com.mineground.features;
 
+import org.bukkit.entity.Player;
+
 import com.mineground.base.FeatureBase;
 
 public class DevelopmentLog extends FeatureBase {
@@ -28,7 +30,7 @@ public class DevelopmentLog extends FeatureBase {
         System.out.println("onMinegroundUnloaded()");
     }
     
-    public void onPlayerJoined(String nickname) {
-        System.out.println("Welcome on Mineground, " + nickname);
+    public void onPlayerJoined(Player player) {
+        System.out.println("Welcome on Mineground, " + player.getName());
     }
 }

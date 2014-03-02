@@ -19,7 +19,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
 
 // The Event Listener class is responsible for listening to incoming Bukkit plugins which we'd like
 // to have handled within Mineground. It will change some of the semantics of the events, for
@@ -30,19 +29,11 @@ public class EventListener implements Listener {
     public EventListener(EventDispatcher eventDispatcher) {
         mEventDispatcher = eventDispatcher;
     }
-    
-    // Invoked immediately when a player connects to the server. This is the appropriate time to
-    // do any pre-join checks, for example seeing whether a player is allowed to connect at all.
-    @EventHandler(priority=EventPriority.HIGH)
-    public void onPlayerLogin(PlayerLoginEvent event) {
-        // TODO: Forward this event to PlayerManager, which is the only place allowed to receive it.
-    }
-    
     // Invoked when a player joins the server, and the PlayerLoginEvent has succeeded. Mineground
-    // considers this the time at which a player's connection can be considered successful.
+    // considers this the time at which a player's connection can be considered successful. However,
+    // since they haven't logged in to their account yet, they will be considered a a guest.
     @EventHandler(priority=EventPriority.HIGH)
     public void onPlayerJoined(PlayerJoinEvent event) {
-        // TODO: Get a MinegroundPlayer object instead of event.Player.
-        mEventDispatcher.onPlayerJoined(event.getPlayer().getName());
+        mEventDispatcher.onPlayerJoined(event.getPlayer());
     }
 }

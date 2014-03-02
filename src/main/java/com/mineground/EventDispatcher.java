@@ -24,8 +24,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.mineground.base.Feature;
+import org.bukkit.entity.Player;
 
+import com.mineground.base.Feature;
 
 // The EventDispatcher listens to all incoming events from Bukkit, validates them, and invokes all
 // observers within the Mineground plugin which depend on them.
@@ -129,5 +130,5 @@ public class EventDispatcher {
     public void onMinegroundLoaded()   { dispatch(EventTypes.MinegroundLoadedEvent); }
     public void onMinegroundUnloaded() { dispatch(EventTypes.MinegroundUnloadEvent); }
     
-    public void onPlayerJoined(String name) { dispatch(EventTypes.PlayerJoinedEvent, name); }
+    public void onPlayerJoined(Player player) { dispatch(EventTypes.PlayerJoinedEvent, player); }
 }
