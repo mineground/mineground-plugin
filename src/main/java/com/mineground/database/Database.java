@@ -13,7 +13,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.mineground;
+package com.mineground.database;
 
 import org.bukkit.configuration.file.FileConfiguration;
 

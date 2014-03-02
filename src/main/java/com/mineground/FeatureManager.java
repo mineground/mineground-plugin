@@ -23,6 +23,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 import com.mineground.base.Feature;
 import com.mineground.base.FeatureInitParams;
+import com.mineground.database.Database;
 import com.mineground.features.DevelopmentLog;
 
 // The feature manager is responsible for --and owns-- all features available on Mineground. While

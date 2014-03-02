@@ -23,6 +23,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.mineground.database.Database;
+
 // The Mineground class is the plugin which exposes our plugin to Bukkit. It has access to APIs for
 // most of Bukkit's internals, and decides the lifetime of the rest of the mode.
 public class Mineground extends JavaPlugin {

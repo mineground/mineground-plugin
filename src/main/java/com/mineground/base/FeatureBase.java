@@ -21,9 +21,9 @@ import org.bukkit.Server;
 import org.bukkit.configuration.Configuration;
 
 import com.mineground.CommandManager;
-import com.mineground.Database;
 import com.mineground.EventDispatcher;
 import com.mineground.FeatureManager;
+import com.mineground.database.Database;
 
 // Parent class for all features implemented in the Mineground plugin. It allows features to access
 // various parts of the Mineground core, allowing it to work in an effective, yet isolated way.
