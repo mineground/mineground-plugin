@@ -17,6 +17,7 @@ package com.mineground.base;
 
 import org.bukkit.Server;
 
+import com.mineground.CommandManager;
 import com.mineground.EventDispatcher;
 import com.mineground.FeatureManager;
 
@@ -24,6 +25,7 @@ import com.mineground.FeatureManager;
 // class, allowing it to initialize itself to make all features available.
 public class FeatureInitParams {
     public FeatureManager featureManager;
+    public CommandManager commandManager;
     public EventDispatcher eventDispatcher;
     public Server server;
 }

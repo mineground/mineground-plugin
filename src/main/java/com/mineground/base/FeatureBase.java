@@ -19,6 +19,8 @@ import java.util.logging.Logger;
 
 import org.bukkit.Server;
 
+import com.mineground.CommandManager;
+import com.mineground.EventDispatcher;
 import com.mineground.FeatureManager;
 
 // Parent class for all features implemented in the Mineground plugin. It allows features to access
@@ -40,12 +42,15 @@ public class FeatureBase implements Feature {
         // Registers all event listeners defined in this feature with the EventDispatcher.
         params.eventDispatcher.registerFeature(this);
 
-        // TODO: Register this feature with the Command Manager.
+        // Registers all commands defined in this feature with the CommandManager.
+        params.commandManager.registerCommands(this);
     }
     
     // Returns the Logger instance which is specific to this feature.
     protected Logger getLogger() { return mLogger; }
     
     protected FeatureManager getFeatureManager() { return mInitParams.featureManager; }
+    protected CommandManager getCommandManager() { return mInitParams.commandManager; }
+    protected EventDispatcher getEventDispatcher() { return mInitParams.eventDispatcher; }
     protected Server getServer() { return mInitParams.server; }
 }

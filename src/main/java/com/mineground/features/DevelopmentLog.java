@@ -18,6 +18,7 @@ package com.mineground.features;
 import org.bukkit.entity.Player;
 
 import com.mineground.base.FeatureBase;
+import com.mineground.base.FeatureCommand;
 import com.mineground.base.FeatureInitParams;
 
 public class DevelopmentLog extends FeatureBase {
@@ -35,5 +36,10 @@ public class DevelopmentLog extends FeatureBase {
     
     public void onPlayerJoined(Player player) {
         getLogger().info("Welcome on Mineground, " + player.getName());
+    }
+    
+    @FeatureCommand("apple")
+    public boolean onAppleCommand() {
+        return false;
     }
 }

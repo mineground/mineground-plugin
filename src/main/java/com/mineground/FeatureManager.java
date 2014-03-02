@@ -32,10 +32,12 @@ public class FeatureManager {
     private Map<String, Feature> mFeatures;
 
     private Server mServer;
+    private CommandManager mCommandManager;
     private EventDispatcher mEventDispatcher;
     
-    public FeatureManager(Server server, EventDispatcher eventDispatcher) {
+    public FeatureManager(Server server, CommandManager commandManager, EventDispatcher eventDispatcher) {
         mServer = server;
+        mCommandManager = commandManager;
         mEventDispatcher = eventDispatcher;
         
         mFeatures = new HashMap<String, Feature>();
@@ -46,6 +48,7 @@ public class FeatureManager {
     public void initializeFeatures() {
         FeatureInitParams params = new FeatureInitParams();
         params.featureManager = this;
+        params.commandManager = mCommandManager;
         params.eventDispatcher = mEventDispatcher;
         params.server = mServer;
         
