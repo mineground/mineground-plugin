@@ -20,6 +20,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
 import com.mineground.base.Promise;
+import com.mineground.base.PromiseError;
 
 // The Database class is the public-facing API for database communications within Mineground. All
 // queries to be executed on this database will be ran asynchronously.
@@ -52,17 +53,24 @@ public class Database {
     // successfully. The Database system will automatically reconnect if the connection is lost at
     // any point during the plugin's lifetime.
     public boolean connect() {
-        // TODO: Initialize the database connection and start the thread.
+        DatabaseConnectionParams params = new DatabaseConnectionParams();
+        params.hostname = mConfiguration.getString("database.hostname", "localhost");
+        params.port = mConfiguration.getInt("database.port", 3306);
+        params.username = mConfiguration.getString("database.username", "changeme");
+        params.password = mConfiguration.getString("database.password", "");
+        params.database = mConfiguration.getString("database.database", "mineground");
+        
+        mConnection = new DatabaseConnection(params);
+        if (!mConnection.connect())
+            return false;
         
         // Register a task with the Bukkit Scheduler to poll for results every 2 server ticks. The
         // Bukkit server has 20 ticks per second (once per 50ms), so the expected maximum delay in
         // relaying database results is about a hundred milliseconds.
         mSchedulerTaskId = getScheduler().scheduleSyncRepeatingTask(mPlugin, new Runnable() {
             public void run() {
-                if (mConnection == null)
-                    return;
-                
-                mConnection.doPollForResults();
+                if (mConnection != null)
+                    mConnection.doPollForResults();
             }
         }, 2, 2);
 
@@ -72,7 +80,11 @@ public class Database {
     // Synchronously stops the database thread after all pending queries have been executed, and
     // disconnects the established connection with the database.
     public void disconnect() {
-        // TODO: Close the database connection and stop the thread.
+        if (mConnection == null)
+            return;
+
+        mConnection.disconnect();
+        mConnection = null;
 
         getScheduler().cancelTask(mSchedulerTaskId);
         mSchedulerTaskId = INVALID_TASK_ID;
@@ -81,19 +93,21 @@ public class Database {
     // Prepares |query| as a database statement, making it more convenient and safer to perform
     // operations on it when the query will be used in the future.
     public DatabaseStatement prepare(String query) {
-        return new DatabaseStatement(mConnection, query);
+        return new DatabaseStatement(this, query);
     }
     
     // Executes |query| on the database and returns a promise which will be settled depending on the
     // result. If the query succeeds, the promise will be resolved with a DatabaseResult instance,
     // otherwise the promise will be rejected sharing the error which occurred in the database.
     public Promise<DatabaseResult> query(String query) {
-        // TODO: Implement support for queries.
-        return null;
+        if (mConnection != null)
+            return mConnection.enqueueQueryForExecution(query);
+        
+        Promise<DatabaseResult> promise = new Promise<DatabaseResult>();
+        promise.reject(new PromiseError("Mineground does not have an established connection with the database."));
+        return promise;
     }
     
     // Returns the Bukkit scheduler from |mPlugin|.
-    private BukkitScheduler getScheduler() {
-        return mPlugin.getServer().getScheduler();
-    }
+    private BukkitScheduler getScheduler() { return mPlugin.getServer().getScheduler(); }
 }

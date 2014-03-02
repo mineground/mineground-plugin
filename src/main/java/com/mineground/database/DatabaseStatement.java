@@ -21,14 +21,15 @@ import com.mineground.base.Promise;
 // lifetime. Whilst this class does not represent a formal implementation of prepared statements,
 // the current aim is to make database communications in Mineground as convenient as possible.
 public class DatabaseStatement {
-    // The database connection which this statement has been created for.
-    private DatabaseConnection mConnection;
+    // The Database will be used to execute this statement on as a normal query.
+    private Database mDatabase;
     
-    // The query which this statement will prepare.
+    // The query which this statement will prepare. Each time the character "?" (question mark) is
+    // found, it will be replaced with one of the parameters to this statement.
     private String mQuery;
     
-    public DatabaseStatement(DatabaseConnection connection, String query) {
-        mConnection = connection;
+    public DatabaseStatement(Database database, String query) {
+        mDatabase = database;
         mQuery = query;
     }
     
@@ -37,6 +38,10 @@ public class DatabaseStatement {
     
     // Executes |mQuery| with all parameters replaced with the values as set on the statement.
     public Promise<DatabaseResult> execute() {
-        return null;
+        String preparedQuery = mQuery;
+        
+        // TODO: Prepare |preparedQuery| using the available parameters.
+        
+        return mDatabase.query(preparedQuery);
     }
 }
