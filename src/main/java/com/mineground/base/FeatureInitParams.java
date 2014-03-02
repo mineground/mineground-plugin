@@ -13,27 +13,17 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.mineground.features;
+package com.mineground.base;
 
-import org.bukkit.entity.Player;
+import org.bukkit.Server;
 
-import com.mineground.base.FeatureBase;
-import com.mineground.base.FeatureInitParams;
+import com.mineground.EventDispatcher;
+import com.mineground.FeatureManager;
 
-public class DevelopmentLog extends FeatureBase {
-    public DevelopmentLog(FeatureInitParams params) {
-        super(params);
-    }
-    
-    public void onMinegroundLoaded() {
-        getLogger().info("onMinegroundLoaded()");
-    }
-    
-    public void onMinegroundUnloaded() {
-        getLogger().info("onMinegroundUnloaded()");
-    }
-    
-    public void onPlayerJoined(Player player) {
-        getLogger().info("Welcome on Mineground, " + player.getName());
-    }
+// Initialization parameters which features receive and must pass on to their FeatureBase parent
+// class, allowing it to initialize itself to make all features available.
+public class FeatureInitParams {
+    public FeatureManager featureManager;
+    public EventDispatcher eventDispatcher;
+    public Server server;
 }
