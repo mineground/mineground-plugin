@@ -24,6 +24,9 @@ import org.bukkit.inventory.ItemStack;
 import com.mineground.base.FeatureBase;
 import com.mineground.base.FeatureCommand;
 import com.mineground.base.FeatureInitParams;
+import com.mineground.base.PromiseError;
+import com.mineground.base.PromiseResultHandler;
+import com.mineground.database.DatabaseResult;
 
 public class DevelopmentLog extends FeatureBase {
     public DevelopmentLog(FeatureInitParams params) {
@@ -35,6 +38,17 @@ public class DevelopmentLog extends FeatureBase {
     
     public void onPlayerJoined(Player player) {
         player.sendMessage("Welcome on Mineground, " + player.getName());
+        
+        // TODO: Convert this example to use DatabaseStatement.
+        final String playerRequest = "SELECT * FROM users WHERE user_uuid = \"" + player.getUniqueId().toString() + "\"";
+        getDatabase().query(playerRequest).then(new PromiseResultHandler<DatabaseResult>() {
+            public void onFulfilled(DatabaseResult result) {
+                // TODO: Validate the contents of |result| in here.
+            }
+            public void onRejected(PromiseError error) {
+                getLogger().warning("Database error: " + error.reason());
+            }
+        });
     }
     
     @FeatureCommand(value = "bread", description = "Gives you some bread to eat.", console = false)
