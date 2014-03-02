@@ -15,7 +15,11 @@
 
 package com.mineground.features;
 
+import org.bukkit.Material;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import com.mineground.base.FeatureBase;
 import com.mineground.base.FeatureCommand;
@@ -26,20 +30,19 @@ public class DevelopmentLog extends FeatureBase {
         super(params);
     }
     
-    public void onMinegroundLoaded() {
-        getLogger().info("onMinegroundLoaded()");
-    }
-    
-    public void onMinegroundUnloaded() {
-        getLogger().info("onMinegroundUnloaded()");
-    }
+    public void onMinegroundLoaded() { }
+    public void onMinegroundUnloaded() { }
     
     public void onPlayerJoined(Player player) {
-        getLogger().info("Welcome on Mineground, " + player.getName());
+        player.sendMessage("Welcome on Mineground, " + player.getName());
     }
     
-    @FeatureCommand("apple")
-    public boolean onAppleCommand() {
-        return false;
+    @FeatureCommand(value = "bread", description = "Gives you some bread to eat.", console = false)
+    public boolean onBreadCommand(CommandSender sender, Command command, String[] arguments) {
+        Player player = (Player) sender;
+        player.getInventory().addItem(new ItemStack(Material.BREAD, 16));
+        
+        sender.sendMessage("Enjoy your bread!");
+        return true;
     }
 }

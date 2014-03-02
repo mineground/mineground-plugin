@@ -26,7 +26,13 @@ public @interface FeatureCommand {
     // Name of the command which this method should handle, without a slash.
     String value();
     
+    // Whether this command should be executed when entered in the console.
+    boolean console() default true;
+    
+    // Brief, one-sentence description of what this command is meant to do.
     String description() default "";
+    
+    // What is the syntax using which users should be using this command?
     String usage() default "";
     
     // List of aliases under which this command should also be executed. This can be used if the

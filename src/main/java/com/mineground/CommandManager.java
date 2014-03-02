@@ -16,21 +16,26 @@
 package com.mineground;
 
 import java.lang.annotation.Annotation;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.SimplePluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.mineground.base.Feature;
 import com.mineground.base.FeatureCommand;
 
 // Commands are a critical part of creating an interactive server, as it allows more advanced
@@ -48,11 +53,28 @@ public class CommandManager {
     private CommandMap mBukkitCommandMap;
     
     // Commands are owned by a plugin in Bukkit, so we need our instance of JavaPlugin.
-    private JavaPlugin mPlugin;
+    private final JavaPlugin mPlugin;
+    
+    // Private inner class representing the fact that |method| on |instance| handles a command.
+    private class CommandObserver {
+        private WeakReference<Object> instance;
+        private Method method;
+        private boolean console;
+        
+        private CommandObserver(Object instance_, Method method_, boolean console_) {
+            instance = new WeakReference<Object>(instance_);
+            method = method_;
+            console = console_;
+        }
+    }
+    
+    // Map between a command name and the observer which should be handling it.
+    private final Map<String, CommandObserver> mCommandMap;
 
     // Initializes our local instances of the Bukkit command map, as well as Bukkit's PluginCommand
     // constructor, and verifies that we can use them.
     public CommandManager(JavaPlugin plugin) {
+        mCommandMap = new HashMap<String, CommandObserver>();
         mPlugin = plugin;
         
         final PluginManager pluginManager = plugin.getServer().getPluginManager();
@@ -117,15 +139,52 @@ public class CommandManager {
                 return;
             }
             
-            // TODO: Register the command internally in the CommandManager.
+            // Registers the command in our own command map, allowing us to dispatch it.
+            mCommandMap.put(command.value(), new CommandObserver(instance, method, command.console()));
         }
+    }
+    
+    // When a command has been registered by an object which no longer is alive, the feature has
+    // likely been unloaded. Remove the command both from our internal mapping and from Bukkit's.
+    private void unregisterCommand(Command command, CommandObserver observer) {
+        mCommandMap.remove(command.getName());
+        
+        // TODO: Figure out a way to unregister commands from Bukkit.
     }
     
     // Invoked when either the player or an operator through the console, identified by |sender|,
     // executes |command|, with |arguments| as the entered arguments.
     public boolean onCommand(CommandSender sender, Command command, String[] arguments) {
-        // TODO: Dispatch the command to the method which registered it. If the instance on which
-        //       the method lived no longer is around, we need to unregister the command from Bukkit.
+        final CommandObserver observer = mCommandMap.get(command.getName());
+        if (observer == null)
+            return false;
+        
+        final Object instance = observer.instance.get();
+        
+        // Check whether the instance on which this command was defined is still alive. If it has
+        // been garbage collected, then we should unregister this command from Bukkit.
+        if (instance == null) {
+            unregisterCommand(command, observer);
+            return false;
+        }
+        
+        // If the command was executed on the console, and it's been listed as a command which may
+        // only be used from in-game, don't invoke the method either.
+        if (!observer.console && !(sender instanceof Player)) {
+            sender.sendMessage("This command may only be used from in-game.");
+            return false;
+        }
+        
+        // Execute the command by invoking the method, and returning the return value (which should
+        // be a boolean) to the caller of onCommand.
+        try {
+            return (boolean) observer.method.invoke(instance, sender, command, arguments);
+
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            mPlugin.getLogger().severe("An exception occurred while executing command /" + command.getName() + ":");
+            e.printStackTrace();
+        }
+
         return false;
     }
 }
