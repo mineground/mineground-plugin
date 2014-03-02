@@ -71,7 +71,7 @@ public class Mineground extends JavaPlugin {
         
         // Initialize the Database API and ensure that it can connect to actual database powering
         // it. Without database access, Mineground will be significantly limited in functionality.
-        mDatabase = new Database(mConfiguration);
+        mDatabase = new Database(mConfiguration, getServer().getScheduler());
         if (!mDatabase.connect())
             getLogger().severe("Could not connect to the Mineground database.");
         
@@ -97,6 +97,9 @@ public class Mineground extends JavaPlugin {
         
         mConfiguration = null;
         mConfigurationFile = null;
+        
+        mDatabase.disconnect();
+        mDatabase = null;
         
         mFeatureManager = null;
         mEventListener = null;
