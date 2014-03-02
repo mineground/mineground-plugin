@@ -17,4 +17,9 @@ package com.mineground.database;
 
 public class DatabaseConnection {
 
+    // Polls for finished database queries from the database thread, for which the promises can be
+    // settled. This method will be called every 2 server ticks (~100ms) on the main thread.
+    public void doPollForResults() {
+        // TODO: Poll for results in here.
+    }
 }

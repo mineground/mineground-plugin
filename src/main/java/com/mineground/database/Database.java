@@ -16,6 +16,7 @@
 package com.mineground.database;
 
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
 import com.mineground.base.Promise;
@@ -23,6 +24,10 @@ import com.mineground.base.Promise;
 // The Database class is the public-facing API for database communications within Mineground. All
 // queries to be executed on this database will be ran asynchronously.
 public class Database {
+    // Id of an invalid task in the Bukkit scheduler. We can safely pass this value to Bukkit as
+    // a task Id regardless of whether its ours or not, so use it as the default value.
+    private static final int INVALID_TASK_ID = -1;
+
     // Configuration (mineground.yml) based on which the connection will be established.
     private FileConfiguration mConfiguration;
     
@@ -30,13 +35,17 @@ public class Database {
     // The connection itself will execute all queries on a separate thread.
     private DatabaseConnection mConnection;
     
-    // The Bukkit Scheduler is used to execute a poll for finished database results from the
-    // database thread, because we want to deliver the results on the main thread.
-    private BukkitScheduler mBukkitScheduler;
+    private JavaPlugin mPlugin;
     
-    public Database(FileConfiguration configuration, BukkitScheduler scheduler) {
+    // Task Id of the running repeating task within Bukkit's task scheduler. When the database is
+    // disconnected, the task needs to be unregistered as well.
+    private int mSchedulerTaskId;
+    
+    public Database(FileConfiguration configuration, JavaPlugin plugin) {
         mConfiguration = configuration;
-        mBukkitScheduler = scheduler;
+        mPlugin = plugin;
+        
+        mSchedulerTaskId = INVALID_TASK_ID;
     }
     
     // Synchronously connects to the database and returns whether the connection was established
@@ -44,13 +53,29 @@ public class Database {
     // any point during the plugin's lifetime.
     public boolean connect() {
         // TODO: Initialize the database connection and start the thread.
-        return false;
+        
+        // Register a task with the Bukkit Scheduler to poll for results every 2 server ticks. The
+        // Bukkit server has 20 ticks per second (once per 50ms), so the expected maximum delay in
+        // relaying database results is about a hundred milliseconds.
+        mSchedulerTaskId = getScheduler().scheduleSyncRepeatingTask(mPlugin, new Runnable() {
+            public void run() {
+                if (mConnection == null)
+                    return;
+                
+                mConnection.doPollForResults();
+            }
+        }, 2, 2);
+
+        return true;
     }
     
     // Synchronously stops the database thread after all pending queries have been executed, and
     // disconnects the established connection with the database.
     public void disconnect() {
         // TODO: Close the database connection and stop the thread.
+
+        getScheduler().cancelTask(mSchedulerTaskId);
+        mSchedulerTaskId = INVALID_TASK_ID;
     }
     
     // Prepares |query| as a database statement, making it more convenient and safer to perform
@@ -65,5 +90,10 @@ public class Database {
     public Promise<DatabaseResult> query(String query) {
         // TODO: Implement support for queries.
         return null;
+    }
+    
+    // Returns the Bukkit scheduler from |mPlugin|.
+    private BukkitScheduler getScheduler() {
+        return mPlugin.getServer().getScheduler();
     }
 }
