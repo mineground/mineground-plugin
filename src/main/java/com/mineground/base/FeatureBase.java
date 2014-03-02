@@ -42,7 +42,7 @@ public class FeatureBase implements Feature {
         mLogger = Logger.getLogger(getClass().getCanonicalName());
         
         // Registers all event listeners defined in this feature with the EventDispatcher.
-        params.eventDispatcher.registerFeature(this);
+        params.eventDispatcher.registerListeners(this);
 
         // Registers all commands defined in this feature with the CommandManager.
         params.commandManager.registerCommands(this);

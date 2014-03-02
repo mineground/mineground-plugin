@@ -52,7 +52,7 @@ public class EventDispatcherTest extends TestCase {
             }
         };
 
-        mEventDispatcher.registerFeature(myFeature);
+        mEventDispatcher.registerListeners(myFeature);
         mEventDispatcher.onMinegroundLoaded();
         mEventDispatcher.onMinegroundUnloaded();
         
@@ -73,7 +73,7 @@ public class EventDispatcherTest extends TestCase {
             }
         };
 
-        mEventDispatcher.registerFeature(myFeature);
+        mEventDispatcher.registerListeners(myFeature);
         mEventDispatcher.onMinegroundLoaded();
         
         WeakReference<Feature> reference = new WeakReference<Feature>(myFeature);

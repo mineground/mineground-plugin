@@ -26,8 +26,6 @@ import java.util.Map;
 
 import org.bukkit.entity.Player;
 
-import com.mineground.base.Feature;
-
 // The EventDispatcher listens to all incoming events from Bukkit, validates them, and invokes all
 // observers within the Mineground plugin which depend on them.
 public class EventDispatcher {
@@ -50,13 +48,13 @@ public class EventDispatcher {
         }
     }
     
-    // Information regarding an individual event observer: |method| on the |feature| instance.
+    // Information regarding an individual event observer: |method| on the |object| instance.
     private class EventObserver {
-        private WeakReference<Feature> feature;
+        private WeakReference<Object> instance;
         private Method method;
         
-        private EventObserver(Feature feature_, Method method_) {
-            feature = new WeakReference<Feature>(feature_);
+        private EventObserver(Object instance_, Method method_) {
+            instance = new WeakReference<Object>(instance_);
             method = method_;
         }
     }
@@ -81,17 +79,17 @@ public class EventDispatcher {
         }
     }
     
-    // Registers all event listeners in |feature| with the observer lists owned by this dispatcher.
+    // Registers all event listeners in |instance| with the observer lists owned by this dispatcher.
     // Reflection is used to find the relevant method names (as dictated by the EventTypes enum
     // defined earlier in this class) on the instance.
-    public void registerFeature(Feature feature) {
-        Method[] reflectionMethods = feature.getClass().getMethods();
+    public void registerListeners(Object instance) {
+        Method[] reflectionMethods = instance.getClass().getMethods();
         for (Method reflectionMethod : reflectionMethods) {
             EventTypes eventType = mEventNameToTypeMap.get(reflectionMethod.getName());
             if (eventType == null)
                 continue;
 
-            mObserverListMap.get(eventType).add(new EventObserver(feature, reflectionMethod));
+            mObserverListMap.get(eventType).add(new EventObserver(instance, reflectionMethod));
         }
     }
     
@@ -101,17 +99,17 @@ public class EventDispatcher {
         final Iterator<EventObserver> observers = mObserverListMap.get(event).iterator();
         while (observers.hasNext()) {
             final EventObserver observer = observers.next();
-            final Feature feature = observer.feature.get();
+            final Object instance = observer.instance.get();
 
-            // If |feature| is null, the feature itself has lost all its references elsewhere in the
-            // plugin, and we thus can't deliver events to it anymore.
-            if (feature == null) {
+            // If |instance| is null, the object instance itself has lost all its references
+            // elsewhere in the plugin, and we thus can't deliver events to it anymore.
+            if (instance == null) {
                 observers.remove();
                 continue;
             }
 
             try {
-                observer.method.invoke(feature, arguments);
+                observer.method.invoke(instance, arguments);
             } catch (IllegalArgumentException e) {
                 // TODO: Log an error because the method has an invalid signature.
                 e.printStackTrace();
