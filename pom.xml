@@ -34,6 +34,7 @@
         <java.version>1.7</java.version>
         <craftbukkit.version>1.7.2-R0.3</craftbukkit.version>
         <junit.version>4.10</junit.version>
+        <mysqlConnector.version>5.1.29</mysqlConnector.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -65,7 +66,7 @@
                     <showDeprecation>true</showDeprecation>
                     <showWarnings>true</showWarnings>
                     <source>${java.version}</source>
-                    <target>{$java.version}</target>
+                    <target>${java.version}</target>
                 </configuration>
             </plugin>
         </plugins>
@@ -82,6 +83,11 @@
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>${mysqlConnector.version}</version>
         </dependency>
     </dependencies>
 
