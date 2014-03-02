@@ -13,23 +13,19 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.mineground.base;
+package com.mineground;
 
-import org.bukkit.Server;
 import org.bukkit.configuration.file.FileConfiguration;
 
-import com.mineground.CommandManager;
-import com.mineground.Database;
-import com.mineground.EventDispatcher;
-import com.mineground.FeatureManager;
+public class Database {
+    private FileConfiguration mConfiguration;
+    
+    public Database(FileConfiguration configuration) {
+        mConfiguration = configuration;
+    }
+    
+    public boolean connect() {
+        return false;
+    }
 
-// Initialization parameters which features receive and must pass on to their FeatureBase parent
-// class, allowing it to initialize itself to make all features available.
-public class FeatureInitParams {
-    public FeatureManager featureManager;
-    public CommandManager commandManager;
-    public EventDispatcher eventDispatcher;
-    public FileConfiguration configuration;
-    public Database database;
-    public Server server;
 }

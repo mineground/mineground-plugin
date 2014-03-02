@@ -46,6 +46,11 @@ public class Mineground extends JavaPlugin {
     private FileConfiguration mConfiguration;
     private File mConfigurationFile;
     
+    // Mineground stores pretty much all information (beyond the world data) in a database, ensuring
+    // that it persists between sessions and can be accessed from outside this plugin as well. The
+    // Database implementation is the main API for that.
+    private Database mDatabase;
+    
     @Override
     public void onEnable() {
         mEventDispatcher = new EventDispatcher();
@@ -62,12 +67,18 @@ public class Mineground extends JavaPlugin {
         mConfigurationFile = new File(dataFolder, "mineground.yml");
         mConfiguration = YamlConfiguration.loadConfiguration(mConfigurationFile);
         
+        // Initialize the Database API and ensure that it can connect to actual database powering
+        // it. Without database access, Mineground will be significantly limited in functionality.
+        mDatabase = new Database(mConfiguration);
+        if (!mDatabase.connect())
+            getLogger().severe("Could not connect to the Mineground database.");
+        
         // Register |mEventListener| with Bukkit's Plugin Manager, so it will receive events.
         getServer().getPluginManager().registerEvents(mEventListener, this);
 
         // The Feature Manager will initialize all individual features available on Mineground,
         // which includes giving them the ability to listen for the |onMinegroundLoaded| event.
-        mFeatureManager = new FeatureManager(getServer(), mCommandManager, mEventDispatcher, mConfiguration);
+        mFeatureManager = new FeatureManager(getServer(), mCommandManager, mEventDispatcher, mConfiguration, mDatabase);
         mFeatureManager.initializeFeatures();
         
         mEventDispatcher.onMinegroundLoaded();

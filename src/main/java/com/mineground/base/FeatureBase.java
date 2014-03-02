@@ -21,6 +21,7 @@ import org.bukkit.Server;
 import org.bukkit.configuration.Configuration;
 
 import com.mineground.CommandManager;
+import com.mineground.Database;
 import com.mineground.EventDispatcher;
 import com.mineground.FeatureManager;
 
@@ -54,5 +55,7 @@ public class FeatureBase implements Feature {
     protected CommandManager getCommandManager() { return mInitParams.commandManager; }
     protected EventDispatcher getEventDispatcher() { return mInitParams.eventDispatcher; }
     protected Configuration getConfiguration() { return mInitParams.configuration; }
+    protected Database getDatabase() { return mInitParams.database; }
+    
     protected Server getServer() { return mInitParams.server; }
 }
