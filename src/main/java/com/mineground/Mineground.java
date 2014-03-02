@@ -15,8 +15,12 @@
 
 package com.mineground;
 
+import java.io.File;
+
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 // The Mineground class is the plugin which exposes our plugin to Bukkit. It has access to APIs for
@@ -36,6 +40,12 @@ public class Mineground extends JavaPlugin {
     // Class used for managing all features implemented in the Mineground plugin.
     private FeatureManager mFeatureManager;
     
+    // Mineground uses a separate YML file in its data directory for configuration of this plugin.
+    // The instance is writable, and will be made available to every feature. The file is stored
+    // outside of the jar to avoid needing to rebuild it when a setting changes.
+    private FileConfiguration mConfiguration;
+    private File mConfigurationFile;
+    
     @Override
     public void onEnable() {
         mEventDispatcher = new EventDispatcher();
@@ -43,12 +53,21 @@ public class Mineground extends JavaPlugin {
         
         mCommandManager = new CommandManager(this);
         
+        // Initializes the Mineground-specific configuration (which should reside in the plugin's
+        // data folder). If the data folder does not exist yet, it will be created.
+        final File dataFolder = getDataFolder();
+        if (!dataFolder.exists() && !dataFolder.mkdir())
+            getLogger().severe("Could not create the data folder for the Mineground plugin.");
+        
+        mConfigurationFile = new File(dataFolder, "mineground.yml");
+        mConfiguration = YamlConfiguration.loadConfiguration(mConfigurationFile);
+        
         // Register |mEventListener| with Bukkit's Plugin Manager, so it will receive events.
         getServer().getPluginManager().registerEvents(mEventListener, this);
 
         // The Feature Manager will initialize all individual features available on Mineground,
         // which includes giving them the ability to listen for the |onMinegroundLoaded| event.
-        mFeatureManager = new FeatureManager(getServer(), mCommandManager, mEventDispatcher);
+        mFeatureManager = new FeatureManager(getServer(), mCommandManager, mEventDispatcher, mConfiguration);
         mFeatureManager.initializeFeatures();
         
         mEventDispatcher.onMinegroundLoaded();
@@ -62,6 +81,9 @@ public class Mineground extends JavaPlugin {
     @Override
     public void onDisable() {
         mEventDispatcher.onMinegroundUnloaded();
+        
+        mConfiguration = null;
+        mConfigurationFile = null;
         
         mFeatureManager = null;
         mEventListener = null;

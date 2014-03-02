@@ -16,6 +16,7 @@
 package com.mineground.base;
 
 import org.bukkit.Server;
+import org.bukkit.configuration.Configuration;
 
 import com.mineground.CommandManager;
 import com.mineground.EventDispatcher;
@@ -27,5 +28,6 @@ public class FeatureInitParams {
     public FeatureManager featureManager;
     public CommandManager commandManager;
     public EventDispatcher eventDispatcher;
+    public Configuration configuration;
     public Server server;
 }

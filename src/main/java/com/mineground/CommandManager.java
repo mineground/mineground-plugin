@@ -35,7 +35,6 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.SimplePluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.mineground.base.Feature;
 import com.mineground.base.FeatureCommand;
 
 // Commands are a critical part of creating an interactive server, as it allows more advanced

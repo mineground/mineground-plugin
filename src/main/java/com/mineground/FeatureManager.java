@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.bukkit.Server;
+import org.bukkit.configuration.Configuration;
 
 import com.mineground.base.Feature;
 import com.mineground.base.FeatureInitParams;
@@ -34,11 +35,13 @@ public class FeatureManager {
     private Server mServer;
     private CommandManager mCommandManager;
     private EventDispatcher mEventDispatcher;
+    private Configuration mConfiguration;
     
-    public FeatureManager(Server server, CommandManager commandManager, EventDispatcher eventDispatcher) {
+    public FeatureManager(Server server, CommandManager commandManager, EventDispatcher eventDispatcher, Configuration configuration) {
         mServer = server;
         mCommandManager = commandManager;
         mEventDispatcher = eventDispatcher;
+        mConfiguration = configuration;
         
         mFeatures = new HashMap<String, Feature>();
     }
@@ -50,6 +53,7 @@ public class FeatureManager {
         params.featureManager = this;
         params.commandManager = mCommandManager;
         params.eventDispatcher = mEventDispatcher;
+        params.configuration = mConfiguration;
         params.server = mServer;
         
         // TODO: Should we implement a more formal dependency model between features? That would

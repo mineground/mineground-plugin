@@ -18,6 +18,7 @@ package com.mineground.base;
 import java.util.logging.Logger;
 
 import org.bukkit.Server;
+import org.bukkit.configuration.Configuration;
 
 import com.mineground.CommandManager;
 import com.mineground.EventDispatcher;
@@ -52,5 +53,6 @@ public class FeatureBase implements Feature {
     protected FeatureManager getFeatureManager() { return mInitParams.featureManager; }
     protected CommandManager getCommandManager() { return mInitParams.commandManager; }
     protected EventDispatcher getEventDispatcher() { return mInitParams.eventDispatcher; }
+    protected Configuration getConfiguration() { return mInitParams.configuration; }
     protected Server getServer() { return mInitParams.server; }
 }
