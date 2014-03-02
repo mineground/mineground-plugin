@@ -35,7 +35,11 @@ public class EventDispatcher {
         MinegroundLoadedEvent("onMinegroundLoaded"),
         
         // Invoked when the Mineground plugin gets unloaded by the Bukkit server.
-        MinegroundUnloadEvent("onMinegroundUnloaded");
+        MinegroundUnloadEvent("onMinegroundUnloaded"),
+        
+        // Invoked when a player has joined Mineground, and the handshake with the Minecraft
+        // server has successfully commenced. We already checked whether they're banned or not.
+        PlayerJoinedEvent("onPlayerJoined");
         
         // -----------------------------------------------------------------------------------------
         
@@ -109,16 +113,21 @@ public class EventDispatcher {
                 observer.method.invoke(feature, arguments);
             } catch (IllegalArgumentException e) {
                 // TODO: Log an error because the method has an invalid signature.
+                e.printStackTrace();
             } catch (InvocationTargetException e) {
                 // Ignored, we do a null check on |feature| earlier on in this method. By getting
                 // the weak pointer's value we create a strong reference too, stopping the instance
                 // from being garbage collected while we're dispatching an event on it.
+                e.printStackTrace();
             } catch (IllegalAccessException e) {
                 // TODO: Log an error because the method is not accessible.
+                e.printStackTrace();
             }
         }
     }
     
     public void onMinegroundLoaded()   { dispatch(EventTypes.MinegroundLoadedEvent); }
     public void onMinegroundUnloaded() { dispatch(EventTypes.MinegroundUnloadEvent); }
+    
+    public void onPlayerJoined(String name) { dispatch(EventTypes.PlayerJoinedEvent, name); }
 }
