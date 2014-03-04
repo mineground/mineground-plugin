@@ -17,8 +17,11 @@ package com.mineground.database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import com.mineground.base.Promise;
@@ -72,13 +75,58 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
         public void run() {
             connect();
             
-            // TODO: Execute all the queries.
+            while (!mShutdownRequested) {
+                try {
+                    PendingQuery query = mPendingQueryQueue.poll(1, TimeUnit.SECONDS);
+                    if (query == null)
+                        continue;
+                    
+                    mFinishedQueryQueue.add(executeQuery(query));
+                } catch (InterruptedException e) { /** It's safe to ignore this exception **/ }
+            }
 
             mPendingQueryQueue.clear();
             mFinishedQueryQueue.clear();
             mShutdownRequested = false;
             
             disconnect();
+        }
+        
+        // Executes |query| on the established database connection. If a MySQL error occurs, the
+        // PendingQuery's error message will be set to the textual explanation. Otherwise a new
+        // DatabaseResult object will be created, containing the result values.
+        private PendingQuery executeQuery(PendingQuery query) {
+            try {
+                final Statement statement = mConnection.createStatement();
+                final DatabaseResult result = new DatabaseResult();
+                
+                if (statement.execute(query.query, Statement.RETURN_GENERATED_KEYS)) {
+                    ResultSet resultSet = statement.getResultSet();
+                    while (resultSet.next()) {
+                        // TODO: Store the retrieved information in the |result| object, so that the
+                        //       caller can actually use it. We can't pass ResultSet back here,
+                        //       because it depends on the statement and the connection.
+
+                        result.numRows++;
+                    }
+                } else {
+                    result.affectedRows = statement.getUpdateCount();
+                    
+                    ResultSet generatedKeysResultSet = statement.getGeneratedKeys();
+                    if (generatedKeysResultSet.next())
+                        result.insertId = generatedKeysResultSet.getInt(1);
+                }
+                
+                query.result = result;
+                
+            } catch (SQLException exception) {
+                String message = "Error while executing the MySQL query (" + 
+                        exception.getErrorCode() + "): " + exception.getMessage();
+
+                query.error = message;
+            }
+            
+            return query;
         }
         
         // Connects to the database, and returns whether the connection was successful. This method
