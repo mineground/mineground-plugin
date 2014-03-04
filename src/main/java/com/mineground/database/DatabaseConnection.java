@@ -16,46 +16,25 @@
 package com.mineground.database;
 
 import com.mineground.base.Promise;
-import com.mineground.base.PromiseError;
 
 // The database connection class curates the actual connection with the database, and owns the
-// execution thread on which queries will be executed.
-public class DatabaseConnection {
-    // TODO: Implement support for query timeouts.
+// execution thread on which queries will be executed. This interface defines the API with which
+// the Database class can communicate with it, keeping implementation details separate.
+public interface DatabaseConnection {
+    // Asynchronously establishes a connection with the database. If the connection is lost at any
+    // point during the plugin's lifetime, the implementation will make a best effort to reestablish
+    // it. The implementation will output diagnostic information to a logger.
+    public void connect();
     
-    // Connection parameters which are being used to connect to the database. This field will be
-    // assigned to once (in the constructor) and should be considered immutable thereafter.
-    private final DatabaseConnectionParams mConnectionParams;
+    // Synchronously disconnects from the database and returns when the connection is dead. When
+    // the implementation has gone unresponsive, it will return after a 5 second timeout as well.
+    public void disconnect();
     
-    public DatabaseConnection(DatabaseConnectionParams connectionParams) {
-        mConnectionParams = connectionParams;
-    }
-    
-    // Synchronously establishes a connection with the database, and returns whether that has
-    // succeeded. In case of a failure, log messages will be outputted to the console.
-    public boolean connect() {
-        // TODO: Synchronously connect to the database and start the thread.
-        return false;
-    }
-    
-    // Synchronously disconnects from the database and returns when both the connection is dead, and
-    // the database thread has been terminated as well.
-    public void disconnect() {
-        // TODO: Synchronously disconnect from the database and stop the thread.
-    }
-
-    // Enqueues |query| to be executed on the database thread. A promise will be returned which will
-    // be executed when a result has been made available.
-    public Promise<DatabaseResult> enqueueQueryForExecution(String query) {
-        Promise<DatabaseResult> promise = new Promise<DatabaseResult>();
-        promise.reject(new PromiseError("The database thread has not been implemented yet."));
-        
-        return promise;
-    }
+    // Enqueues |query| to be asynchronously executed on the database. A promise will be returned,
+    // which will be settled when a result has been made available.
+    public Promise<DatabaseResult> enqueueQueryForExecution(String query);
     
     // Polls for finished database queries from the database thread, for which the promises can be
-    // settled. This method will be called every 2 server ticks (~100ms) on the main thread.
-    public void doPollForResults() {
-        // TODO: Poll for results in here.
-    }
+    // settled. This method should be called every 2 server ticks (~100ms) on the main thread.
+    public void doPollForResults();
 }
