@@ -22,6 +22,9 @@ import com.mineground.base.Promise;
 // Implementation of the DatabaseConnection interface, based on a JDBC connection using the MySQL
 // J/Connection connector. A thread is used for asynchronous communication with the database.
 public class DatabaseConnectionImpl implements DatabaseConnection {
+    // The maximum number of *milliseconds* which the main thread will be waiting on the database
+    // thread to shutdown cleanly. When this expires, the database thread will be considered dead.
+    private final static int MAXIMUM_DISCONNECT_WAIT_TIME = 5000;
     
     // Logger used for outputting warnings and errors occurring on the database connection. The
     // instance will be used from both the main and database threads, and is guaranteed to be safe.
@@ -34,8 +37,29 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
         // assigned to once (in the constructor) and should be considered immutable thereafter.
         private final DatabaseConnectionParams mConnectionParams;
         
+        // Whether the database thread should be shut down. This means that no further queries will
+        // be accepted. All pending queries will be flushed before exiting.
+        private boolean mShutdownRequested;
+        
         public DatabaseThread(DatabaseConnectionParams connectionParams) {
             mConnectionParams = connectionParams;
+            mShutdownRequested = false;
+        }
+        
+        // Main loop for the database thread. It will do a best effort job in keeping a connection
+        // alive, or re-establishing it when the connection has been lost. Pending queries will then
+        // be retrieved from the |mPendingQueryQueue|, which will be executed and then stored in
+        // the |mFinishedQueryQueue| so that the main thread can run off with the results.
+        public void run() {
+            
+            // TODO: Reset other members to neutral values.
+            mShutdownRequested = false;
+        }
+        
+        // Requests a shutdown of the database thread. After all currently queued queries have
+        // finished, this thread will automatically exit.
+        public void requestShutdown() {
+            mShutdownRequested = true;
         }
     }
     
@@ -50,13 +74,18 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
     // Starts the database thread, which will then start its attempts in establishing a connection
     // with the MySQL information, using the DatabaseConnectionParams provided.
     public void connect() {
-        // TODO: Implement this method.
+        mDatabaseThread.start();
     }
 
     // Disconnects from the database by requesting the database thread to terminate. If it doesn't
     // terminate within five seconds, we will consider the thread as being lost.
     public void disconnect() {
-        // TODO: Implement this method.
+        mDatabaseThread.requestShutdown();
+        try {
+            mDatabaseThread.join(MAXIMUM_DISCONNECT_WAIT_TIME);
+        } catch (InterruptedException exception) {
+            mLogger.severe("Database shutdown has been interrupted: " + exception.getMessage());
+        }
     }
 
     // Creates a PendingQuery instance holding |query|, and adds it to a queue on the database
