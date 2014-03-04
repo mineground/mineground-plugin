@@ -95,14 +95,16 @@ public class Database {
     // Executes |query| on the database and returns a promise which will be settled depending on the
     // result. If the query succeeds, the promise will be resolved with a DatabaseResult instance,
     // otherwise the promise will be rejected sharing the error which occurred in the database.
-    public Promise<DatabaseResult> query(String query) {
+    public Promise<DatabaseResult> query(String query, DatabaseStatementParams parameters) {
         if (mConnection != null)
-            return mConnection.enqueueQueryForExecution(query);
+            return mConnection.enqueueQueryForExecution(query, parameters);
         
         Promise<DatabaseResult> promise = new Promise<DatabaseResult>();
         promise.reject(new PromiseError("Mineground does not have an established connection with the database."));
         return promise;
     }
+    
+    public Promise<DatabaseResult> query(String query) { return this.query(query, null); }
     
     // Returns the Bukkit scheduler from |mPlugin|.
     private BukkitScheduler getScheduler() { return mPlugin.getServer().getScheduler(); }

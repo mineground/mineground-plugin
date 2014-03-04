@@ -18,30 +18,48 @@ package com.mineground.database;
 import com.mineground.base.Promise;
 
 // The DatabaseStatement class encapsulates a prepared statement which can be reused during its
-// lifetime. Whilst this class does not represent a formal implementation of prepared statements,
-// the current aim is to make database communications in Mineground as convenient as possible.
+// lifetime. This class is only responsible for gathering the data required to create a prepared
+// statement in the database connection implementation.
 public class DatabaseStatement {
-    // The Database will be used to execute this statement on as a normal query.
+    // The Database which this statement has been created for, and the |execute()| method will defer
+    // to for execution of the statement itself.
     private Database mDatabase;
     
     // The query which this statement will prepare. Each time the character "?" (question mark) is
     // found, it will be replaced with one of the parameters to this statement.
     private String mQuery;
     
+    // Map of parameters which should be set in the query. All entries will be stored as Objects,
+    // which will be converted back to their values in the database connection implementation.
+    private DatabaseStatementParams mParameters;
+    
     public DatabaseStatement(Database database, String query) {
+        mParameters = new DatabaseStatementParams();
         mDatabase = database;
         mQuery = query;
     }
     
-    // TODO: Recognize the number of required parameters in the query.
-    // TODO: Implement setters for the individual parameters in the query.
+    // Sets parameter |parameterIndex| in |mQuery| to equal the string |value|.
+    public DatabaseStatement setString(int parameterIndex, String value) {
+        mParameters.put(parameterIndex, value);
+        return this;
+    }
     
-    // Executes |mQuery| with all parameters replaced with the values as set on the statement.
+    // Sets parameter |parameterIndex| in |mQuery| to equal the integer |value|.
+    public DatabaseStatement setInteger(int parameterIndex, Integer value) {
+        mParameters.put(parameterIndex, value);
+        return this;
+    }
+    
+    // Sets parameter |parameterIndex| in |mQuery| to equal the double |value|.
+    public DatabaseStatement setDouble(int parameterIndex, Double value) {
+        mParameters.put(parameterIndex, value);
+        return this;
+    }
+    
+    // Sends |mQuery| to the database connection to be executed, together with the parameters as
+    // they have been stored for this statement. Preparing the statement will be done by the thread.
     public Promise<DatabaseResult> execute() {
-        String preparedQuery = mQuery;
-        
-        // TODO: Prepare |preparedQuery| using the available parameters.
-        
-        return mDatabase.query(preparedQuery);
+        return mDatabase.query(mQuery, mParameters);
     }
 }

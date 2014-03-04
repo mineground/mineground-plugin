@@ -17,6 +17,7 @@ package com.mineground.database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -125,12 +126,30 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
         // DatabaseResult object will be created, containing the result values.
         private PendingQuery executeQuery(PendingQuery query) {
             try {
-                final Statement statement = mConnection.createStatement();
+                final PreparedStatement statement = mConnection.prepareStatement(query.query, Statement.RETURN_GENERATED_KEYS);
                 final DatabaseResult result = new DatabaseResult();
                 
                 statement.setQueryTimeout(MAXIMUM_QUERY_EXECUTION_TIME);
+                if (query.parameters != null) {
+                    // Apply all parameters to the prepared statement depending on their type. Only
+                    // the types supported in DatabaseStatement will be inserted here. If an entry
+                    // with an unknown type is occurred, execution of this query will be aborted.
+                    for (int parameterIndex : query.parameters.keySet()) {
+                        Object parameter = query.parameters.get(parameterIndex);
+                        if (parameter instanceof String)
+                            statement.setString(parameterIndex, (String) parameter);
+                        else if (parameter instanceof Integer)
+                            statement.setInt(parameterIndex, (Integer) parameter);
+                        else if (parameter instanceof Double)
+                            statement.setDouble(parameterIndex, (Double) parameter);
+                        else {
+                            query.error = "Invalid query parameter supplied at index " + parameterIndex;
+                            return query;
+                        }
+                    }
+                }
                 
-                if (statement.execute(query.query, Statement.RETURN_GENERATED_KEYS)) {
+                if (statement.execute()) {
                     ResultSet resultSet = statement.getResultSet();
                     while (resultSet.next()) {
                         // TODO: Store the retrieved information in the |result| object, so that the
@@ -241,11 +260,11 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
 
     // Creates a PendingQuery instance holding |query|, and adds it to a queue on the database
     // thread. The promise belonging to the PendingQuery will be returned.
-    public Promise<DatabaseResult> enqueueQueryForExecution(String query) {
+    public Promise<DatabaseResult> enqueueQueryForExecution(String query, DatabaseStatementParams parameters) {
         if (mDatabaseThread == null)
             throw new RuntimeException("A query is being queued for execution while the database thread is inactive.");
         
-        PendingQuery pendingQuery = new PendingQuery(query);
+        PendingQuery pendingQuery = new PendingQuery(query, parameters);
         mDatabaseThread.enqueue(pendingQuery);
 
         return pendingQuery.promise;

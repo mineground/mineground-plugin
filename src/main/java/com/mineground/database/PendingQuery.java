@@ -22,15 +22,18 @@ import com.mineground.base.Promise;
 public class PendingQuery {
     public Promise<DatabaseResult> promise;
     
-    // In: The query which should be executed on the database.
+    // In: The query which should be executed on the database, and an optional map of parameters
+    // which should be replaced in the query, when it's treated as a prepared statement.
     public String query;
+    public DatabaseStatementParams parameters;
     
     // Out: The DatabaseResult object if available, or a String containing the error message.
     public DatabaseResult result;
     public String error;
     
-    public PendingQuery(String query_) {
+    public PendingQuery(String query_, DatabaseStatementParams parameters_) {
         promise = new Promise<DatabaseResult>();
         query = query_;
+        parameters = parameters_;
     }
 }
