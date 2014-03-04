@@ -77,16 +77,40 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
         // be retrieved from the |mPendingQueryQueue|, which will be executed and then stored in
         // the |mFinishedQueryQueue| so that the main thread can run off with the results.
         public void run() {
-            connect();
-            
+            int reconnectionBackoffExponent = 0, reconnectionBackoffSeconds = 0;
             while (!mShutdownRequested) {
+                if (mConnection == null) {
+                    try {
+                        reconnectionBackoffExponent = Math.min(reconnectionBackoffExponent, /** 2 ^ 7 == 128 **/ 7);
+                        reconnectionBackoffSeconds = (int) Math.pow(2, reconnectionBackoffExponent);
+                        
+                        mLogger.info("Waiting " + reconnectionBackoffSeconds + " seconds before reconnecting to the database...");
+                        Thread.sleep(1000 * reconnectionBackoffSeconds);
+
+                    } catch (InterruptedException e) { /** It's safe to ignore this exception **/ }
+                    
+                    if (!connect()) {
+                        reconnectionBackoffExponent++;
+                        continue;
+                    }
+                    
+                    // The connection has succeeded, so make sure that the reconnection back off
+                    // exponent is set to zero, meaning that we can reconnect immediately again next
+                    // time the connection is lost (which hopefully is never?).
+                    reconnectionBackoffExponent = 0;
+                }
+
                 try {
                     PendingQuery query = mPendingQueryQueue.poll(1, TimeUnit.SECONDS);
                     if (query == null)
                         continue;
                     
                     mFinishedQueryQueue.add(executeQuery(query));
-                } catch (InterruptedException e) { /** It's safe to ignore this exception **/ }
+
+                } catch (InterruptedException e) {
+                    // TODO: We need to recognize when a connection has been lost, and set the
+                    //       |mConnection| member to NULL so a reconnection can be started.
+                }
             }
 
             mPendingQueryQueue.clear();
