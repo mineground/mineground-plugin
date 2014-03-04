@@ -59,7 +59,7 @@ public class Database {
         params.password = mConfiguration.getString("database.password", "");
         params.database = mConfiguration.getString("database.database", "mineground");
         
-        mConnection = new DatabaseConnection(params);
+        mConnection = new DatabaseConnectionImpl(params);
         mConnection.connect();
         
         // Register a task with the Bukkit Scheduler to poll for results every 2 server ticks. The
