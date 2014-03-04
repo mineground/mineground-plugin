@@ -40,9 +40,11 @@ public class DevelopmentLog extends FeatureBase {
         player.sendMessage("Welcome on Mineground, " + player.getName());
         
         // TODO: Convert this example to use DatabaseStatement.
-        final String playerRequest = "SELECT * FROM users WHERE user_uuid = \"" + player.getUniqueId().toString() + "\"";
+        final String playerRequest = "SELECT * FROM users WHERE user_id = 1";
         getDatabase().query(playerRequest).then(new PromiseResultHandler<DatabaseResult>() {
             public void onFulfilled(DatabaseResult result) {
+                getLogger().warning("Retrieved " + result.numRows + " rows from the database!");
+                
                 // TODO: Validate the contents of |result| in here.
             }
             public void onRejected(PromiseError error) {
