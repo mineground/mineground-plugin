@@ -15,9 +15,11 @@
 
 package com.mineground.database;
 
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 import com.mineground.base.Promise;
+import com.mineground.base.PromiseError;
 
 // Implementation of the DatabaseConnection interface, based on a JDBC connection using the MySQL
 // J/Connection connector. A thread is used for asynchronous communication with the database.
@@ -41,9 +43,20 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
         // be accepted. All pending queries will be flushed before exiting.
         private boolean mShutdownRequested;
         
+        // A blocking queue which contains the queries which are currently pending execution.
+        private final LinkedBlockingQueue<PendingQuery> mPendingQueryQueue;
+        
+        // A blocking queue which contains the queries which have already been executed, and can
+        // be finalized by the main thread by invoking the pending promises on them.
+        private final LinkedBlockingQueue<PendingQuery> mFinishedQueryQueue;
+        
         public DatabaseThread(DatabaseConnectionParams connectionParams) {
             mConnectionParams = connectionParams;
             mShutdownRequested = false;
+            mPendingQueryQueue = new LinkedBlockingQueue<PendingQuery>();
+            
+            // TODO: LinkedBlockingQueue probably isn't the right type for the finished queue.
+            mFinishedQueryQueue = new LinkedBlockingQueue<PendingQuery>();
         }
         
         // Main loop for the database thread. It will do a best effort job in keeping a connection
@@ -53,6 +66,8 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
         public void run() {
             
             // TODO: Reset other members to neutral values.
+            mPendingQueryQueue.clear();
+            mFinishedQueryQueue.clear();
             mShutdownRequested = false;
         }
         
@@ -60,6 +75,17 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
         // finished, this thread will automatically exit.
         public void requestShutdown() {
             mShutdownRequested = true;
+        }
+        
+        // Enqueues |pendingQuery| to be executed on the database thread.
+        public void enqueue(PendingQuery pendingQuery) {
+            mPendingQueryQueue.add(pendingQuery);
+        }
+        
+        // Immediately returns the PendingQuery object of a finished query if one is available. The
+        // name emphasizes the fact that we will not block the main thread on this.
+        public PendingQuery immediatelyRetrieveFinishedQuery() {
+            return mFinishedQueryQueue.poll();
         }
     }
     
@@ -91,13 +117,26 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
     // Creates a PendingQuery instance holding |query|, and adds it to a queue on the database
     // thread. The promise belonging to the PendingQuery will be returned.
     public Promise<DatabaseResult> enqueueQueryForExecution(String query) {
-        // TODO: Implement this method.
-        return null;
+        if (mDatabaseThread == null)
+            throw new RuntimeException("A query is being queued for execution while the database thread is inactive.");
+        
+        PendingQuery pendingQuery = new PendingQuery(query);
+        mDatabaseThread.enqueue(pendingQuery);
+
+        return pendingQuery.promise;
     }
 
     // Reads all finished PendingQuery instance from the database thread and settles their promises
     // based on what result information is available on them.
     public void doPollForResults() {
-        // TODO: Implement this method.
+        PendingQuery finishedQuery = mDatabaseThread.immediatelyRetrieveFinishedQuery();
+        while (finishedQuery != null) {
+            if (finishedQuery.result != null)
+                finishedQuery.promise.resolve(finishedQuery.result);
+            else
+                finishedQuery.promise.reject(new PromiseError(finishedQuery.error));
+            
+            finishedQuery = mDatabaseThread.immediatelyRetrieveFinishedQuery();
+        }
     }
 }
