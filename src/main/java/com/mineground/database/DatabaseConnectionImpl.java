@@ -15,6 +15,9 @@
 
 package com.mineground.database;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
@@ -50,6 +53,9 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
         // be finalized by the main thread by invoking the pending promises on them.
         private final LinkedBlockingQueue<PendingQuery> mFinishedQueryQueue;
         
+        // The database connection which will be servicing this database thread.
+        private Connection mConnection;
+        
         public DatabaseThread(DatabaseConnectionParams connectionParams) {
             mConnectionParams = connectionParams;
             mShutdownRequested = false;
@@ -64,11 +70,52 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
         // be retrieved from the |mPendingQueryQueue|, which will be executed and then stored in
         // the |mFinishedQueryQueue| so that the main thread can run off with the results.
         public void run() {
+            connect();
             
-            // TODO: Reset other members to neutral values.
+            // TODO: Execute all the queries.
+
             mPendingQueryQueue.clear();
             mFinishedQueryQueue.clear();
             mShutdownRequested = false;
+            
+            disconnect();
+        }
+        
+        // Connects to the database, and returns whether the connection was successful. This method
+        // will output error messages to the logger if it couldn't establish a new connection.
+        private boolean connect() {
+            String connectionUrl = "jdbc:mysql://" + mConnectionParams.hostname + ":" +
+                    mConnectionParams.port + "/" + mConnectionParams.database;
+            
+            try {
+                mConnection = DriverManager.getConnection(connectionUrl, mConnectionParams.username, mConnectionParams.password);
+                mLogger.info("Mineground has established a connection with the database!");
+
+                return true;
+            } catch (SQLException exception) {
+                String message = "Could not connect to " + mConnectionParams.username + "@" +
+                        mConnectionParams.hostname + ":" + mConnectionParams.port +
+                        " for database " + mConnectionParams.database;
+                
+                message += " (" + exception.getErrorCode() + "): " + exception.getMessage();
+                mLogger.severe(message);
+            }
+            
+            return false;
+        }
+        
+        // Closes the established connection with the database, if it's still active. This normally
+        // happens when the database thread is being terminated.
+        private void disconnect() {
+            if (mConnection == null)
+                return;
+            
+            try {
+                mConnection.close();
+            } catch (SQLException e) { /** It's safe to ignore this exception **/ }
+
+            mLogger.info("Mineground has closed the connection with the database!");
+            mConnection = null;
         }
         
         // Requests a shutdown of the database thread. After all currently queued queries have
