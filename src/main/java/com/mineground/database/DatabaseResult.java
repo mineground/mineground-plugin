@@ -15,6 +15,17 @@
 
 package com.mineground.database;
 
+// 
 public class DatabaseResult {
-
+    public int numRows;
+    
+    public int affectedRows;
+    
+    public int insertId;
+    
+    public DatabaseResult() {
+        numRows = 0;
+        affectedRows = 0;
+        insertId = 0;
+    }
 }
