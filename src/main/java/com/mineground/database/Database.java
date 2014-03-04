@@ -49,10 +49,9 @@ public class Database {
         mSchedulerTaskId = INVALID_TASK_ID;
     }
     
-    // Synchronously connects to the database and returns whether the connection was established
-    // successfully. The Database system will automatically reconnect if the connection is lost at
-    // any point during the plugin's lifetime.
-    public boolean connect() {
+    // Starts the Database Thread, which will attempt to connect to the database. The thread will
+    // automatically reconnect if the connection is lost at any point during the plugin's lifetime.
+    public void connect() {
         DatabaseConnectionParams params = new DatabaseConnectionParams();
         params.hostname = mConfiguration.getString("database.hostname", "localhost");
         params.port = mConfiguration.getInt("database.port", 3306);
@@ -61,8 +60,7 @@ public class Database {
         params.database = mConfiguration.getString("database.database", "mineground");
         
         mConnection = new DatabaseConnection(params);
-        if (!mConnection.connect())
-            return false;
+        mConnection.connect();
         
         // Register a task with the Bukkit Scheduler to poll for results every 2 server ticks. The
         // Bukkit server has 20 ticks per second (once per 50ms), so the expected maximum delay in
@@ -73,8 +71,6 @@ public class Database {
                     mConnection.doPollForResults();
             }
         }, 2, 2);
-
-        return true;
     }
     
     // Synchronously stops the database thread after all pending queries have been executed, and

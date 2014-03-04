@@ -72,8 +72,7 @@ public class Mineground extends JavaPlugin {
         // Initialize the Database API and ensure that it can connect to actual database powering
         // it. Without database access, Mineground will be significantly limited in functionality.
         mDatabase = new Database(mConfiguration, this);
-        if (!mDatabase.connect())
-            getLogger().severe("Could not connect to the Mineground database.");
+        mDatabase.connect();
         
         // Register |mEventListener| with Bukkit's Plugin Manager, so it will receive events.
         getServer().getPluginManager().registerEvents(mEventListener, this);
