@@ -34,6 +34,10 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
     // thread to shutdown cleanly. When this expires, the database thread will be considered dead.
     private final static int MAXIMUM_DISCONNECT_WAIT_TIME = 5000;
     
+    // The maximum number of *seconds* any individual query may take whilst executing. After this
+    // duration the query will be considered as having failed.
+    private final static int MAXIMUM_QUERY_EXECUTION_TIME = 10;
+    
     // Logger used for outputting warnings and errors occurring on the database connection. The
     // instance will be used from both the main and database threads, and is guaranteed to be safe.
     private final Logger mLogger;
@@ -99,6 +103,8 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
             try {
                 final Statement statement = mConnection.createStatement();
                 final DatabaseResult result = new DatabaseResult();
+                
+                statement.setQueryTimeout(MAXIMUM_QUERY_EXECUTION_TIME);
                 
                 if (statement.execute(query.query, Statement.RETURN_GENERATED_KEYS)) {
                     ResultSet resultSet = statement.getResultSet();
