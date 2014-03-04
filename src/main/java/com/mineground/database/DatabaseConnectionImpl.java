@@ -15,14 +15,36 @@
 
 package com.mineground.database;
 
+import java.util.logging.Logger;
+
 import com.mineground.base.Promise;
 
 // Implementation of the DatabaseConnection interface, based on a JDBC connection using the MySQL
 // J/Connection connector. A thread is used for asynchronous communication with the database.
 public class DatabaseConnectionImpl implements DatabaseConnection {
     
-    public DatabaseConnectionImpl(DatabaseConnectionParams params) {
+    // Logger used for outputting warnings and errors occurring on the database connection. The
+    // instance will be used from both the main and database threads, and is guaranteed to be safe.
+    private final Logger mLogger;
+    
+    // The DatabaseThread is the thread which actually communicates with the MySQL database. We run
+    // this on a separate thread since queries should not block the rest of the server.
+    private class DatabaseThread extends Thread {
+        // Connection parameters which are being used to connect to the database. This field will be
+        // assigned to once (in the constructor) and should be considered immutable thereafter.
+        private final DatabaseConnectionParams mConnectionParams;
         
+        public DatabaseThread(DatabaseConnectionParams connectionParams) {
+            mConnectionParams = connectionParams;
+        }
+    }
+    
+    // Instance of the thread which will be used for this connection.
+    private final DatabaseThread mDatabaseThread;
+    
+    public DatabaseConnectionImpl(DatabaseConnectionParams params) {
+        mLogger = Logger.getLogger("DatabaseConnection");
+        mDatabaseThread = new DatabaseThread(params);
     }
     
     // Starts the database thread, which will then start its attempts in establishing a connection
