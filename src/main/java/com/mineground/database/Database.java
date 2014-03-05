@@ -93,8 +93,10 @@ public class Database {
     }
     
     // Executes |query| on the database and returns a promise which will be settled depending on the
-    // result. If the query succeeds, the promise will be resolved with a DatabaseResult instance,
-    // otherwise the promise will be rejected sharing the error which occurred in the database.
+    // result. The |parameters| object will be used to replace parameters in the query with values
+    // specified elsewhere, using Prepared Statements, thus in a safe way. If the query succeeds,
+    // the promise will be resolved with a DatabaseResult instance, otherwise the promise will be
+    // rejected sharing the error which occurred in the database.
     public Promise<DatabaseResult> query(String query, DatabaseStatementParams parameters) {
         if (mConnection != null)
             return mConnection.enqueueQueryForExecution(query, parameters);
@@ -104,6 +106,9 @@ public class Database {
         return promise;
     }
     
+    // Executes |query| on the database and returns a promise which will be settled depending on the
+    // result. If the query succeeds, the promise will be resolved with a DatabaseResult instance,
+    // otherwise the promise will be rejected sharing the error which occurred in the database.
     public Promise<DatabaseResult> query(String query) { return this.query(query, null); }
     
     // Returns the Bukkit scheduler from |mPlugin|.
