@@ -76,18 +76,19 @@ public class AccountManager {
         if (account == null)
             return;
         
+        account.load(accountData);
         dispatcher.onPlayerJoined(player);
     }
     
     // Called when the player is leaving the server, meaning we should store the latest updates to
     // their account in the database. When the Mineground plugin is disabled, this method will be
     // called for all players to ensure that we properly store all information.
-    public void unloadAccount(final Player player) {
+    public void unloadAccount(Player player) {
         final Account account = mPlayerAccountMap.get(player);
         if (account == null)
             return;
         
-        mAccountDatabase.updateAccount(player, account.getAccountData());
+        mAccountDatabase.updateAccount(account.getAccountData());
         mPlayerAccountMap.remove(player);
     }
     

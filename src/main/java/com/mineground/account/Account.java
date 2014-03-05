@@ -15,13 +15,15 @@
 
 package com.mineground.account;
 
+import java.util.logging.Logger;
+
 // The Account class contains all information, settings and options in regards to an individual
 // player. The instances themselves should be retrieved through the AccountManager. All changes made
 // to this object, including its members, will persist between playing sessions.
 public class Account {
 
     public void load(AccountData accountData) {
-        
+        Logger.getLogger("account").info(accountData.username + " has been online for " + accountData.online_time + " seconds!");
     }
     
     public AccountData getAccountData() {

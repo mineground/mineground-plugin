@@ -17,6 +17,8 @@ package com.mineground.account;
 
 import java.util.Date;
 
+import org.bukkit.entity.Player;
+
 // The AccountData class holds information about the player's profile, as it is stored in the
 // database. When adding or removing fields, please make sure they are listed in the same order as
 // they are in the actual database scheme, making this class easier to work with.
@@ -71,4 +73,23 @@ public class AccountData {
     
     // The date at which the player last connected to the server.
     public Date last_seen;
+    
+    // ***** Constructor for default values ********************************************************
+    
+    public AccountData(Player player) {
+        user_id = 0;
+        username = player.getName();
+        unique_id = player.getUniqueId().toString();
+        password = "";
+        level = AccountLevel.Guest;
+        registered = new Date();
+        
+        online_time = 0;
+        kill_count = 0;
+        death_count = 0;
+        stats_reaction = 0;
+        stats_blocks_created = 0;
+        stats_blocks_destroyed = 0;
+        last_seen = new Date();
+    }
 }

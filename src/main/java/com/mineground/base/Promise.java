@@ -196,6 +196,12 @@ public class Promise<SuccessValueType> {
         for (PromiseResultHandler<SuccessValueType> handler : mHandlers)
             handler.onRejected(error);
     }
+    
+    // Rejects this promise because of |errorMessage|. The promise must not have been previously
+    // settled. All attached handlers will immediately have their |onRejected| methods invoked.
+    public void reject(String errorMessage) throws PromiseSettledException {
+        reject(new PromiseError(errorMessage));
+    }
 
     // Casts |value| to a Promise which will immediately be resolved with PromiseCastType as the
     // SuccessValueType. This is a utility function for quick returns in Promise-returning methods.
