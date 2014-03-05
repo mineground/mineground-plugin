@@ -88,8 +88,13 @@ public class AccountManager {
         if (account == null)
             return;
         
-        mAccountDatabase.updateAccount(account.getAccountData());
         mPlayerAccountMap.remove(player);
+        
+        final AccountData accountData = account.getAccountData();
+        if (accountData == null)
+            return;
+        
+        mAccountDatabase.updateAccount(accountData);
     }
     
     // Retrieves the account for |player|. If no account is available for them, NULL will be

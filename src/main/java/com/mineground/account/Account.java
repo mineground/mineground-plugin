@@ -21,12 +21,15 @@ import java.util.logging.Logger;
 // player. The instances themselves should be retrieved through the AccountManager. All changes made
 // to this object, including its members, will persist between playing sessions.
 public class Account {
+    // 
+    private AccountData mAccountData;
 
     public void load(AccountData accountData) {
         Logger.getLogger("account").info(accountData.username + " has been online for " + accountData.online_time + " seconds!");
+        mAccountData = accountData;
     }
     
     public AccountData getAccountData() {
-        return null;
+        return mAccountData;
     }
 }

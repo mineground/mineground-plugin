@@ -18,6 +18,7 @@ package com.mineground.account;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.Logger;
 
 import org.bukkit.entity.Player;
@@ -44,6 +45,8 @@ public class AccountDatabase {
     private final DatabaseStatement mLoadAccountStatement;
     private final DatabaseStatement mCreateUserStatement;
     private final DatabaseStatement mCreateUserSettingsStatement;
+    private final DatabaseStatement mUpdateUserStatement;
+    private final DatabaseStatement mUpdateUserSettingsStatement;
     
     public AccountDatabase(Database database) {
         mDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -91,6 +94,33 @@ public class AccountDatabase {
                     "(user_id, last_ip, last_seen) " +
                 "VALUES " +
                     "(?, INET_ATON(?), NOW())"
+        );
+        
+        // Statement to update the users table with the latest unique_id and password.
+        mUpdateUserStatement = database.prepare(
+                "UPDATE " +
+                    "users " +
+                "SET " +
+                    "unique_id = ?, " +
+                    "password = ? " +
+                "WHERE " +
+                    "user_id = ?"
+        );
+        
+        // Statement to update the user's settings with the latest information.
+        mUpdateUserSettingsStatement = database.prepare(
+                "UPDATE " +
+                    "users_settings " +
+                "SET " +
+                    "online_time = ?, " +
+                    "kill_count = ?, " +
+                    "death_count = ?, " +
+                    "stats_reaction = ?, " +
+                    "stats_blocks_created = ?, " +
+                    "stats_blocks_destroyed = ?, " +
+                    "last_seen = ? " +
+                "WHERE " +
+                    "user_id = ?"
         );
     }
     
@@ -185,7 +215,33 @@ public class AccountDatabase {
         });
     }
     
-    public void updateAccount(AccountData account) {
-
+    // Updates the database with the mutable fields in the AccountData instance |accountData|. 
+    public void updateAccount(final AccountData accountData) {
+        mUpdateUserStatement.setString(1, accountData.unique_id);
+        mUpdateUserStatement.setString(2, accountData.password);
+        mUpdateUserStatement.setInteger(3, accountData.user_id);
+        mUpdateUserStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
+            public void onFulfilled(DatabaseResult result) { /** Yippie! **/ }
+            public void onRejected(PromiseError error) {
+                mLogger.severe("Unable to update user information for " + accountData.username + ".");
+                mLogger.severe(error.reason());
+            }
+        });
+        
+        mUpdateUserSettingsStatement.setInteger(1, accountData.online_time);
+        mUpdateUserSettingsStatement.setInteger(2, accountData.kill_count);
+        mUpdateUserSettingsStatement.setInteger(3, accountData.death_count);
+        mUpdateUserSettingsStatement.setInteger(4, accountData.stats_reaction);
+        mUpdateUserSettingsStatement.setInteger(5, accountData.stats_blocks_created);
+        mUpdateUserSettingsStatement.setInteger(6, accountData.stats_blocks_destroyed);
+        mUpdateUserSettingsStatement.setString(7, mDateFormat.format(new Date()));
+        mUpdateUserSettingsStatement.setInteger(8, accountData.user_id);
+        mUpdateUserSettingsStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
+            public void onFulfilled(DatabaseResult result) { /** Yippie! **/ }
+            public void onRejected(PromiseError error) {
+                mLogger.severe("Unable to update user settings for " + accountData.username + ".");
+                mLogger.severe(error.reason());
+            }
+        });
     }
 }
