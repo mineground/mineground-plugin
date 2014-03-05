@@ -21,6 +21,7 @@ import java.util.Map;
 import org.bukkit.Server;
 import org.bukkit.configuration.file.FileConfiguration;
 
+import com.mineground.account.AccountManager;
 import com.mineground.base.Feature;
 import com.mineground.base.FeatureInitParams;
 import com.mineground.database.Database;
@@ -38,16 +39,18 @@ public class FeatureManager {
     private EventDispatcher mEventDispatcher;
     private FileConfiguration mConfiguration;
     private Database mDatabase;
+    private AccountManager mAccountManager;
     
     // TODO: This doesn't really scale very well. Should we perhaps initialize |FeatureInitParams|
     //       in Mineground.onEnable() already, and cache the instance here?
     public FeatureManager(Server server, CommandManager commandManager, EventDispatcher eventDispatcher,
-            FileConfiguration configuration, Database database) {
+            FileConfiguration configuration, Database database, AccountManager accountManager) {
         mServer = server;
         mCommandManager = commandManager;
         mEventDispatcher = eventDispatcher;
         mConfiguration = configuration;
         mDatabase = database;
+        mAccountManager = accountManager;
         
         mFeatures = new HashMap<String, Feature>();
     }
@@ -61,6 +64,7 @@ public class FeatureManager {
         params.eventDispatcher = mEventDispatcher;
         params.configuration = mConfiguration;
         params.database = mDatabase;
+        params.accountManager = mAccountManager;
         params.server = mServer;
         
         // TODO: Should we implement a more formal dependency model between features? That would

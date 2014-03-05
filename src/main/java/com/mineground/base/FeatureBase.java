@@ -23,6 +23,7 @@ import org.bukkit.configuration.Configuration;
 import com.mineground.CommandManager;
 import com.mineground.EventDispatcher;
 import com.mineground.FeatureManager;
+import com.mineground.account.AccountManager;
 import com.mineground.database.Database;
 
 // Parent class for all features implemented in the Mineground plugin. It allows features to access
@@ -56,6 +57,7 @@ public class FeatureBase implements Feature {
     protected EventDispatcher getEventDispatcher() { return mInitParams.eventDispatcher; }
     protected Configuration getConfiguration() { return mInitParams.configuration; }
     protected Database getDatabase() { return mInitParams.database; }
+    protected AccountManager getAccountManager() { return mInitParams.accountManager; }
     
     protected Server getServer() { return mInitParams.server; }
 }

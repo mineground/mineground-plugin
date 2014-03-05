@@ -21,6 +21,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import com.mineground.CommandManager;
 import com.mineground.EventDispatcher;
 import com.mineground.FeatureManager;
+import com.mineground.account.AccountManager;
 import com.mineground.database.Database;
 
 // Initialization parameters which features receive and must pass on to their FeatureBase parent
@@ -31,5 +32,6 @@ public class FeatureInitParams {
     public EventDispatcher eventDispatcher;
     public FileConfiguration configuration;
     public Database database;
+    public AccountManager accountManager;
     public Server server;
 }

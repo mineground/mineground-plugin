@@ -23,6 +23,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.mineground.account.AccountManager;
 import com.mineground.database.Database;
 
 // The Mineground class is the plugin which exposes our plugin to Bukkit. It has access to APIs for
@@ -42,6 +43,10 @@ public class Mineground extends JavaPlugin {
     // Class used for managing all features implemented in the Mineground plugin.
     private FeatureManager mFeatureManager;
     
+    // The account manager curates the accounts of all players on Mineground. Each player implicitly
+    // receives an account, which they can activate by registering on the website.
+    private AccountManager mAccountManager;
+    
     // Mineground uses a separate YML file in its data directory for configuration of this plugin.
     // The instance is writable, and will be made available to every feature. The file is stored
     // outside of the jar to avoid needing to rebuild it when a setting changes.
@@ -55,11 +60,6 @@ public class Mineground extends JavaPlugin {
     
     @Override
     public void onEnable() {
-        mEventDispatcher = new EventDispatcher();
-        mEventListener = new EventListener(mEventDispatcher);
-        
-        mCommandManager = new CommandManager(this);
-        
         // Initializes the Mineground-specific configuration (which should reside in the plugin's
         // data folder). If the data folder does not exist yet, it will be created.
         final File dataFolder = getDataFolder();
@@ -73,13 +73,20 @@ public class Mineground extends JavaPlugin {
         // it. Without database access, Mineground will be significantly limited in functionality.
         mDatabase = new Database(mConfiguration, this);
         mDatabase.connect();
+
+        mAccountManager = new AccountManager(mDatabase);
         
+        mEventDispatcher = new EventDispatcher();
+        mEventListener = new EventListener(mEventDispatcher, mAccountManager);
+        
+        mCommandManager = new CommandManager(this);
+
         // Register |mEventListener| with Bukkit's Plugin Manager, so it will receive events.
         getServer().getPluginManager().registerEvents(mEventListener, this);
 
         // The Feature Manager will initialize all individual features available on Mineground,
         // which includes giving them the ability to listen for the |onMinegroundLoaded| event.
-        mFeatureManager = new FeatureManager(getServer(), mCommandManager, mEventDispatcher, mConfiguration, mDatabase);
+        mFeatureManager = new FeatureManager(getServer(), mCommandManager, mEventDispatcher, mConfiguration, mDatabase, mAccountManager);
         mFeatureManager.initializeFeatures();
         
         mEventDispatcher.onMinegroundLoaded();
@@ -93,15 +100,19 @@ public class Mineground extends JavaPlugin {
     @Override
     public void onDisable() {
         mEventDispatcher.onMinegroundUnloaded();
+
+        mFeatureManager = null;
+        mCommandManager = null;
+
+        mEventListener = null;
+        mEventDispatcher = null;
         
-        mConfiguration = null;
-        mConfigurationFile = null;
+        mAccountManager = null;
         
         mDatabase.disconnect();
         mDatabase = null;
         
-        mFeatureManager = null;
-        mEventListener = null;
-        mEventDispatcher = null;
+        mConfiguration = null;
+        mConfigurationFile = null;
     }
 }
