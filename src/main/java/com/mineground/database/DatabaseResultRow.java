@@ -15,6 +15,7 @@
 
 package com.mineground.database;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +41,10 @@ public class DatabaseResultRow {
         if (columnIndex < 0 || columnIndex >= mFieldList.size())
             return null;
         
+        Object value = mFieldList.get(columnIndex);
+        if (value instanceof Timestamp)
+            return ((Timestamp) value).toString().substring(0, 19);
+        
         return (String) mFieldList.get(columnIndex);
     }
     
@@ -59,6 +64,10 @@ public class DatabaseResultRow {
         if (columnIndex < 0 || columnIndex >= mFieldList.size())
             return null;
         
+        Object value = mFieldList.get(columnIndex);
+        if (value instanceof Integer)
+            return ((Integer) value).longValue();
+        
         return (Long) mFieldList.get(columnIndex);
     }
     
@@ -77,6 +86,10 @@ public class DatabaseResultRow {
         --columnIndex; // map one-based indices to zero-based ones.
         if (columnIndex < 0 || columnIndex >= mFieldList.size())
             return null;
+        
+        Object value = mFieldList.get(columnIndex);
+        if (value instanceof Float)
+            return ((Float) value).doubleValue();
         
         return (Double) mFieldList.get(columnIndex);
     }
