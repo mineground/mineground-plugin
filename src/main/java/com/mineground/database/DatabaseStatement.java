@@ -46,14 +46,14 @@ public class DatabaseStatement {
     }
     
     // Sets parameter |parameterIndex| in |mQuery| to equal the integer |value|.
-    public DatabaseStatement setInteger(int parameterIndex, Long value) {
-        mParameters.put(parameterIndex, value);
+    public DatabaseStatement setInteger(int parameterIndex, long value) {
+        mParameters.put(parameterIndex, new Long(value));
         return this;
     }
     
     // Sets parameter |parameterIndex| in |mQuery| to equal the double |value|.
-    public DatabaseStatement setDouble(int parameterIndex, Double value) {
-        mParameters.put(parameterIndex, value);
+    public DatabaseStatement setDouble(int parameterIndex, double value) {
+        mParameters.put(parameterIndex, new Double(value));
         return this;
     }
     

@@ -60,7 +60,7 @@ public class AccountManager {
                 if (!player.isOnline())
                     return;
                 
-                player.sendMessage("Your account could not be loaded, so we've logged you in as a guest.");
+                player.sendMessage("Your account could not be loaded from the database.");
                 player.sendMessage("Please contact an administrator to get this resolved!");
                 dispatcher.onPlayerJoined(player);
             }

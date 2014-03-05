@@ -42,6 +42,8 @@ public class AccountDatabase {
     // The following statements are the queries which are being used for loading, creating and
     // updating accounts in the database. See the constructor for more detailed documentation.
     private final DatabaseStatement mLoadAccountStatement;
+    private final DatabaseStatement mCreateUserStatement;
+    private final DatabaseStatement mCreateUserSettingsStatement;
     
     public AccountDatabase(Database database) {
         mDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -70,6 +72,26 @@ public class AccountDatabase {
                 "WHERE " +
                     "users.username = ?"
         );
+        
+        // Statement used for creating a new entry for this user in the database. After this
+        // statement successfully executes, an entry in the users_settings table will be created.
+        mCreateUserStatement = database.prepare(
+                "INSERT INTO " +
+                    "users " +
+                    "(username, unique_id, registered) " +
+                "VALUES " +
+                    "(?, ?, NOW())"
+        );
+        
+        // Statement for creating a new entry in the users_settings table in the database. This
+        // row will contain statistics and more generic information about the player.
+        mCreateUserSettingsStatement = database.prepare(
+                "INSERT INTO " +
+                    "users_settings " +
+                    "(user_id, last_ip, last_seen) " +
+                "VALUES " +
+                    "(?, INET_ATON(?), NOW())"
+        );
     }
     
     // Loads the account of |player| from the database. If it does not exist yet, a new account will
@@ -81,7 +103,9 @@ public class AccountDatabase {
         mLoadAccountStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
             public void onFulfilled(DatabaseResult result) {
                 if (result.rows.size() == 0) {
-                    createAccount(player, promise);
+                    if (player.isOnline())
+                        createAccount(player, promise);
+
                     return;
                 }
                 
@@ -118,7 +142,7 @@ public class AccountDatabase {
                 mLogger.severe("Unable to load the account of " + player.getName() + ".");
                 mLogger.severe(error.reason());
 
-                promise.reject("An error occurred with the database.");
+                promise.reject("An error occurred when loading the account from database.");
             }
         });
         
@@ -128,8 +152,37 @@ public class AccountDatabase {
     // Creates an account for |player|, and resolves |promise| with a valid AccountData instance
     // once that has succeeded. This will implicitly register the player as a guest.
     public void createAccount(final Player player, final Promise<AccountData> promise) {
-        // TODO: Create an account for |player|.
-        promise.reject("Support for creating accounts has not yet been implemented.");
+        mCreateUserStatement.setString(1, player.getName());
+        mCreateUserStatement.setString(2, player.getUniqueId().toString());
+        mCreateUserStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
+            public void onFulfilled(DatabaseResult result) {
+                final AccountData accountData = new AccountData(player);
+                accountData.user_id = result.insertId;
+                accountData.username = player.getName();
+                accountData.unique_id = player.getUniqueId().toString();
+                
+                mCreateUserSettingsStatement.setInteger(1, result.insertId);
+                mCreateUserSettingsStatement.setString(2, player.getAddress().getAddress().getHostAddress());
+                mCreateUserSettingsStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
+                    public void onFulfilled(DatabaseResult result) { /** Yippie! **/ }
+                    public void onRejected(PromiseError error) {
+                        mLogger.severe("Unable to create new account settings for " + player.getName() + ".");
+                        mLogger.severe(error.reason());
+                    }
+                });
+                
+                // There is no need to wait for the player's row to be available in users_settings,
+                // so resolve the promise immediately with the newly created AccountData object.
+                promise.resolve(accountData);
+            }
+
+            public void onRejected(PromiseError error) {
+                mLogger.severe("Unable to create a new account for " + player.getName() + ".");
+                mLogger.severe(error.reason());
+                
+                promise.reject("An error occurred when creating a new account in the database.");
+            }
+        });
     }
     
     public void updateAccount(AccountData account) {
