@@ -37,13 +37,6 @@ public class EventListener implements Listener {
         mAccountManager = accountManager;
     }
     
-    // Invoked immediately after the player has connected, but before their connection has been
-    // verified. Start loading their account information at this time.
-    @EventHandler(priority=EventPriority.HIGH)
-    public void onPlayerLogin(PlayerLoginEvent event) {
-        mAccountManager.preloadAccount(event.getPlayer().getName());
-    }
-    
     // Invoked when a player joins the server, and the PlayerLoginEvent has succeeded. Mineground
     // considers this the time at which a player's connection can be considered successful. However,
     // since they haven't logged in to their account yet, they will be considered a a guest.

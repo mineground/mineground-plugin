@@ -15,8 +15,9 @@
 
 package com.mineground.account;
 
-import java.util.logging.Logger;
+import org.bukkit.entity.Player;
 
+import com.mineground.base.Promise;
 import com.mineground.database.Database;
 
 // Whereas the AccountManager class curates the account, this class is responsible for loading,
@@ -27,5 +28,13 @@ public class AccountDatabase {
 
     public AccountDatabase(Database database) {
         mDatabase = database;
+    }
+    
+    public Promise<AccountData> loadOrCreateAccount(final Player player) {
+        return null;
+    }
+    
+    public void updateAccount(final Player player, AccountData account) {
+
     }
 }

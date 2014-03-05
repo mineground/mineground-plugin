@@ -20,4 +20,11 @@ package com.mineground.account;
 // to this object, including its members, will persist between playing sessions.
 public class Account {
 
+    public void load(AccountData accountData) {
+        
+    }
+    
+    public AccountData getAccountData() {
+        return null;
+    }
 }

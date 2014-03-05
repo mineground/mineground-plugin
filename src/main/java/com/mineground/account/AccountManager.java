@@ -21,6 +21,8 @@ import java.util.Map;
 import org.bukkit.entity.Player;
 
 import com.mineground.EventDispatcher;
+import com.mineground.base.PromiseError;
+import com.mineground.base.PromiseResultHandler;
 import com.mineground.database.Database;
 
 // The account manager curates the player accounts on Mineground, their statistics, information,
@@ -38,25 +40,55 @@ public class AccountManager {
         mPlayerAccountMap = new HashMap<Player, Account>();
     }
     
-    // Start preloading the account of a user whose name is |nickname|. The user won't be considered
-    // connected yet, since other plugins may take the honors of denying them access.
-    public void preloadAccount(String nickname) {
-        // TODO: Start preloading the account.
-    }
-    
     // Loads the account, and don't fire the onPlayerJoined event on the dispatcher until their
     // information has been loaded and verified. This will be called for all online players when the
     // plugin is being loaded while there already are players in-game.
     public void loadAccount(final Player player, final EventDispatcher dispatcher) {
-        // TODO: Load the account. Only call onPlayerJoined() when it has succeeded.
+        mPlayerAccountMap.put(player,  new Account());
+        mAccountDatabase.loadOrCreateAccount(player).then(new PromiseResultHandler<AccountData>() {
+            public void onFulfilled(AccountData accountData) {
+                if (!player.isOnline())
+                    return;
+
+                // Try to authenticate the player with their account information. We will not
+                // authenticate the player with their account until we know it's really them.
+                authenticatePlayerAccount(player, accountData, dispatcher);
+            }
+
+            // Something went wrong when trying to create an account for this player.
+            public void onRejected(PromiseError error) {
+                if (!player.isOnline())
+                    return;
+                
+                player.sendMessage("Your account could not be loaded, so we've logged you in as a guest.");
+                player.sendMessage("Please contact an administrator to get this resolved!");
+                dispatcher.onPlayerJoined(player);
+            }
+        });
+    }
+    
+    // Authenticates |player| based on their |accountData|. Mineground support silent log in for
+    // players with an official client, whereas other players will have to enter their password.
+    private void authenticatePlayerAccount(final Player player, final AccountData accountData, final EventDispatcher dispatcher) {
+        // TODO: Authenticate the player.
+        
+        final Account account = mPlayerAccountMap.get(player);
+        if (account == null)
+            return;
+        
         dispatcher.onPlayerJoined(player);
     }
     
     // Called when the player is leaving the server, meaning we should store the latest updates to
     // their account in the database. When the Mineground plugin is disabled, this method will be
     // called for all players to ensure that we properly store all information.
-    public void unloadAccount(Player player) {
-        // TODO: Unload the account.
+    public void unloadAccount(final Player player) {
+        final Account account = mPlayerAccountMap.get(player);
+        if (account == null)
+            return;
+        
+        mAccountDatabase.updateAccount(player, account.getAccountData());
+        mPlayerAccountMap.remove(player);
     }
     
     // Retrieves the account for |player|. If no account is available for them, NULL will be
