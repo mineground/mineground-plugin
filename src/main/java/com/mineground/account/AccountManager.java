@@ -46,10 +46,17 @@ public class AccountManager {
     
     // Loads the account, and don't fire the onPlayerJoined event on the dispatcher until their
     // information has been loaded and verified. This will be called for all online players when the
-    // module is being loaded while there already are players in-game.
+    // plugin is being loaded while there already are players in-game.
     public void loadAccount(final Player player, final EventDispatcher dispatcher) {
         // TODO: Load the account. Only call onPlayerJoined() when it has succeeded.
         dispatcher.onPlayerJoined(player);
+    }
+    
+    // Called when the player is leaving the server, meaning we should store the latest updates to
+    // their account in the database. When the Mineground plugin is disabled, this method will be
+    // called for all players to ensure that we properly store all information.
+    public void unloadAccount(Player player) {
+        // TODO: Unload the account.
     }
     
     // Retrieves the account for |player|. If no account is available for them, NULL will be

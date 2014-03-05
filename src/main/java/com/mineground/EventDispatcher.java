@@ -37,8 +37,12 @@ public class EventDispatcher {
         MinegroundUnloadEvent("onMinegroundUnloaded"),
         
         // Invoked when a player has joined Mineground, and the handshake with the Minecraft
-        // server has successfully commenced. We already checked whether they're banned or not.
-        PlayerJoinedEvent("onPlayerJoined");
+        // server has successfully commenced. Their account is available at this point.
+        PlayerJoinedEvent("onPlayerJoined"),
+        
+        // Invoked when a player disconnects from Mineground. Their account information is still
+        // mutable during this call, but it will be serialized immediately after.
+        PlayerQuitEvent("onPlayerQuit");
         
         // -----------------------------------------------------------------------------------------
         
@@ -129,4 +133,5 @@ public class EventDispatcher {
     public void onMinegroundUnloaded() { dispatch(EventTypes.MinegroundUnloadEvent); }
     
     public void onPlayerJoined(Player player) { dispatch(EventTypes.PlayerJoinedEvent, player); }
+    public void onPlayerQuit(Player player) { dispatch(EventTypes.PlayerQuitEvent, player); }
 }
