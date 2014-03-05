@@ -46,7 +46,7 @@ public class DatabaseStatement {
     }
     
     // Sets parameter |parameterIndex| in |mQuery| to equal the integer |value|.
-    public DatabaseStatement setInteger(int parameterIndex, Integer value) {
+    public DatabaseStatement setInteger(int parameterIndex, Long value) {
         mParameters.put(parameterIndex, value);
         return this;
     }
