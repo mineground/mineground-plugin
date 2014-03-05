@@ -21,6 +21,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.mineground.account.AccountManager;
@@ -90,6 +91,11 @@ public class Mineground extends JavaPlugin {
         mFeatureManager.initializeFeatures();
         
         mEventDispatcher.onMinegroundLoaded();
+        
+        // If there are already players around on the server, we need to inform the account manager
+        // and all features about them being here. Treat them as if they're just joining.
+        for (Player player : getServer().getOnlinePlayers())
+            mAccountManager.loadAccount(player, mEventDispatcher);
     }
     
     @Override
@@ -99,8 +105,18 @@ public class Mineground extends JavaPlugin {
     
     @Override
     public void onDisable() {
+        // If there still are players on the server, inform the account manager and all the features
+        // as if they're all leaving the server at the same time right now.
+        for (Player player : getServer().getOnlinePlayers()) {
+            mEventDispatcher.onPlayerQuit(player);
+            mAccountManager.unloadAccount(player);
+        }
+        
+        // Fire the onMinegroundUnloaded event, telling all features that they must clean up.
         mEventDispatcher.onMinegroundUnloaded();
 
+        // And NULL all the main instances in Mineground, which should clean up all remaining state,
+        // close open connections, so that we can leave with a clear conscience.
         mFeatureManager = null;
         mCommandManager = null;
 
