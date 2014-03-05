@@ -19,8 +19,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -136,10 +139,11 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
                     // with an unknown type is occurred, execution of this query will be aborted.
                     for (int parameterIndex : query.parameters.keySet()) {
                         Object parameter = query.parameters.get(parameterIndex);
+                        
                         if (parameter instanceof String)
                             statement.setString(parameterIndex, (String) parameter);
-                        else if (parameter instanceof Integer)
-                            statement.setInt(parameterIndex, (Integer) parameter);
+                        else if (parameter instanceof Long)
+                            statement.setLong(parameterIndex, (Long) parameter);
                         else if (parameter instanceof Double)
                             statement.setDouble(parameterIndex, (Double) parameter);
                         else {
@@ -148,15 +152,25 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
                         }
                     }
                 }
-                
+
                 if (statement.execute()) {
                     ResultSet resultSet = statement.getResultSet();
-                    while (resultSet.next()) {
-                        // TODO: Store the retrieved information in the |result| object, so that the
-                        //       caller can actually use it. We can't pass ResultSet back here,
-                        //       because it depends on the statement and the connection.
+                    ResultSetMetaData meta = statement.getMetaData();
+                    
+                    List<String> columnNames = new ArrayList<String>();
+                    
+                    int columnCount = meta.getColumnCount();
+                    for (int columnIndex = 1; columnIndex <= columnCount; ++columnIndex)
+                        columnNames.add(meta.getColumnName(columnIndex));
+                    
+                    result.setColumnNames(columnNames);
 
-                        result.numRows++;
+                    while (resultSet.next()) {
+                        DatabaseResultRow resultRow = new DatabaseResultRow(result, columnCount);
+                        for (int columnIndex = 1; columnIndex <= columnCount; ++columnIndex)
+                            resultRow.add(resultSet.getObject(columnIndex));
+
+                        result.rows.add(resultRow);
                     }
                 } else {
                     result.affectedRows = statement.getUpdateCount();
