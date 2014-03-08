@@ -29,6 +29,14 @@ public class Account {
         mAccountData = accountData;
     }
     
+    public boolean isGuest() {
+        return false;
+    }
+    
+    public boolean isFirstJoin() {
+        return false;
+    }
+    
     public AccountData getAccountData() {
         return mAccountData;
     }

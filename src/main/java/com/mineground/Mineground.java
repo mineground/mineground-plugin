@@ -86,6 +86,7 @@ public class Mineground extends JavaPlugin {
         mEventListener = new EventListener(mEventDispatcher, mAccountManager, mChatManager);
         
         mCommandManager = new CommandManager(this);
+        mCommandManager.registerCommands(mAccountManager);
 
         // Register |mEventListener| with Bukkit's Plugin Manager, so it will receive events.
         getServer().getPluginManager().registerEvents(mEventListener, this);

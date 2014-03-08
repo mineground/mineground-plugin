@@ -83,6 +83,13 @@ public class AccountManager {
                 if (!player.isOnline())
                     return;
 
+                // If the player's account does not have a password set, they're a guest and we
+                // won't be able to log them in to any account. Bail out.
+                if (accountData.password.length() == 0) {
+                    didAuthenticatePlayer(player, accountData, dispatcher);
+                    return;
+                }
+                
                 // Try to authenticate the player with their account information. We will not
                 // authenticate the player with their account until we know it's really them.
                 authenticatePlayerAccount(player, accountData, dispatcher);
@@ -167,6 +174,11 @@ public class AccountManager {
             // algorithm. We can't recover from this, given that's how we hash all the passwords..
             player.sendMessage("PBKDF2 is not available on the server, please notify an admin!");
             e.printStackTrace();
+        } catch (NumberFormatException e) {
+            // This is very bad -- it means the PasswordHash implementation threw an exception for
+            // other reasons, e.g. because the stored hash is invalid.
+            player.sendMessage("The password algorithm crashed, please notify an admin!");
+            e.printStackTrace();
         }
         
         return true;
@@ -179,14 +191,21 @@ public class AccountManager {
         if (account == null)
             throw new RuntimeException("|account| must not be NULL here.");
 
+        // TODO: Log this with the PlayerLog class.
+        
         account.load(accountData);
         
-        // TODO: Log this with the PlayerLog class.
-        player.sendMessage("Welcome back on Mineground, " + player.getName() + "!");
-
         dispatcher.onPlayerJoined(player);
+        
+        if (account.isFirstJoin()) {
+            // TODO: Give them some money, some tools, say hello, and so on.
+        } else if (account.isGuest()) {
+            // TODO: Remind them to register on our website.
+        } else {
+            player.sendMessage("Welcome back on Mineground, " + player.getName() + "!");
+        }
     }
-    
+
     // Called when the player is leaving the server, meaning we should store the latest updates to
     // their account in the database. When the Mineground plugin is disabled, this method will be
     // called for all players to ensure that we properly store all information.
