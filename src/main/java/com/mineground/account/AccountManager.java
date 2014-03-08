@@ -17,6 +17,7 @@ package com.mineground.account;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,8 +36,12 @@ import com.mineground.database.Database;
 // economics and everything else related to it. Each player implicitly gets an account, however,
 // without having registered their account on the website it will be considered as a guest account.
 public class AccountManager {
-    //
+    // The maximum number of times a player can try to identify to an account using /login.
     private static final int MAXIMUM_AUTHENTICATION_ATTEMPTS = 3;
+    
+    // The maximum number of hours the player's last session must be in the past in order for IP-
+    // based automatic login to be available for their account.
+    private static final int MAXIMUM_AUTOMATIC_LOGIN_HOURS = 24;
     
     // Interface between the account manager and the database.
     private final AccountDatabase mAccountDatabase;
@@ -102,14 +107,23 @@ public class AccountManager {
     // If Mineground were to switch to be an online server, we could do silent authentication here
     // by comparing their unique Id (the minecraft.net Id) against the one in the database.
     private void authenticatePlayerAccount(final Player player, final AccountData accountData, final EventDispatcher dispatcher) {
-        // TODO: Authenticate the player.
-        
         final Account account = mPlayerAccountMap.get(player);
         if (account == null)
             return;
         
-        // TODO: Authenticate the player based on their IP address and last session.
+        long previousSessionTimeAgo = ((new Date().getTime()) - accountData.last_seen.getTime());
+        if (previousSessionTimeAgo < (MAXIMUM_AUTOMATIC_LOGIN_HOURS * 60 * 60 * 1000)) {
+            // The player's last session was less than |MAXIMUM_AUTOMATIC_LOGIN_HOURS| hours ago, so
+            // if their IP address matches we will automatically log them in again.
+            final String ipAddress = player.getAddress().getAddress().toString();
+            if (accountData.last_ip != null && accountData.last_ip == ipAddress) {
+                didAuthenticatePlayer(player, accountData, dispatcher);
+                return;
+            }
+        }
         
+        // We cannot log them in automatically. They now have to use the /login command with their
+        // password before they will be allowed to participate in playing on Mineground.
         mAuthenticationRequestMap.put(player, new PendingAuthentication(accountData, dispatcher));
         player.sendMessage("Please log in to your account: /login YourPassword");
     }

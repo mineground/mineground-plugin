@@ -67,6 +67,9 @@ public class AccountData {
     // The number of blocks this player has destroyed, in all worlds and gamemodes.
     public int stats_blocks_destroyed;
     
+    // The IP address which the player used when they last connected to the server.
+    public String last_ip;
+    
     // The date at which the player last connected to the server.
     public Date last_seen;
     

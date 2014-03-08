@@ -66,6 +66,7 @@ public class AccountDatabase {
                     "users_settings.stats_reaction, " +
                     "users_settings.stats_blocks_created, " +
                     "users_settings.stats_blocks_destroyed, " +
+                    "INET_NTOA(users_settings.last_ip) AS last_ip, " +
                     "users_settings.last_seen " +
                 "FROM " +
                     "users " +
@@ -156,6 +157,7 @@ public class AccountDatabase {
                 accountData.stats_reaction = resultRow.getInteger("stats_reaction").intValue();
                 accountData.stats_blocks_created = resultRow.getInteger("stats_blocks_created").intValue();
                 accountData.stats_blocks_destroyed = resultRow.getInteger("stats_blocks_destroyed").intValue();
+                accountData.last_ip = resultRow.getString("last_ip");
                 try {
                     accountData.last_seen = mDateFormat.parse(resultRow.getString("last_seen"));
                 } catch (ParseException exception) { }
