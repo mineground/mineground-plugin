@@ -15,12 +15,18 @@
 
 package com.mineground.account;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import com.mineground.EventDispatcher;
+import com.mineground.base.CommandHandler;
+import com.mineground.base.PasswordHash;
 import com.mineground.base.PromiseError;
 import com.mineground.base.PromiseResultHandler;
 import com.mineground.database.Database;
@@ -29,15 +35,37 @@ import com.mineground.database.Database;
 // economics and everything else related to it. Each player implicitly gets an account, however,
 // without having registered their account on the website it will be considered as a guest account.
 public class AccountManager {
+    //
+    private static final int MAXIMUM_AUTHENTICATION_ATTEMPTS = 3;
+    
     // Interface between the account manager and the database.
     private final AccountDatabase mAccountDatabase;
     
     // Map between Bukkit players and their Mineground accounts.
     private final Map<Player, Account> mPlayerAccountMap;
     
+    // Class containing information about a player who has connected to Mineground, but has not yet
+    // authenticated themselves with their account.
+    class PendingAuthentication {
+        public AccountData accountData;
+        public EventDispatcher dispatcher;
+        public int attempts;
+        
+        PendingAuthentication(AccountData accountData_, EventDispatcher dispatcher_) {
+            accountData = accountData_;
+            dispatcher = dispatcher_;
+            attempts = 0;
+        }
+    }
+    
+    // Map between Bukkit players and their account data, for players whose authentication is still
+    // pending on them entering their password using the /login command.
+    private final Map<Player, PendingAuthentication> mAuthenticationRequestMap;
+    
     public AccountManager(Database database) {
         mAccountDatabase = new AccountDatabase(database);
         mPlayerAccountMap = new HashMap<Player, Account>();
+        mAuthenticationRequestMap = new HashMap<Player, PendingAuthentication>();
     }
     
     // Loads the account, and don't fire the onPlayerJoined event on the dispatcher until their
@@ -80,7 +108,68 @@ public class AccountManager {
         if (account == null)
             return;
         
+        // TODO: Authenticate the player based on their IP address and last session.
+        
+        mAuthenticationRequestMap.put(player, new PendingAuthentication(accountData, dispatcher));
+        player.sendMessage("Please log in to your account: /login YourPassword");
+    }
+    
+    // Users have to identify with their account using the /login command, using which they specify
+    // their password. This method handles input for that command. If we can verify the player's
+    // password, we'll continue to authenticate the player with their account.
+    @CommandHandler("login")
+    public boolean onLoginCommand(CommandSender sender, Command command, String[] arguments) {
+        if (!(sender instanceof Player) || arguments.length == 0)
+            return false;
+        
+        final Player player = (Player) sender;
+
+        final PendingAuthentication authenticationRequest = mAuthenticationRequestMap.get(player);
+        if (authenticationRequest == null) {
+            player.sendMessage("Either you are already logged in, or your account is not yet available!");
+            return true;
+        }
+        
+        if (++authenticationRequest.attempts >= MAXIMUM_AUTHENTICATION_ATTEMPTS) {
+            // TODO: Log this with the PlayerLog class.
+            // TODO: Show a message to the user about what to do when they forgot their password.
+            player.kickPlayer("Too many invalid passwords.");
+            return true;
+        }
+        
+        final Account account = mPlayerAccountMap.get(player);
+        if (account == null)
+            throw new RuntimeException("|account| must not be NULL here.");
+        
+        String password = arguments[0];
+        try {
+            if (PasswordHash.validatePassword(password, authenticationRequest.accountData.password)) {
+                didAuthenticatePlayer(player, authenticationRequest.accountData, authenticationRequest.dispatcher);
+                mAuthenticationRequestMap.remove(player);
+            } else
+                player.sendMessage("The password you entered was not correct. Please try again!");
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            // This is very bad -- it means the server does not support the PBKDF2 password
+            // algorithm. We can't recover from this, given that's how we hash all the passwords..
+            player.sendMessage("PBKDF2 is not available on the server, please notify an admin!");
+            e.printStackTrace();
+        }
+        
+        return true;
+    }
+    
+    // Will set up the player's state properly when they've been recognized as the rightful owner
+    // of their account. Called both for automatic identification, and for the /login command.
+    private void didAuthenticatePlayer(Player player, AccountData accountData, EventDispatcher dispatcher) {
+        final Account account = mPlayerAccountMap.get(player);
+        if (account == null)
+            throw new RuntimeException("|account| must not be NULL here.");
+
         account.load(accountData);
+        
+        // TODO: Log this with the PlayerLog class.
+        player.sendMessage("Welcome back on Mineground, " + player.getName() + "!");
+
         dispatcher.onPlayerJoined(player);
     }
     
@@ -88,6 +177,8 @@ public class AccountManager {
     // their account in the database. When the Mineground plugin is disabled, this method will be
     // called for all players to ensure that we properly store all information.
     public void unloadAccount(Player player) {
+        mAuthenticationRequestMap.remove(player);
+
         final Account account = mPlayerAccountMap.get(player);
         if (account == null)
             return;

@@ -5,6 +5,9 @@ website: mineground.com
 author: LVM Development Team
 
 commands:
+    login:
+        description: Identify yourself with your account.
+        usage: /login [password]
     bread:
         description: Gives you 16 pieces of bread.
         usage: /bread
