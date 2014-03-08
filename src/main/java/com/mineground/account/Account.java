@@ -25,7 +25,9 @@ public class Account {
     private AccountData mAccountData;
 
     public void load(AccountData accountData) {
-        Logger.getLogger("account").info(accountData.username + " has been online for " + accountData.online_time + " seconds!");
+        Logger.getLogger("account").info(accountData.username + " (Id: " + accountData.user_id + ") has been online for " +
+                accountData.online_time + " seconds!");
+        
         mAccountData = accountData;
     }
     

@@ -192,18 +192,9 @@ public class AccountManager {
             throw new RuntimeException("|account| must not be NULL here.");
 
         // TODO: Log this with the PlayerLog class.
-        
         account.load(accountData);
         
         dispatcher.onPlayerJoined(player);
-        
-        if (account.isFirstJoin()) {
-            // TODO: Give them some money, some tools, say hello, and so on.
-        } else if (account.isGuest()) {
-            // TODO: Remind them to register on our website.
-        } else {
-            player.sendMessage("Welcome back on Mineground, " + player.getName() + "!");
-        }
     }
 
     // Called when the player is leaving the server, meaning we should store the latest updates to
@@ -222,7 +213,7 @@ public class AccountManager {
         if (accountData == null)
             return;
         
-        mAccountDatabase.updateAccount(accountData);
+        mAccountDatabase.updateAccount(accountData, player);
     }
     
     // Retrieves the account for |player|. If no account is available for them, NULL will be

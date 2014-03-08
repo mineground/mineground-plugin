@@ -117,6 +117,7 @@ public class AccountDatabase {
                     "stats_reaction = ?, " +
                     "stats_blocks_created = ?, " +
                     "stats_blocks_destroyed = ?, " +
+                    "last_ip = INET_ATON(?), " +
                     "last_seen = ? " +
                 "WHERE " +
                     "user_id = ?"
@@ -213,7 +214,7 @@ public class AccountDatabase {
     }
     
     // Updates the database with the mutable fields in the AccountData instance |accountData|. 
-    public void updateAccount(final AccountData accountData) {
+    public void updateAccount(final AccountData accountData, final Player player) {
         mUpdateUserStatement.setString(1, accountData.password);
         mUpdateUserStatement.setInteger(2, accountData.user_id);
         mUpdateUserStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
@@ -230,8 +231,9 @@ public class AccountDatabase {
         mUpdateUserSettingsStatement.setInteger(4, accountData.stats_reaction);
         mUpdateUserSettingsStatement.setInteger(5, accountData.stats_blocks_created);
         mUpdateUserSettingsStatement.setInteger(6, accountData.stats_blocks_destroyed);
-        mUpdateUserSettingsStatement.setString(7, mDateFormat.format(new Date()));
-        mUpdateUserSettingsStatement.setInteger(8, accountData.user_id);
+        mUpdateUserSettingsStatement.setString(7, player.getAddress().getAddress().getHostAddress());
+        mUpdateUserSettingsStatement.setString(8, mDateFormat.format(new Date()));
+        mUpdateUserSettingsStatement.setInteger(9, accountData.user_id);
         mUpdateUserSettingsStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
             public void onFulfilled(DatabaseResult result) { /** Yippie! **/ }
             public void onRejected(PromiseError error) {
