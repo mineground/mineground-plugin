@@ -18,13 +18,8 @@ package com.mineground;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.bukkit.Server;
-import org.bukkit.configuration.file.FileConfiguration;
-
-import com.mineground.account.AccountManager;
 import com.mineground.base.Feature;
 import com.mineground.base.FeatureInitParams;
-import com.mineground.database.Database;
 import com.mineground.features.DevelopmentLog;
 
 // The feature manager is responsible for --and owns-- all features available on Mineground. While
@@ -33,44 +28,26 @@ import com.mineground.features.DevelopmentLog;
 public class FeatureManager {
     // Map of the name and instances of all features loaded on Mineground.
     private Map<String, Feature> mFeatures;
-
-    private Server mServer;
-    private CommandManager mCommandManager;
-    private EventDispatcher mEventDispatcher;
-    private FileConfiguration mConfiguration;
-    private Database mDatabase;
-    private AccountManager mAccountManager;
     
-    // TODO: This doesn't really scale very well. Should we perhaps initialize |FeatureInitParams|
-    //       in Mineground.onEnable() already, and cache the instance here?
-    public FeatureManager(Server server, CommandManager commandManager, EventDispatcher eventDispatcher,
-            FileConfiguration configuration, Database database, AccountManager accountManager) {
-        mServer = server;
-        mCommandManager = commandManager;
-        mEventDispatcher = eventDispatcher;
-        mConfiguration = configuration;
-        mDatabase = database;
-        mAccountManager = accountManager;
-        
+    // The feature initialization parameters contain all important instances required for features
+    // to communicate with both Mineground and Bukkit internals. The instance will be given to us
+    // by the Mineground plugin, through the constructor.
+    private final FeatureInitParams mInitParams;
+
+    public FeatureManager(FeatureInitParams initParams) {
         mFeatures = new HashMap<String, Feature>();
+        
+        mInitParams = initParams;
+        mInitParams.featureManager = this;
     }
     
     // Initializes all the individual features by calling their constructors with an instance of the
     // FeatureInitParams class, which contains settings required by the FeatureBase class to work.
     public void initializeFeatures() {
-        FeatureInitParams params = new FeatureInitParams();
-        params.featureManager = this;
-        params.commandManager = mCommandManager;
-        params.eventDispatcher = mEventDispatcher;
-        params.configuration = mConfiguration;
-        params.database = mDatabase;
-        params.accountManager = mAccountManager;
-        params.server = mServer;
-        
         // TODO: Should we implement a more formal dependency model between features? That would
         //       have quite significant impact for the initialization order of them.
         
-        mFeatures.put("DevelopmentLog", new DevelopmentLog(params));
+        mFeatures.put("DevelopmentLog", new DevelopmentLog(mInitParams));
     }
     
     

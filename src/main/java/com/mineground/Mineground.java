@@ -25,6 +25,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.mineground.account.AccountManager;
+import com.mineground.base.FeatureInitParams;
 import com.mineground.database.Database;
 
 // The Mineground class is the plugin which exposes our plugin to Bukkit. It has access to APIs for
@@ -87,7 +88,17 @@ public class Mineground extends JavaPlugin {
 
         // The Feature Manager will initialize all individual features available on Mineground,
         // which includes giving them the ability to listen for the |onMinegroundLoaded| event.
-        mFeatureManager = new FeatureManager(getServer(), mCommandManager, mEventDispatcher, mConfiguration, mDatabase, mAccountManager);
+        // Features require access to a large amount of internals, passed on in FeatureInitParams.
+        FeatureInitParams featureInitParams = new FeatureInitParams();
+        featureInitParams.commandManager = mCommandManager;
+        featureInitParams.eventDispatcher = mEventDispatcher;
+        featureInitParams.configuration = mConfiguration;
+        featureInitParams.database = mDatabase;
+        featureInitParams.accountManager = mAccountManager;
+        featureInitParams.server = getServer();
+        
+        // Instantiate the Feature Manager itself, with the parameters as we previously compiled.
+        mFeatureManager = new FeatureManager(featureInitParams);
         mFeatureManager.initializeFeatures();
         
         mEventDispatcher.onMinegroundLoaded();
