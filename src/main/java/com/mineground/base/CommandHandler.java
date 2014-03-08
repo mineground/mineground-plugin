@@ -22,27 +22,7 @@ import java.lang.annotation.Target;
 
 @Target(value = ElementType.METHOD)
 @Retention(value = RetentionPolicy.RUNTIME)
-public @interface FeatureCommand {
+public @interface CommandHandler {
     // Name of the command which this method should handle, without a slash.
     String value();
-    
-    // Whether this command should be executed when entered in the console.
-    boolean console() default true;
-    
-    // Brief, one-sentence description of what this command is meant to do.
-    String description() default "";
-    
-    // What is the syntax using which users should be using this command?
-    String usage() default "";
-    
-    // List of aliases under which this command should also be executed. This can be used if the
-    // command has a long and short representation (e.g. "/reply" and "/r").
-    String[] aliases() default { };
-    
-    // Permission which the player executing this command must have.
-    String permission() default "";
-    
-    // Message which will be shown to players who don't have the permission required to execute this
-    // command. The default behavior is to act as if the command does not exist.
-    String permissionMessage() default "";
 }

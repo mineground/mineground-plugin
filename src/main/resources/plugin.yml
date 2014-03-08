@@ -3,3 +3,14 @@ main: com.mineground.Mineground
 version: 2.0
 website: mineground.com
 author: LVM Development Team
+
+commands:
+    bread:
+        description: Gives you 16 pieces of bread.
+        usage: /bread
+    get:
+        description: Gives you any arbitrary item.
+        usage: /get [id] [amount=16]
+    test:
+        description: Tests something undefined.
+        usage: /test
