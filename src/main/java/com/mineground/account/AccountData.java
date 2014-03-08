@@ -31,11 +31,7 @@ public class AccountData {
     
     // The player's username, which is not necessarily equal to their display name.
     public String username;
-    
-    // The player's unique Id. This will be set to the Minecraft.net Id for players with an official
-    // client. For players with a cracked client, it will be an empty string.
-    public String unique_id;
-    
+
     // Mineground uses PBKDF2 to store player passwords, for which the player's hashed password and
     // salt used to hash that password are both stored in this string. The password can be validated
     // by using Taylor Hornby's PBKDF2 password hash implementation.
@@ -79,7 +75,6 @@ public class AccountData {
     public AccountData(Player player) {
         user_id = 0;
         username = player.getName();
-        unique_id = player.getUniqueId().toString();
         password = "";
         level = AccountLevel.Guest;
         registered = new Date();

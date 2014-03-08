@@ -67,8 +67,12 @@ public class AccountManager {
         });
     }
     
-    // Authenticates |player| based on their |accountData|. Mineground support silent log in for
-    // players with an official client, whereas other players will have to enter their password.
+    // Authenticates |player| based on their |accountData|. The player will need to enter their
+    // password in order to identify their identity, unless their IP address matches their last one,
+    // and their previous session was in the near past.
+    //
+    // If Mineground were to switch to be an online server, we could do silent authentication here
+    // by comparing their unique Id (the minecraft.net Id) against the one in the database.
     private void authenticatePlayerAccount(final Player player, final AccountData accountData, final EventDispatcher dispatcher) {
         // TODO: Authenticate the player.
         

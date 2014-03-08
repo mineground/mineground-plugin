@@ -57,7 +57,6 @@ public class AccountDatabase {
                 "SELECT " +
                     "users.user_id, " +
                     "users.username, " +
-                    "users.unique_id, " +
                     "users.password, " +
                     "users.level, " +
                     "users.registered, " +
@@ -81,9 +80,9 @@ public class AccountDatabase {
         mCreateUserStatement = database.prepare(
                 "INSERT INTO " +
                     "users " +
-                    "(username, unique_id, registered) " +
+                    "(username, registered) " +
                 "VALUES " +
-                    "(?, ?, NOW())"
+                    "(?, NOW())"
         );
         
         // Statement for creating a new entry in the users_settings table in the database. This
@@ -101,7 +100,6 @@ public class AccountDatabase {
                 "UPDATE " +
                     "users " +
                 "SET " +
-                    "unique_id = ?, " +
                     "password = ? " +
                 "WHERE " +
                     "user_id = ?"
@@ -145,7 +143,6 @@ public class AccountDatabase {
                 // Table: users
                 accountData.user_id = resultRow.getInteger("user_id").intValue();
                 accountData.username = resultRow.getString("username");
-                accountData.unique_id = resultRow.getString("unique_id");
                 accountData.password = resultRow.getString("password");
                 accountData.level = AccountLevel.fromString(resultRow.getString("level"));
                 try {
@@ -183,13 +180,11 @@ public class AccountDatabase {
     // once that has succeeded. This will implicitly register the player as a guest.
     public void createAccount(final Player player, final Promise<AccountData> promise) {
         mCreateUserStatement.setString(1, player.getName());
-        mCreateUserStatement.setString(2, player.getUniqueId().toString());
         mCreateUserStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
             public void onFulfilled(DatabaseResult result) {
                 final AccountData accountData = new AccountData(player);
                 accountData.user_id = result.insertId;
                 accountData.username = player.getName();
-                accountData.unique_id = player.getUniqueId().toString();
                 
                 mCreateUserSettingsStatement.setInteger(1, result.insertId);
                 mCreateUserSettingsStatement.setString(2, player.getAddress().getAddress().getHostAddress());
@@ -217,9 +212,8 @@ public class AccountDatabase {
     
     // Updates the database with the mutable fields in the AccountData instance |accountData|. 
     public void updateAccount(final AccountData accountData) {
-        mUpdateUserStatement.setString(1, accountData.unique_id);
-        mUpdateUserStatement.setString(2, accountData.password);
-        mUpdateUserStatement.setInteger(3, accountData.user_id);
+        mUpdateUserStatement.setString(1, accountData.password);
+        mUpdateUserStatement.setInteger(2, accountData.user_id);
         mUpdateUserStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
             public void onFulfilled(DatabaseResult result) { /** Yippie! **/ }
             public void onRejected(PromiseError error) {
