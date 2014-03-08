@@ -40,6 +40,10 @@ public class EventDispatcher {
         // server has successfully commenced. Their account is available at this point.
         PlayerJoinedEvent("onPlayerJoined"),
         
+        // Invoked when a player sends a chat message to other players, and none of the filters
+        // registered on the Chat Manager has handled the message previously.
+        PlayerChatEvent("onPlayerChat"),
+        
         // Invoked when a player disconnects from Mineground. Their account information is still
         // mutable during this call, but it will be serialized immediately after.
         PlayerQuitEvent("onPlayerQuit");
@@ -133,5 +137,6 @@ public class EventDispatcher {
     public void onMinegroundUnloaded() { dispatch(EventTypes.MinegroundUnloadEvent); }
     
     public void onPlayerJoined(Player player) { dispatch(EventTypes.PlayerJoinedEvent, player); }
+    public void onPlayerChat(Player player, String message) { dispatch(EventTypes.PlayerChatEvent, player, message); }
     public void onPlayerQuit(Player player) { dispatch(EventTypes.PlayerQuitEvent, player); }
 }

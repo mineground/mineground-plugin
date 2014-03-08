@@ -18,6 +18,7 @@ package com.mineground;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -29,10 +30,12 @@ import com.mineground.account.AccountManager;
 public class EventListener implements Listener {
     private EventDispatcher mEventDispatcher;
     private AccountManager mAccountManager;
+    private ChatManager mChatManager;
     
-    public EventListener(EventDispatcher eventDispatcher, AccountManager accountManager) {
+    public EventListener(EventDispatcher eventDispatcher, AccountManager accountManager, ChatManager chatManager) {
         mEventDispatcher = eventDispatcher;
         mAccountManager = accountManager;
+        mChatManager = chatManager;
     }
     
     // Invoked when a player joins the server, and the PlayerLoginEvent has succeeded. Mineground
@@ -41,6 +44,19 @@ public class EventListener implements Listener {
     @EventHandler(priority=EventPriority.HIGH)
     public void onPlayerJoined(PlayerJoinEvent event) {
         mAccountManager.loadAccount(event.getPlayer(), mEventDispatcher);
+    }
+    
+    // Invoked when a player chats with other players. We route all incoming chat messages through
+    // the ChatManager to make sure we can filter it, before dispatching it to features.
+    //
+    // This event is being called "asynchronous" by Bukkit. By this they mean that it gets executed
+    // on another thread, but it still gives us the ability to cancel the event if we want. Features
+    // which listen to this event should not call the Bukkit API in their handlers.
+    @EventHandler(priority=EventPriority.HIGH)
+    public void onPlayerChat(AsyncPlayerChatEvent event) {
+        mChatManager.onIncomingMessage(event,
+                                       mAccountManager.getAccountForPlayer(event.getPlayer()),
+                                       mEventDispatcher);
     }
     
     // Invoked when a player leaves the server. Features may want to finalize their information, and

@@ -49,6 +49,9 @@ public class Mineground extends JavaPlugin {
     // receives an account, which they can activate by registering on the website.
     private AccountManager mAccountManager;
     
+    // 
+    private ChatManager mChatManager;
+    
     // Mineground uses a separate YML file in its data directory for configuration of this plugin.
     // The instance is writable, and will be made available to every feature. The file is stored
     // outside of the jar to avoid needing to rebuild it when a setting changes.
@@ -77,9 +80,10 @@ public class Mineground extends JavaPlugin {
         mDatabase.connect();
 
         mAccountManager = new AccountManager(mDatabase);
+        mChatManager = new ChatManager();
         
         mEventDispatcher = new EventDispatcher();
-        mEventListener = new EventListener(mEventDispatcher, mAccountManager);
+        mEventListener = new EventListener(mEventDispatcher, mAccountManager, mChatManager);
         
         mCommandManager = new CommandManager(this);
 
@@ -134,6 +138,7 @@ public class Mineground extends JavaPlugin {
         mEventListener = null;
         mEventDispatcher = null;
         
+        mChatManager = null;
         mAccountManager = null;
         
         mDatabase.disconnect();
