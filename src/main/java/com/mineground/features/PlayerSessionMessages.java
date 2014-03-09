@@ -18,7 +18,12 @@ package com.mineground.features;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.entity.PlayerDeathEvent;
 
 import com.mineground.Mineground;
 import com.mineground.account.Account;
@@ -27,6 +32,7 @@ import com.mineground.base.Color;
 import com.mineground.base.FeatureBase;
 import com.mineground.base.FeatureInitParams;
 import com.mineground.base.Message;
+import com.mineground.base.TextDecoration;
 
 /**
  * When a player joins or leaves Mineground, we'd like to welcome them and inform the other players
@@ -56,6 +62,16 @@ public class PlayerSessionMessages extends FeatureBase {
     private final Message mPlayerJoinAnnouncement;
     
     /**
+     * Announcement which will be distributed when a player has died.
+     */
+    private final Message mPlayerDeathAnnouncement;
+    
+    /**
+     * Announcement which will be distributed when a player has been killed by another player.
+     */
+    private final Message mPlayerKilledAnnouncement;
+    
+    /**
      * Announcement which will be distributed when a player leaves the server.
      */
     private final Message mPlayerQuitAnnouncement;
@@ -69,6 +85,8 @@ public class PlayerSessionMessages extends FeatureBase {
         mNewPlayerStaffAnnouncement = Message.Load("first_join_announcement");
         
         mPlayerJoinAnnouncement = Message.Load("player_join");
+        mPlayerDeathAnnouncement = Message.Load("player_death");
+        mPlayerKilledAnnouncement = Message.Load("player_killed");
         mPlayerQuitAnnouncement = Message.Load("player_quit");
     }
     
@@ -89,15 +107,21 @@ public class PlayerSessionMessages extends FeatureBase {
         // TODO: Surely there ought to be a better way of removing a single entry from an array?
         final List<Player> onlinePlayers = new ArrayList<Player>();
         for (Player p : getServer().getOnlinePlayers()) {
-            if (player == p)
-                continue;
+            //if (player == p)
+            //    continue;
             
             onlinePlayers.add(p);
         }
         
-        // The join message will contain a suffix with the player's level if they're staff.
-        final String suffix = AccountLevel.isStaff(account.getLevel()) ?
-                "(" + AccountLevel.toString(account.getLevel()).toLowerCase() + ")" : "";
+        String suffix = "";
+        
+        // The join message will contain a suffix with the player's level if they're staff. The
+        // formatting is done here to ensure having a consistent color. Or maybe my grammar OCD.
+        if (AccountLevel.isStaff(account.getLevel())) {
+            suffix = Color.GRAY + TextDecoration.ITALIC + " (" +
+                    AccountLevel.toString(account.getLevel()).toLowerCase() + ")" +
+                    Color.PLAYER_EVENT;
+        }
 
         // Distribute the join announcement for |player| to all other online players.
         mPlayerJoinAnnouncement.setString("nickname", nickname);
@@ -117,6 +141,41 @@ public class PlayerSessionMessages extends FeatureBase {
     }
     
     /**
+     * Announces that a player has died. The cause of the death could be PvP fighting, common causes
+     * such as starvation and falling from a high place, but also just plain stupidity.
+     * 
+     * @param event The Bukkit PlayerDeathEvent event.
+     */
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        final Player player = event.getEntity();
+        final EntityDamageEvent damageEvent = player.getLastDamageCause();
+        String reason = "";
+        
+        if (damageEvent != null && (damageEvent instanceof EntityDamageByEntityEvent)) {
+            final EntityDamageByEntityEvent entityDamageEvent = (EntityDamageByEntityEvent) damageEvent;
+            if (entityDamageEvent.getEntityType() == EntityType.PLAYER) {
+                final Player killer = (Player) entityDamageEvent.getEntity();
+                
+                // TODO: If the weapon used by |killer| to kill |player| has a name, it should be
+                //       included in the message as |reason|.
+                
+                mPlayerKilledAnnouncement.setString("nickname", player.getName());
+                mPlayerKilledAnnouncement.setString("killer", killer.getName());
+                mPlayerKilledAnnouncement.setString("reason", reason);
+                mPlayerKilledAnnouncement.send(getServer().getOnlinePlayers(), Color.PLAYER_EVENT);
+                return;
+            }
+        }
+        
+        if (damageEvent != null)
+            reason = explanationForDamageCause(damageEvent);
+        
+        mPlayerDeathAnnouncement.setString("nickname", player.getName());
+        mPlayerDeathAnnouncement.setString("reason", reason);
+        mPlayerDeathAnnouncement.send(getServer().getOnlinePlayers(), Color.PLAYER_EVENT);
+    }
+    
+    /**
      * Announces that |player| is leaving the server to all online players.
      * 
      * @param player The player who is leaving the server.
@@ -127,5 +186,17 @@ public class PlayerSessionMessages extends FeatureBase {
 
         mPlayerQuitAnnouncement.setString("nickname", player.getName());
         mPlayerQuitAnnouncement.send(getServer().getOnlinePlayers(), Color.PLAYER_EVENT);
+    }
+    
+    /**
+     * Translates entries in the DamageCause enumeration to a textual representation. If the cause
+     * cannot be exactly determined, an empty string will be returned instead.
+     * 
+     * @param damageCause   The damage cause to get a textual representation for.
+     * @return              Textual representation of |damageCause|.
+     */
+    private String explanationForDamageCause(EntityDamageEvent damageEvent) {
+        // TODO: Determine the exact reason of their death.
+        return "";
     }
 }

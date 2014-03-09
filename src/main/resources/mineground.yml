@@ -37,11 +37,11 @@ messages:
 
     # Announcement to all players when a player joins the server.
     # Available macros: {nickname}, {staff_level}
-    player_join: "» {nickname} has joined Mineground §7§o{staff_level}"
+    player_join: "» §e{nickname}§6 has joined Mineground{staff_level}."
 
     # Announcement to all players when a player leaves the server.
     # Available macros: {nickname}
-    player_quit: "» {nickname} has disconnected from Mineground"
+    player_quit: "» §e{nickname}§6 has disconnected from Mineground."
 
     # Announcement to staff members when a player joins Mineground for the first time. This allows
     # them to proactively reach out to the new player in case they need help.
@@ -53,3 +53,13 @@ messages:
     first_join:
         - "Welcome on our server, {nickname}! We're glad to have you!"
         - "Please accept ${money_gift} and some tools to get you started."
+
+    # Announcement to all players when a player has died. If another player was found to be the cause
+    # of their death, the "player_killed" announcement will be used instead.
+    # Available macros: {nickname}, {reason}.
+    player_death: "» §e{nickname}§6 has died{reason}."
+
+    # Announcement to all players when a player has been killed by another player, through PvP. If
+    # the weapon used by the killer had a special name, that will be included in the message.
+    # Available macros: {nickname}, {killer}, {reason}
+    player_killed: "» §e{nickname}§6 has been killed by §e{killer}§6{reason}."

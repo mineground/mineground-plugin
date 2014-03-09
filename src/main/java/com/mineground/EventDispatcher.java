@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.PlayerDeathEvent;
 
 /** 
  * The EventDispatcher listens to all incoming events from Bukkit, validates them, and invokes all
@@ -53,6 +54,12 @@ public class EventDispatcher {
          * registered on the Chat Manager has handled the message previously.
          */
         PlayerChatEvent("onPlayerChat"),
+        
+        /**
+         * Invoked when a player has died. The reason of their death is not immediately included in
+         * the event, but can be retrieved by reading the cause of their last damage.
+         */
+        PlayerDeathEvent("onPlayerDeath"),
         
         /**
          * Invoked when a player disconnects from Mineground. Their account information is still
@@ -166,5 +173,6 @@ public class EventDispatcher {
     
     public void onPlayerJoined(Player player) { dispatch(EventTypes.PlayerJoinedEvent, player); }
     public void onPlayerChat(Player player, String message) { dispatch(EventTypes.PlayerChatEvent, player, message); }
+    public void onPlayerDeath(PlayerDeathEvent event) { dispatch(EventTypes.PlayerDeathEvent, event); }
     public void onPlayerQuit(Player player) { dispatch(EventTypes.PlayerQuitEvent, player); }
 }

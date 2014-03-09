@@ -18,6 +18,7 @@ package com.mineground;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -68,6 +69,20 @@ public class EventListener implements Listener {
         mChatManager.onIncomingMessage(event,
                                        mAccountManager.getAccountForPlayer(event.getPlayer()),
                                        mEventDispatcher);
+    }
+    
+    /**
+     * Invoked when a player dies. The reason is not directly included in the event, but it should
+     * be available when reading the cause of the last damage occurred to the player. 
+     * 
+     * @param event The Bukkit PlayerDeathEvent object.
+     */
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        event.setDeathMessage(null);
+        
+        // TODO: There would be too many parameters (4 or 5) to pass along if we weren't passing the
+        //       Bukkit event directly. Should we just do this everywhere? Only if it makes sense?
+        mEventDispatcher.onPlayerDeath(event);
     }
     
     /**
