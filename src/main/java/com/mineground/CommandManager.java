@@ -29,14 +29,18 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.mineground.base.CommandHandler;
 
-// Commands are a critical part of creating an interactive server, as it allows more advanced
-// functionality such as warps and personal messaging to be implemented effectively. This class
-// routes commands to their designated handler, but keep in mind that the commands themselves will
-// still need to be defined in the plugin.yml file as well.
+/**
+ * Commands are a critical part of creating an interactive server, as it allows more advanced
+ * functionality such as warps and personal messaging to be implemented effectively. This class
+ * routes commands to their designated handler, but keep in mind that the commands themselves will
+ * still need to be defined in the plugin.yml file as well.
+ */
 public class CommandManager {
-    // Private inner class representing the fact that |method| on |instance| handles a command. Weak
-    // references are kept of command handler instances, because we don't want to keep features
-    // alive (as we allow them to be enabled and disabled during runtime).
+    /**
+     * Private inner class representing the fact that |method| on |instance| handles a command. Weak
+     * references are kept of command handler instances, because we don't want to keep features
+     * alive (as we allow them to be enabled and disabled during runtime).
+     */
     private class CommandHandlerRef {
         private WeakReference<Object> instance;
         private Method method;
@@ -47,10 +51,14 @@ public class CommandManager {
         }
     }
     
-    // Map between a command name and the handler which will be controlling it.
+    /**
+     * Map between a command name and the handler which will be controlling it.
+     */
     private final Map<String, CommandHandlerRef> mCommandMap;
     
-    // Logger used for outputting warnings and errors which occurred whilst executing a command.
+    /**
+     * Logger used for outputting warnings and errors which occurred whilst executing a command.
+     */
     private final Logger mLogger;
 
     public CommandManager(JavaPlugin plugin) {
@@ -58,8 +66,12 @@ public class CommandManager {
         mLogger = Logger.getLogger(CommandManager.class.getCanonicalName());
     }
 
-    // Registers all commands we can find in |instance|. Commands are identified by their mandatory
-    // CommandHandler annotation. Permissions for the commands will be dealt with by Bukkit.
+    /**
+     * Registers all commands we can find in |instance|. Commands are identified by their mandatory
+     * CommandHandler annotation. Permissions for the commands will be dealt with by Bukkit.
+     * 
+     * @param instance The object to scan for command handlers.
+     */
     public void registerCommands(Object instance) {
         Method[] reflectionMethods = instance.getClass().getMethods();
         for (Method method : reflectionMethods) {
@@ -72,8 +84,15 @@ public class CommandManager {
         }
     }
 
-    // Invoked when either the player or an operator through the console, identified by |sender|,
-    // executes |command|, with |arguments| as the entered arguments.
+    /**
+     * Invoked when either the player or an operator through the console, identified by |sender|,
+     * executes |command|, with |arguments| as the entered arguments.
+     * 
+     * @param sender    Origin of the command, can be a Player or a console object.
+     * @param command   The command which they executed.
+     * @param arguments Array of arguments passed to the command. 
+     * @return          Whether the command was executed successfully.
+     */
     public boolean onCommand(CommandSender sender, Command command, String[] arguments) {
         final CommandHandlerRef observer = mCommandMap.get(command.getName());
         if (observer == null)

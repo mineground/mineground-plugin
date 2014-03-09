@@ -26,26 +26,38 @@ import java.util.Map;
 
 import org.bukkit.entity.Player;
 
-// The EventDispatcher listens to all incoming events from Bukkit, validates them, and invokes all
-// observers within the Mineground plugin which depend on them.
+/** 
+ * The EventDispatcher listens to all incoming events from Bukkit, validates them, and invokes all
+ * observers within the Mineground plugin which depend on them.
+ */
 public class EventDispatcher {
     private enum EventTypes {
-        // Invoked when the Mineground plugin gets loaded by the Bukkit server.
+        /**
+         * Invoked when the Mineground plugin gets loaded by the Bukkit server.
+         */
         MinegroundLoadedEvent("onMinegroundLoaded"),
         
-        // Invoked when the Mineground plugin gets unloaded by the Bukkit server.
+        /**
+         * Invoked when the Mineground plugin gets unloaded by the Bukkit server.
+         */
         MinegroundUnloadEvent("onMinegroundUnloaded"),
         
-        // Invoked when a player has joined Mineground, and the handshake with the Minecraft
-        // server has successfully commenced. Their account is available at this point.
+        /**
+         * Invoked when a player has joined Mineground, and the handshake with the Minecraft
+         * server has successfully commenced. Their account is available at this point.
+         */
         PlayerJoinedEvent("onPlayerJoined"),
         
-        // Invoked when a player sends a chat message to other players, and none of the filters
-        // registered on the Chat Manager has handled the message previously.
+        /**
+         * Invoked when a player sends a chat message to other players, and none of the filters
+         * registered on the Chat Manager has handled the message previously.
+         */
         PlayerChatEvent("onPlayerChat"),
         
-        // Invoked when a player disconnects from Mineground. Their account information is still
-        // mutable during this call, but it will be serialized immediately after.
+        /**
+         * Invoked when a player disconnects from Mineground. Their account information is still
+         * mutable during this call, but it will be serialized immediately after.
+         */
         PlayerQuitEvent("onPlayerQuit");
         
         // -----------------------------------------------------------------------------------------
@@ -56,7 +68,11 @@ public class EventDispatcher {
         }
     }
     
-    // Information regarding an individual event observer: |method| on the |object| instance.
+    /**
+     * Information regarding an individual event observer: |method| on the |object| instance. Hold
+     * weak references to the Feature instances, given that we have no interest in keeping them
+     * alive. If a reference has been invalidated, the Feature should be removed from all observers.
+     */
     private class EventObserver {
         private WeakReference<Object> instance;
         private Method method;
@@ -67,11 +83,14 @@ public class EventDispatcher {
         }
     }
     
-    // Hold weak references to the Feature instances, given that we have no interest in keeping them
-    // alive. If a reference has been invalidated, the Feature should be removed from all observers.
+    /**
+     * Map containing a list of event observers for each of the event types.
+     */
     final private Map<EventTypes, ArrayList<EventObserver>> mObserverListMap;
     
-    // Maintain a map between event method name -> event type, allowing more efficient 
+    /**
+     * Map containing recognized method names, and the event type they're supposed to correspond to.
+     */
     final private Map<String, EventTypes> mEventNameToTypeMap;
     
     public EventDispatcher() {
@@ -87,9 +106,13 @@ public class EventDispatcher {
         }
     }
     
-    // Registers all event listeners in |instance| with the observer lists owned by this dispatcher.
-    // Reflection is used to find the relevant method names (as dictated by the EventTypes enum
-    // defined earlier in this class) on the instance.
+    /**
+     * Registers all event listeners in |instance| with the observer lists owned by this dispatcher.
+     * Reflection is used to find the relevant method names (as dictated by the EventTypes enum
+     * defined earlier in this class) on the instance.
+     * 
+     * @param instance The object to scan for event listeners.
+     */
     public void registerListeners(Object instance) {
         Method[] reflectionMethods = instance.getClass().getMethods();
         for (Method reflectionMethod : reflectionMethods) {
@@ -101,8 +124,13 @@ public class EventDispatcher {
         }
     }
     
-    // Dispatches an event of type |event| to all attached observers, optionally passing |arguments|
-    // as the arguments to the to be invoked observer.
+    /**
+     * Dispatches an event of type |event| to all attached observers, optionally passing |arguments|
+     * as the arguments to the to be invoked observer.
+     * 
+     * @param event     The type of event to dispatch.
+     * @param arguments Arguments passed on as parameters to the handlers.
+     */
     private void dispatch(EventTypes event, Object... arguments) {
         final Iterator<EventObserver> observers = mObserverListMap.get(event).iterator();
         while (observers.hasNext()) {

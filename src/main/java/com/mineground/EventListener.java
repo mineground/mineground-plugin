@@ -24,9 +24,11 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import com.mineground.account.AccountManager;
 
-// The Event Listener class is responsible for listening to incoming Bukkit plugins which we'd like
-// to have handled within Mineground. It will change some of the semantics of the events, for
-// example changing some of Bukkit's types to our own wrapper types.
+/**
+ * The Event Listener class is responsible for listening to incoming Bukkit plugins which we'd like
+ * to have handled within Mineground. It will change some of the semantics of the events, for
+ * example changing some of Bukkit's types to our own wrapper types.
+ */
 public class EventListener implements Listener {
     private EventDispatcher mEventDispatcher;
     private AccountManager mAccountManager;
@@ -38,20 +40,28 @@ public class EventListener implements Listener {
         mChatManager = chatManager;
     }
     
-    // Invoked when a player joins the server, and the PlayerLoginEvent has succeeded. Mineground
-    // considers this the time at which a player's connection can be considered successful. However,
-    // since they haven't logged in to their account yet, they will be considered a a guest.
+    /**
+     * Invoked when a player joins the server, and the PlayerLoginEvent has succeeded. Mineground
+     * considers this the time at which a player's connection can be considered successful. However,
+     * since they haven't logged in to their account yet, they will be considered a a guest.
+     * 
+     * @param event The Bukkit PlayerJoinEvent object.
+     */
     @EventHandler(priority=EventPriority.HIGH)
     public void onPlayerJoined(PlayerJoinEvent event) {
         mAccountManager.loadAccount(event.getPlayer(), mEventDispatcher);
     }
     
-    // Invoked when a player chats with other players. We route all incoming chat messages through
-    // the ChatManager to make sure we can filter it, before dispatching it to features.
-    //
-    // This event is being called "asynchronous" by Bukkit. By this they mean that it gets executed
-    // on another thread, but it still gives us the ability to cancel the event if we want. Features
-    // which listen to this event should not call the Bukkit API in their handlers.
+    /**
+     * Invoked when a player chats with other players. We route all incoming chat messages through
+     * the ChatManager to make sure we can filter it, before dispatching it to features.
+     * 
+     * This event is being called "asynchronous" by Bukkit. By this they mean that it gets executed
+     * on another thread, but it still gives us the ability to cancel the event if we want. Features
+     * which listen to this event should not call the Bukkit API in their handlers.
+     * 
+     * @param event The Bukkit AsyncPlayerChatEvent object.
+     */
     @EventHandler(priority=EventPriority.HIGH)
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         mChatManager.onIncomingMessage(event,
@@ -59,8 +69,12 @@ public class EventListener implements Listener {
                                        mEventDispatcher);
     }
     
-    // Invoked when a player leaves the server. Features may want to finalize their information, and
-    // the account manager should be given the opportunity to store their account to the database.
+    /**
+     * Invoked when a player leaves the server. Features may want to finalize their information, and
+     * the account manager should be given the opportunity to store their account to the database.
+     * 
+     * @param event The Bukkit PlayerQuitEvent object.
+     */
     @EventHandler(priority=EventPriority.HIGH)
     public void onPlayerQuit(PlayerQuitEvent event) {
         mEventDispatcher.onPlayerQuit(event.getPlayer());

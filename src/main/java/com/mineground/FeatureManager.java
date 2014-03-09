@@ -23,16 +23,22 @@ import com.mineground.base.FeatureInitParams;
 import com.mineground.features.DevelopmentLog;
 import com.mineground.features.PlayerSessionMessages;
 
-// The feature manager is responsible for --and owns-- all features available on Mineground. While
-// features have reasonably individual contexts, there is a limited communication channel available
-// between features, which is being curated by the manager.
+/**
+ * The feature manager is responsible for --and owns-- all features available on Mineground. While
+ * features have reasonably individual contexts, there is a limited communication channel available
+ * between features, which is being curated by the manager.
+ */
 public class FeatureManager {
-    // Map of the name and instances of all features loaded on Mineground.
+    /**
+     * Map of the name and instances of all features loaded on Mineground.
+     */
     private Map<String, Feature> mFeatures;
     
-    // The feature initialization parameters contain all important instances required for features
-    // to communicate with both Mineground and Bukkit internals. The instance will be given to us
-    // by the Mineground plugin, through the constructor.
+    /**
+     * The feature initialization parameters contain all important instances required for features
+     * to communicate with both Mineground and Bukkit internals. The instance will be given to us
+     * by the Mineground plugin, through the constructor.
+     */
     private final FeatureInitParams mInitParams;
 
     public FeatureManager(FeatureInitParams initParams) {
@@ -42,8 +48,10 @@ public class FeatureManager {
         mInitParams.featureManager = this;
     }
     
-    // Initializes all the individual features by calling their constructors with an instance of the
-    // FeatureInitParams class, which contains settings required by the FeatureBase class to work.
+    /**
+     * Initializes all the individual features by calling their constructors with an instance of the
+     * FeatureInitParams class, which contains settings required by the FeatureBase class to work.
+     */
     public void initializeFeatures() {
         // TODO: Should we implement a more formal dependency model between features? That would
         //       have quite significant impact for the initialization order of them.
