@@ -35,6 +35,19 @@ messages:
         - "If you forgot your password, please visit our website:"
         - "    §bhttp://mineground.com/"
 
+    # Announcement to all players when a player joins the server.
+    # Available macros: {nickname}, {staff_level}
+    player_join: "» {nickname} has joined Mineground §7§o{staff_level}"
+
+    # Announcement to all players when a player leaves the server.
+    # Available macros: {nickname}
+    player_quit: "» {nickname} has disconnected from Mineground"
+
+    # Announcement to staff members when a player joins Mineground for the first time. This allows
+    # them to proactively reach out to the new player in case they need help.
+    # Available macros: {nickname}
+    first_join_announcement: "{nickname} has just joined Mineground for the first time."
+
     # Welcoming message to players who join Mineground for the first time.
     # Available macros: {nickname}, {money_gift}.
     first_join:

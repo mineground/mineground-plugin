@@ -33,12 +33,17 @@ public class Account {
      */
     private AccountLevel mAccountLevel;
 
+    public Account() {
+        mAccountLevel = AccountLevel.Guest;
+    }
+    
     /**
      * Initializes this account based on the information available in |accountData|.
      * 
      * @param accountData The account data to be associated with this account.
      */
     public void initialize(AccountData accountData) {
+        mAccountLevel = accountData.level;
         mAccountData = accountData;
     }
     

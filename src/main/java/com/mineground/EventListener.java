@@ -50,6 +50,7 @@ public class EventListener implements Listener {
     @EventHandler(priority=EventPriority.HIGH)
     public void onPlayerJoined(PlayerJoinEvent event) {
         mAccountManager.loadAccount(event.getPlayer(), mEventDispatcher);
+        event.setJoinMessage(null);
     }
     
     /**
@@ -79,5 +80,6 @@ public class EventListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         mEventDispatcher.onPlayerQuit(event.getPlayer());
         mAccountManager.unloadAccount(event.getPlayer());
+        event.setQuitMessage(null);
     }
 }

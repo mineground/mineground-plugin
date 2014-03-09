@@ -69,6 +69,23 @@ public class Mineground extends JavaPlugin {
     private ChatManager mChatManager;
     
     /**
+     * Enumaration containing the lifetimes the plugin can be in, allowing features to adjust their
+     * behavior based on the context they're running in. As an example, when the plugin reloads we
+     * shouldn't spam everyone's chat with join messages.
+     */
+    public enum PluginLifetime {
+        Loading,    // The plugin is being loaded, as part of onEnable().
+        Running,    // The plugin is running its usual business.
+        Stopping,   // The plugin is being unloaded, as part of onDisable().
+        Idle        // Default and other states.
+    }
+    
+    /**
+     * The lifetime the Mineground plugin is currently in.
+     */
+    public static PluginLifetime Lifetime = PluginLifetime.Idle;
+    
+    /**
      * Mineground uses a separate YML file in its data directory for configuration of this plugin.
      * The instance is writable, and will be made available to every feature. The file is stored
      * outside of the jar to avoid needing to rebuild it when a setting changes.
@@ -85,6 +102,8 @@ public class Mineground extends JavaPlugin {
     
     @Override
     public void onEnable() {
+        Mineground.Lifetime = PluginLifetime.Loading;
+        
         // Initializes the Mineground-specific configuration (which should reside in the plugin's
         // data folder). If the data folder does not exist yet, it will be created.
         final File dataFolder = getDataFolder();
@@ -134,6 +153,8 @@ public class Mineground extends JavaPlugin {
         // and all features about them being here. Treat them as if they're just joining.
         for (Player player : getServer().getOnlinePlayers())
             mAccountManager.loadAccount(player, mEventDispatcher);
+        
+        Mineground.Lifetime = PluginLifetime.Running;
     }
     
     @Override
@@ -143,6 +164,8 @@ public class Mineground extends JavaPlugin {
     
     @Override
     public void onDisable() {
+        Mineground.Lifetime = PluginLifetime.Stopping;
+
         // If there still are players on the server, inform the account manager and all the features
         // as if they're all leaving the server at the same time right now.
         for (Player player : getServer().getOnlinePlayers()) {
@@ -152,6 +175,8 @@ public class Mineground extends JavaPlugin {
         
         // Fire the onMinegroundUnloaded event, telling all features that they must clean up.
         mEventDispatcher.onMinegroundUnloaded();
+        
+        Mineground.Lifetime = PluginLifetime.Idle;
 
         // And NULL all the main instances in Mineground, which should clean up all remaining state,
         // close open connections, so that we can leave with a clear conscience.

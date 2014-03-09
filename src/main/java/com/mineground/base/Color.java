@@ -49,6 +49,18 @@ public final class Color {
     public static final String ACTION_REQUIRED = RED;
     
     /**
+     * Used for displaying player events in the chat box, for example when a new player joins, an
+     * existing player gets kicked or quits, or a player earns an achievement.
+     */
+    public static final String PLAYER_EVENT = GOLD;
+    
+    /**
+     * Used for messages which will only be distributed to staff members (moderators, administrators
+     * and Management), and thus needs to stand out a little bit.
+     */
+    public static final String STAFF_MESSAGE = BLUE;
+    
+    /**
      * Used for serious errors from the Mineground plugin itself. The player won't immediately be
      * able to act upon those, but they will be of interest for administrators and developers.
      */

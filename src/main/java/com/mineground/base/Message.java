@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.Configuration;
+import org.bukkit.entity.Player;
 
 /**
  * Represents a message, to be send to a player, as it has been defined in the configuration. Macros
@@ -125,7 +126,35 @@ public class Message {
             destination.sendMessage(messageLine);
     }
     
-    // TODO: Add a send() method to distribute a message to multiple players at once.
+    /**
+     * Sends the message to the an array of players or consoles. CommandSender is an interface
+     * implemented by both the Player and the various console objects, allowing Messages to be used
+     * for any kind of sender in commands.
+     * 
+     * @param destinationArray  Array of players to send this message to.
+     * @param color             Base color of the message to send.
+     */
+    public void send(CommandSender[] destinationArray, String color) {
+        final List<String> messageLines = compileMessage(color);
+        for (String messageLine : messageLines) {
+            for (CommandSender destination : destinationArray)
+                destination.sendMessage(messageLine);
+        }
+    }
+    
+    /**
+     * Sends the message to a list of Players.
+     * 
+     * @param destinationList   List of players to send this message to.
+     * @param color             Base color of the message to send.
+     */
+    public void send(List<Player> destinationList, String color) {
+        final List<String> messageLines = compileMessage(color);
+        for (String messageLine : messageLines) {
+            for (Player destination : destinationList)
+                destination.sendMessage(messageLine);
+        }
+    }
     
     /**
      * Compiles the actual message which is about to be distributed. For each line that's part of

@@ -111,4 +111,16 @@ public enum AccountLevel {
         
         return "Guest";
     }
+    
+    /**
+     * Returns whether |level| corresponds to the level of a staff member.
+     *
+     * @param level The level to check.
+     * @return      Whether the level should be considered staff.
+     */
+    public static boolean isStaff(AccountLevel level) {
+        return level == Moderator ||
+                level == Administrator ||
+                level == Management;
+    }
 }
