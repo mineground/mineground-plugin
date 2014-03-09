@@ -17,21 +17,50 @@ package com.mineground.features;
 
 import org.bukkit.entity.Player;
 
+import com.mineground.account.Account;
+import com.mineground.base.Color;
 import com.mineground.base.FeatureBase;
 import com.mineground.base.FeatureInitParams;
+import com.mineground.base.Message;
 
 // When a player joins or leaves Mineground, we'd like to welcome them and inform the other players
 // about their presence. Furthermore, when a player joins Mineground for the first time, we may want
 // to be a little bit nicer and give them some money and inventory to start with.
 public class PlayerSessionMessages extends FeatureBase {
-    public PlayerSessionMessages(FeatureInitParams params) { super(params); }
+    // The amount of money a player will receive when they join Mineground for the first time.
+    private static final int MONEY_GIFT_ON_FIRST_JOIN = 100;
+
+    // Message used for welcoming players to Mineground when they join for the first time.
+    private final Message mWelcomeFirstTimeMessage;
+    
+    // Message used for welcoming players to Mineground when they join again.
+    private final Message mWelcomeMessage;
+    
+    public PlayerSessionMessages(FeatureInitParams params) {
+        super(params);
+        
+        mWelcomeFirstTimeMessage = Message.Load("first_join");
+        mWelcomeFirstTimeMessage.setInteger("money_gift", MONEY_GIFT_ON_FIRST_JOIN);
+
+        mWelcomeMessage = Message.Load("join");
+    }
     
     public void onPlayerJoined(Player player) {
-        // TODO: Don't send a message if they already were on the server.
-        player.sendMessage("Welcome back on Mineground, " + player.getName());
+        // TODO: Distribute a message about this player's join to all players.
+        // TODO: Don't send a message if the Mineground plugin is being loaded.
+        
+        final Account account = getAccountManager().getAccountForPlayer(player);
+        if (account.isFirstJoin()) {
+            mWelcomeFirstTimeMessage.setString("nickname", player.getName());
+            mWelcomeFirstTimeMessage.send(player, Color.IMPORTANT_MESSAGE);
+        } else {
+            mWelcomeMessage.setString("nickname", player.getName());
+            mWelcomeMessage.send(player, Color.IMPORTANT_MESSAGE);
+        }
     }
     
     public void onPlayerQuit(Player player) {
+        // TODO: Distribute a message about the player's quit to all players.
         // TODO: Don't send a message if the Mineground plugin is being unloaded.
     }
 }

@@ -26,7 +26,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import com.mineground.EventDispatcher;
+import com.mineground.base.Color;
 import com.mineground.base.CommandHandler;
+import com.mineground.base.Message;
 import com.mineground.base.PasswordHash;
 import com.mineground.base.PromiseError;
 import com.mineground.base.PromiseResultHandler;
@@ -48,6 +50,15 @@ public class AccountManager {
     
     // Map between Bukkit players and their Mineground accounts.
     private final Map<Player, Account> mPlayerAccountMap;
+    
+    // The message which will be send to every connecting player, regardless of their account.
+    private final Message mConnectionMessage;
+    
+    // The message which will be send to the player when authentication requires their password.
+    private final Message mRequirePasswordMessage;
+    
+    // The message which will be send to the player when they entered an invalid password.
+    private final Message mInvalidPasswordMessage;
     
     // Class containing information about a player who has connected to Mineground, but has not yet
     // authenticated themselves with their account.
@@ -71,12 +82,19 @@ public class AccountManager {
         mAccountDatabase = new AccountDatabase(database);
         mPlayerAccountMap = new HashMap<Player, Account>();
         mAuthenticationRequestMap = new HashMap<Player, PendingAuthentication>();
+        
+        mConnectionMessage = Message.Load("welcome");
+        mRequirePasswordMessage = Message.Load("login_password");
+        mInvalidPasswordMessage = Message.Load("login_invalid");
     }
     
     // Loads the account, and don't fire the onPlayerJoined event on the dispatcher until their
     // information has been loaded and verified. This will be called for all online players when the
     // plugin is being loaded while there already are players in-game.
     public void loadAccount(final Player player, final EventDispatcher dispatcher) {
+        // TODO: Don't send a message to the player when we're reloading the plugin.
+        mConnectionMessage.send(player, Color.GOLD);
+        
         mPlayerAccountMap.put(player,  new Account());
         mAccountDatabase.loadOrCreateAccount(player).then(new PromiseResultHandler<AccountData>() {
             public void onFulfilled(AccountData accountData) {
@@ -100,8 +118,8 @@ public class AccountManager {
                 if (!player.isOnline())
                     return;
                 
-                player.sendMessage("Your account could not be loaded from the database.");
-                player.sendMessage("Please contact an administrator to get this resolved!");
+                player.sendMessage(Color.SCRIPT_ERROR + "Your account could not be loaded from the database.");
+                player.sendMessage(Color.SCRIPT_ERROR + "Please contact an administrator to get this resolved!");
                 dispatcher.onPlayerJoined(player);
             }
         });
@@ -132,7 +150,7 @@ public class AccountManager {
         // We cannot log them in automatically. They now have to use the /login command with their
         // password before they will be allowed to participate in playing on Mineground.
         mAuthenticationRequestMap.put(player, new PendingAuthentication(accountData, dispatcher));
-        player.sendMessage("Please log in to your account: /login YourPassword");
+        mRequirePasswordMessage.send(player, Color.IMPORTANT_MESSAGE);
     }
     
     // Users have to identify with their account using the /login command, using which they specify
@@ -164,20 +182,21 @@ public class AccountManager {
         
         String password = arguments[0];
         try {
-            if (PasswordHash.validatePassword(password, authenticationRequest.accountData.password)) {
+            if (!PasswordHash.validatePassword(password, authenticationRequest.accountData.password)) {
+                mInvalidPasswordMessage.send(player, Color.IMPORTANT_MESSAGE);
+            } else {
                 didAuthenticatePlayer(player, authenticationRequest.accountData, authenticationRequest.dispatcher);
                 mAuthenticationRequestMap.remove(player);
-            } else
-                player.sendMessage("The password you entered was not correct. Please try again!");
+            }   
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             // This is very bad -- it means the server does not support the PBKDF2 password
             // algorithm. We can't recover from this, given that's how we hash all the passwords..
-            player.sendMessage("PBKDF2 is not available on the server, please notify an admin!");
+            player.sendMessage(Color.SCRIPT_ERROR + "PBKDF2 is not available on the server, please notify an admin!");
             e.printStackTrace();
         } catch (NumberFormatException e) {
             // This is very bad -- it means the PasswordHash implementation threw an exception for
             // other reasons, e.g. because the stored hash is invalid.
-            player.sendMessage("The password algorithm crashed, please notify an admin!");
+            player.sendMessage(Color.SCRIPT_ERROR + "The password algorithm crashed, please notify an admin!");
             e.printStackTrace();
         }
         

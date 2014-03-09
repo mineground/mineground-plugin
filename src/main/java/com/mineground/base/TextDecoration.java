@@ -17,11 +17,13 @@ package com.mineground.base;
 
 // The following text decoration styles are available in Minecraft. They may be used at any point in
 // messages intended for either a player, or for the console.
-public class TextDecoration {
+public final class TextDecoration {
     public static final String OBFUSCATED = "§k";
     public static final String BOLD = "§l";
     public static final String STRIKETHROUGH = "§m";
     public static final String UNDERLINE = "§n";
     public static final String ITALIC = "§o";
     public static final String RESET = "§r";
+    
+    private TextDecoration() { /** Disallow instantiating this class. **/ }
 }

@@ -1,0 +1,36 @@
+#
+# Copyright (c) 2011 - 2014 Mineground, Las Venturas Playground
+#
+# This program is free software: you can redistribute it and/or modify it under the terms of the
+# GNU General Public License as published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <http://www.gnu.org/licenses/>.
+#
+
+# Details required to connect with the MySQL database.
+database:
+    hostname: 127.0.0.1
+    username: mineground
+    password: changeme
+    database: mineground
+
+# Messages through which Mineground will communicate with players. Text between brackets are macros,
+# which will be replaced with actual values. Each entry can be a string, or a list of strings.
+messages:
+    welcome: "Welcome on Mineground! §bhttp://mineground.com"
+    login_password: "Please identify yourself: /login [password]"
+    login_invalid:
+        - "Sorry, that's not the right password for this account..."
+        - "If you forgot your password, please visit our website:"
+        - "    §bhttp://mineground.com/"
+
+    join: "Welcome back on Mineground, {nickname}!"
+    first_join:
+        - "Welcome on Mineground, {nickname}, we're glad to have you!"
+        - "Please accept ${start_cash} and some tools to get you started."

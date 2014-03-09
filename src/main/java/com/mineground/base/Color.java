@@ -17,7 +17,7 @@ package com.mineground.base;
 
 // The color class contains the colors available for formatting in Minecraft's chat. These colors
 // may be used for both the in-game chat and console chat.
-public class Color {
+public final class Color {
     public static final String BLACK = "§0";
     public static final String DARK_BLUE = "§1";
     public static final String DARK_GREEN = "§2";
@@ -34,4 +34,20 @@ public class Color {
     public static final String LIGHT_PURPLE = "§d";
     public static final String YELLOW = "§e";
     public static final String WHITE = "§f";
+    
+    // The following constants are the canonical colors for operations of the said type throughout
+    // Mineground. This allows the colors of communication on the server to stay consistent.
+    
+    // Used for player status change messages, for example when a player joins or leaves.
+    // ...
+    
+    // Used for important messages which we'd like the player to notice. Welcoming them to the
+    // server could be part of this, but also more serious things such as demands from admins.
+    public static final String IMPORTANT_MESSAGE = RED;
+    
+    // Used for serious errors from the Mineground plugin itself. The player won't immediately be
+    // able to act upon those, but they will be of interest for administrators and developers.
+    public static final String SCRIPT_ERROR = DARK_GRAY + TextDecoration.ITALIC;
+    
+    private Color() { /** Disallow instantiating this class. **/ }
 }

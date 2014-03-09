@@ -26,6 +26,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.mineground.account.AccountManager;
 import com.mineground.base.FeatureInitParams;
+import com.mineground.base.Message;
 import com.mineground.database.Database;
 
 // The Mineground class is the plugin which exposes our plugin to Bukkit. It has access to APIs for
@@ -73,6 +74,8 @@ public class Mineground extends JavaPlugin {
         
         mConfigurationFile = new File(dataFolder, "mineground.yml");
         mConfiguration = YamlConfiguration.loadConfiguration(mConfigurationFile);
+        
+        Message.SetConfiguration(mConfiguration);
         
         // Initialize the Database API and ensure that it can connect to actual database powering
         // it. Without database access, Mineground will be significantly limited in functionality.
@@ -144,6 +147,8 @@ public class Mineground extends JavaPlugin {
         
         mDatabase.disconnect();
         mDatabase = null;
+        
+        Message.SetConfiguration(null);
         
         mConfiguration = null;
         mConfigurationFile = null;
