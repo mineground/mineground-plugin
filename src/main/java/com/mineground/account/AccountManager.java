@@ -34,34 +34,52 @@ import com.mineground.base.PromiseError;
 import com.mineground.base.PromiseResultHandler;
 import com.mineground.database.Database;
 
-// The account manager curates the player accounts on Mineground, their statistics, information,
-// economics and everything else related to it. Each player implicitly gets an account, however,
-// without having registered their account on the website it will be considered as a guest account.
+/**
+ * The account manager curates the player accounts on Mineground, their statistics, information,
+ * economics and everything else related to it. Each player implicitly gets an account, however,
+ * without having registered their account on the website it will be considered as a guest account.
+ */
 public class AccountManager {
-    // The maximum number of times a player can try to identify to an account using /login.
+    /**
+     * The maximum number of times a player can try to identify to an account using /login.
+     */
     private static final int MAXIMUM_AUTHENTICATION_ATTEMPTS = 3;
     
-    // The maximum number of hours the player's last session must be in the past in order for IP-
-    // based automatic login to be available for their account.
+    /**
+     * The maximum number of hours the player's last session must be in the past in order for IP-
+     * based automatic login to be available for their account.
+     */
     private static final int MAXIMUM_AUTOMATIC_LOGIN_HOURS = 24;
     
-    // Interface between the account manager and the database.
+    /**
+     * Interface between the account manager and the database.
+     */
     private final AccountDatabase mAccountDatabase;
     
-    // Map between Bukkit players and their Mineground accounts.
+    /**
+     * Map between Bukkit players and their Mineground accounts.
+     */
     private final Map<Player, Account> mPlayerAccountMap;
     
-    // The message which will be send to every connecting player, regardless of their account.
+    /**
+     * The message which will be send to every connecting player, regardless of their account.
+     */
     private final Message mConnectionMessage;
     
-    // The message which will be send to the player when authentication requires their password.
+    /**
+     * The message which will be send to the player when authentication requires their password.
+     */
     private final Message mRequirePasswordMessage;
     
-    // The message which will be send to the player when they entered an invalid password.
+    /**
+     * The message which will be send to the player when they entered an invalid password.
+     */
     private final Message mInvalidPasswordMessage;
     
-    // Class containing information about a player who has connected to Mineground, but has not yet
-    // authenticated themselves with their account.
+    /**
+     * Class containing information about a player who has connected to Mineground, but has not yet
+     * authenticated themselves with their account.
+     */
     class PendingAuthentication {
         public AccountData accountData;
         public EventDispatcher dispatcher;
@@ -74,8 +92,10 @@ public class AccountManager {
         }
     }
     
-    // Map between Bukkit players and their account data, for players whose authentication is still
-    // pending on them entering their password using the /login command.
+    /**
+     * Map between Bukkit players and their account data, for players whose authentication is still
+     * pending on them entering their password using the /login command.
+     */
     private final Map<Player, PendingAuthentication> mAuthenticationRequestMap;
     
     public AccountManager(Database database) {
@@ -88,9 +108,14 @@ public class AccountManager {
         mInvalidPasswordMessage = Message.Load("login_invalid");
     }
     
-    // Loads the account, and don't fire the onPlayerJoined event on the dispatcher until their
-    // information has been loaded and verified. This will be called for all online players when the
-    // plugin is being loaded while there already are players in-game.
+    /**
+     * Loads the account, and don't fire the onPlayerJoined event on the dispatcher until their
+     * information has been loaded and verified. This will be called for all online players when the
+     * plugin is being loaded while there already are players in-game.
+     * 
+     * @param player        The player whose account should be loaded.
+     * @param dispatcher    Dispatcher to dispatch the onPlayerJoined event to.
+     */
     public void loadAccount(final Player player, final EventDispatcher dispatcher) {
         // TODO: Don't send a message to the player when we're reloading the plugin.
         mConnectionMessage.send(player, Color.GOLD);
@@ -125,12 +150,18 @@ public class AccountManager {
         });
     }
     
-    // Authenticates |player| based on their |accountData|. The player will need to enter their
-    // password in order to identify their identity, unless their IP address matches their last one,
-    // and their previous session was in the near past.
-    //
-    // If Mineground were to switch to be an online server, we could do silent authentication here
-    // by comparing their unique Id (the minecraft.net Id) against the one in the database.
+    /**
+     * Authenticates |player| based on their |accountData|. The player will need to enter their
+     * password in order to identify their identity, unless their IP address matches their last one,
+     * and their previous session was in the near past.
+     * 
+     * If Mineground were to switch to be an online server, we could do silent authentication here
+     * by comparing their unique Id (the minecraft.net Id) against the one in the database.
+     * 
+     * @param player        The player whose credentials should be authenticated.
+     * @param accountData   Loaded account data from the database (yet unverified).
+     * @param dispatcher    Dispatcher to dispatch the onPlayerJoined event to.
+     */
     private void authenticatePlayerAccount(final Player player, final AccountData accountData, final EventDispatcher dispatcher) {
         final Account account = mPlayerAccountMap.get(player);
         if (account == null)
@@ -153,9 +184,15 @@ public class AccountManager {
         mRequirePasswordMessage.send(player, Color.ACTION_REQUIRED);
     }
     
-    // Users have to identify with their account using the /login command, using which they specify
-    // their password. This method handles input for that command. If we can verify the player's
-    // password, we'll continue to authenticate the player with their account.
+    /**
+     * Users have to identify with their account using the /login command, using which they specify
+     * their password. This method handles input for that command. If we can verify the player's
+     * password, we'll continue to authenticate the player with their account.
+     * 
+     * @param sender    Player who entered the /login command.
+     * @param arguments Arguments passed on to the command. Expecting one.
+     * @return          Whether we could process the login attempt.
+     */
     @CommandHandler("login")
     public boolean onLoginCommand(CommandSender sender, Command command, String[] arguments) {
         if (!(sender instanceof Player) || arguments.length == 0)
@@ -203,8 +240,14 @@ public class AccountManager {
         return true;
     }
     
-    // Will set up the player's state properly when they've been recognized as the rightful owner
-    // of their account. Called both for automatic identification, and for the /login command.
+    /**
+     * Will set up the player's state properly when they've been recognized as the rightful owner
+     * of their account. Called both for automatic identification, and for the /login command.
+     * 
+     * @param player        The player who has been authenticated.
+     * @param accountData   The account data belonging to this player.
+     * @param dispatcher    Dispatcher to dispatch the onPlayerJoined event to.
+     */
     private void didAuthenticatePlayer(Player player, AccountData accountData, EventDispatcher dispatcher) {
         final Account account = mPlayerAccountMap.get(player);
         if (account == null)
@@ -216,9 +259,13 @@ public class AccountManager {
         dispatcher.onPlayerJoined(player);
     }
 
-    // Called when the player is leaving the server, meaning we should store the latest updates to
-    // their account in the database. When the Mineground plugin is disabled, this method will be
-    // called for all players to ensure that we properly store all information.
+    /**
+     * Called when the player is leaving the server, meaning we should store the latest updates to
+     * their account in the database. When the Mineground plugin is disabled, this method will be
+     * called for all players to ensure that we properly store all information.
+     * 
+     * @param player    The player whose account should be unloaded.
+     */
     public void unloadAccount(Player player) {
         mAuthenticationRequestMap.remove(player);
 
@@ -235,8 +282,13 @@ public class AccountManager {
         mAccountDatabase.updateAccount(accountData, player);
     }
     
-    // Retrieves the account for |player|. If no account is available for them, NULL will be
-    // returned instead. That just means that no information has been loaded yet.
+    /**
+     * Retrieves the account for |player|. If no account is available for them, NULL will be
+     * returned instead. That just means that no information has been loaded yet.
+     *
+     * @param player    Player to retrieve the account for.
+     * @return          The player's Account object, or NULL.
+     */
     public Account getAccountForPlayer(Player player) {
         return mPlayerAccountMap.get(player);
     }

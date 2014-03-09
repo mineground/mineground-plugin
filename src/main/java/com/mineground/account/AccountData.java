@@ -19,58 +19,86 @@ import java.util.Date;
 
 import org.bukkit.entity.Player;
 
-// The AccountData class holds information about the player's profile, as it is stored in the
-// database. When adding or removing fields, please make sure they are listed in the same order as
-// they are in the actual database scheme, making this class easier to work with.
+/**
+ * The AccountData class holds information about the player's profile, as it is stored in the
+ * database. When adding or removing fields, please make sure they are listed in the same order as
+ * they are in the actual database scheme, making this class easier to work with.
+ */
 public class AccountData {
 
     // ***** users *********************************************************************************
     
-    // Id of the player, which roughly corresponds to the order in which users registered.
+    /**
+     * Id of the player, which roughly corresponds to the order in which users registered.
+     */
     public int user_id;
     
-    // The player's username, which is not necessarily equal to their display name.
+    /**
+     * The player's username, which is not necessarily equal to their display name.
+     */
     public String username;
 
-    // Mineground uses PBKDF2 to store player passwords, for which the player's hashed password and
-    // salt used to hash that password are both stored in this string. The password can be validated
-    // by using Taylor Hornby's PBKDF2 password hash implementation.
+    /**
+     * Mineground uses PBKDF2 to store player passwords, for which the player's hashed password and
+     * salt used to hash that password are both stored in this string. The password can be validated
+     * by using Taylor Hornby's PBKDF2 password hash implementation.
+     */
     public String password;
     
-    // The level this player's account has. This value is not mutable from the plugin, because it
-    // would allow permanent promotions, which we'd like to limit to IRC.
+    /**
+     * The level this player's account has. This value is not mutable from the plugin, because it
+     * would allow permanent promotions, which we'd like to limit to IRC.
+     */
     public AccountLevel level;
     
-    // The date on which the player first joined Mineground. This value is not mutable from the
-    // plugin, because it doesn't make sense to change the registration date.
+    /**
+     * The date on which the player first joined Mineground. This value is not mutable from the
+     * plugin, because it doesn't make sense to change the registration date.
+     */
     public Date registered;
     
     // ***** users_settings ************************************************************************
     
-    // The total number of seconds the player has spent online on Mineground. This does include
-    // time during which the player was idle.
+    /**
+     * The total number of seconds the player has spent online on Mineground. This does include
+     * time during which the player was idle.
+     */
     public int online_time;
     
-    // The number of living entities, including both players, monsters and other NPCs, the player
-    // has killed during their playing on the server.
+    /**
+     * The number of living entities, including both players, monsters and other NPCs, the player
+     * has killed during their playing on the server.
+     */
     public int kill_count;
     
-    // The number of times the player has died, either by being killed or from other causes.
+    /**
+     * The number of times the player has died, either by being killed or from other causes.
+     */
     public int death_count;
     
-    // The number of reaction tests this player has won.
+    /**
+     * The number of reaction tests this player has won.
+     */
     public int stats_reaction;
     
-    // The number of blocks this player has created, in all worlds and gamemodes.
+    /**
+     * The number of blocks this player has created, in all worlds and gamemodes.
+     */
     public int stats_blocks_created;
     
-    // The number of blocks this player has destroyed, in all worlds and gamemodes.
+    /**
+     * The number of blocks this player has destroyed, in all worlds and gamemodes.
+     */
     public int stats_blocks_destroyed;
     
-    // The IP address which the player used when they last connected to the server.
+    /**
+     * The IP address which the player used when they last connected to the server.
+     */
     public String last_ip;
     
-    // The date at which the player last connected to the server.
+    /**
+     * The date at which the player last connected to the server.
+     */
     public Date last_seen;
     
     // ***** Constructor for default values ********************************************************

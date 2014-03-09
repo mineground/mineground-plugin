@@ -15,37 +15,59 @@
 
 package com.mineground.account;
 
-// This class contains enumerations for the account levels supported by Mineground. These must match
-// the "level" enumeration in the "users" table in the database.
+/**
+ * This class contains enumerations for the account levels supported by Mineground. These must match
+ * the "level" enumeration in the "users" table in the database.
+ */
 public enum AccountLevel {
-    // Guests don't have registered their account on the website, and therefore have very limited
-    // rights on the server. They can talk and use a limited amount of commands, but are not allowed
-    // to build anywhere on the server.
+    /**
+     * Guests don't have registered their account on the website, and therefore have very limited
+     * rights on the server. They can talk and use a limited amount of commands, but are not allowed
+     * to build anywhere on the server.
+     */
     Guest,
     
-    // Builders have registered their account on the website, and have validated their e-mail
-    // address. They have the ability to build outside protected areas on Mineground.
+    /**
+     * Builders have registered their account on the website, and have validated their e-mail
+     * address. They have the ability to build outside protected areas on Mineground.
+     */
     Builder,
     
-    // Super Builders are experienced players who have demonstrated to be both responsible and
-    // knowledgeable in their playing on Mineground. They have access to the /fly command.
+    /**
+     * Super Builders are experienced players who have demonstrated to be both responsible and
+     * knowledgeable in their playing on Mineground. They have access to the /fly command.
+     */
     SBuilder,
     
-    // VIPs have donated to the Mineground community, and therefore have a special status. They
-    // receive the same benefits as the SBuilder class.
+    /**
+     * VIPs have donated to the Mineground community, and therefore have a special status. They
+     * receive the same benefits as the SBuilder class.
+     */
     VIP,
     
-    // TODO: Describe this accurately.
+    /**
+     * TODO: Describe this accurately.
+     */
     Moderator,
     
-    // TODO: Describe this accurately.
+    /**
+     * TODO: Describe this accurately.
+     */
     Administrator,
     
-    // Management members have all possible rights on the server, and will be made server operators
-    // with the Bukkit server as well, automagically giving them admin rights for all other plugins.
+    /**
+     * Management members have all possible rights on the server, and will be made server operators
+     * with the Bukkit server as well, automagically giving them admin rights for all other plugins.
+     */
     Management;
     
-    // Returns the AccountLevel corresponding to the string |level|, per our database conventions.
+    /**
+     * Returns the AccountLevel corresponding to the string |level|, per our database conventions.
+     * If no 1:1 mapping between the text and a level can be found, Guest will be returned.
+     * 
+     * @param level Textual representation of a level.
+     * @return      The enumeration value of that level.
+     */
     public static AccountLevel fromString(String level) {
         switch (level) {
             case "Builder":
@@ -65,7 +87,12 @@ public enum AccountLevel {
         return Guest;
     }
     
-    // Returns the String corresponding to the AccountLevel |level|.
+    /**
+     * Returns the String corresponding to the AccountLevel |level|.
+     * 
+     * @param level The level to return the textual representation for.
+     * @return      Textual representation of |level|.
+     */
     public static String toString(AccountLevel level) {
         switch (level) {
             case Builder:

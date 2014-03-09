@@ -31,17 +31,24 @@ import com.mineground.database.DatabaseResult;
 import com.mineground.database.DatabaseResultRow;
 import com.mineground.database.DatabaseStatement;
 
-// Whereas the AccountManager class curates the account, this class is responsible for loading,
-// storing and creating accounts.
+/**
+ * Whereas the AccountManager class curates the account, this class is responsible for loading,
+ * storing and creating accounts.
+ */
 public class AccountDatabase {
-    // Logger used for sharing database errors with the console in case they happen.
+    /**
+     * Logger used for sharing database errors with the console in case they happen.
+     */
     private final Logger mLogger = Logger.getLogger(AccountDatabase.class.getCanonicalName());
 
-    // Date format which we use for reading and storing dates in the database.
+    /**
+     * Date format which we use for reading and storing dates in the database.
+     */
     private final DateFormat mDateFormat;
     
     // The following statements are the queries which are being used for loading, creating and
     // updating accounts in the database. See the constructor for more detailed documentation.
+
     private final DatabaseStatement mLoadAccountStatement;
     private final DatabaseStatement mCreateUserStatement;
     private final DatabaseStatement mCreateUserSettingsStatement;
@@ -124,8 +131,13 @@ public class AccountDatabase {
         );
     }
     
-    // Loads the account of |player| from the database. If it does not exist yet, a new account will
-    // be created, which allows them to play as a guest.
+    /**
+     * Loads the account of |player| from the database. If it does not exist yet, a new account will
+     * be created, which allows them to play as a guest.
+     * 
+     * @param player    The player to load the associated account for.
+     * @return          A promise which will be resolved when the account is available.
+     */
     public Promise<AccountData> loadOrCreateAccount(final Player player) {
         final Promise<AccountData> promise = new Promise<AccountData>();
         
@@ -179,8 +191,13 @@ public class AccountDatabase {
         return promise;
     }
     
-    // Creates an account for |player|, and resolves |promise| with a valid AccountData instance
-    // once that has succeeded. This will implicitly register the player as a guest.
+    /**
+     * Creates an account for |player|, and resolves |promise| with a valid AccountData instance
+     * once that has succeeded. This will implicitly register the player as a guest.
+     * 
+     * @param player    The player whom to create a new account for.
+     * @param promise   The promise to resolve once the account has been created.
+     */
     public void createAccount(final Player player, final Promise<AccountData> promise) {
         mCreateUserStatement.setString(1, player.getName());
         mCreateUserStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
@@ -213,7 +230,12 @@ public class AccountDatabase {
         });
     }
     
-    // Updates the database with the mutable fields in the AccountData instance |accountData|. 
+    /**
+     * Updates the database with the mutable fields in the AccountData instance |accountData|.
+     *
+     * @param accountData   The account data containing the latest information.
+     * @param player        The player who the account belongs to.
+     */
     public void updateAccount(final AccountData accountData, final Player player) {
         mUpdateUserStatement.setString(1, accountData.password);
         mUpdateUserStatement.setInteger(2, accountData.user_id);
