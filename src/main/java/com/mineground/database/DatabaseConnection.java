@@ -17,25 +17,39 @@ package com.mineground.database;
 
 import com.mineground.base.Promise;
 
-// The database connection class curates the actual connection with the database, and owns the
-// execution thread on which queries will be executed. This interface defines the API with which
-// the Database class can communicate with it, keeping implementation details separate.
+/**
+ * The database connection class curates the actual connection with the database, and owns the
+ * execution thread on which queries will be executed. This interface defines the API with which
+ * the Database class can communicate with it, keeping implementation details separate.
+ */
 public interface DatabaseConnection {
-    // Asynchronously establishes a connection with the database. If the connection is lost at any
-    // point during the plugin's lifetime, the implementation will make a best effort to reestablish
-    // it. The implementation will output diagnostic information to a logger.
+    /**
+     * Asynchronously establishes a connection with the database. If the connection is lost at any
+     * point during the plugin's lifetime, the implementation will make a best effort to reestablish
+     * it. The implementation will output diagnostic information to a logger.
+     */
     public void connect();
     
-    // Synchronously disconnects from the database and returns when the connection is dead. When
-    // the implementation has gone unresponsive, it will return after a 5 second timeout as well.
+    /**
+     * Synchronously disconnects from the database and returns when the connection is dead. When
+     * the implementation has gone unresponsive, it will return after a 5 second timeout as well.
+     */
     public void disconnect();
     
-    // Enqueues |query| to be asynchronously executed on the database. A promise will be returned,
-    // which will be settled when a result has been made available. The |parameters| argument may
-    // be used to supply a map of parameters which should be securely replaced in the query.
+    /**
+     * Enqueues |query| to be asynchronously executed on the database. A promise will be returned,
+     * which will be settled when a result has been made available. The |parameters| argument may
+     * be used to supply a map of parameters which should be securely replaced in the query.
+     *
+     * @param query         The query which is to be executed.
+     * @param parameters    An optional list of parameters to be used in the prepared statement.
+     * @return              A Promise, which will be settled when the query has been executed.
+     */
     public Promise<DatabaseResult> enqueueQueryForExecution(String query, DatabaseStatementParams parameters);
     
-    // Polls for finished database queries from the database thread, for which the promises can be
-    // settled. This method should be called every 2 server ticks (~100ms) on the main thread.
+    /**
+     * Polls for finished database queries from the database thread, for which the promises can be
+     * settled. This method should be called every 2 server ticks (~100ms) on the main thread.
+     */
     public void doPollForResults();
 }

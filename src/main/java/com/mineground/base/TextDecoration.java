@@ -15,8 +15,10 @@
 
 package com.mineground.base;
 
-// The following text decoration styles are available in Minecraft. They may be used at any point in
-// messages intended for either a player, or for the console.
+/**
+ * The following text decoration styles are available in Minecraft. They may be used at any point in
+ * messages intended for either a player, or for the console.
+ */
 public final class TextDecoration {
     public static final String OBFUSCATED = "§k";
     public static final String BOLD = "§l";

@@ -24,22 +24,35 @@ import java.util.logging.Logger;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.Configuration;
 
-// Represents a message, to be send to a player, as it has been defined in the configuration. Macros
-// are available for referring to variables in the messages. The main benefit of declaring messages
-// in the configuration file is ease of editing, and that the code doesn't have to care about the
-// message's format, number of lines, and so on.
+/**
+ * Represents a message, to be send to a player, as it has been defined in the configuration. Macros
+ * are available for referring to variables in the messages. The main benefit of declaring messages
+ * in the configuration file is ease of editing, and that the code doesn't have to care about the
+ * message's format, number of lines, and so on.
+ */
 public class Message {
-    // A list of the individual lines this message consists of.
+    /**
+     * A list of the individual lines this message consists of.
+     */
     private final List<String> mMessageLines;
     
-    // A key => value map containing the to-be-replaced macros in this message.
+    /**
+     * A key -> value map containing the to-be-replaced macros in this message.
+     */
     private final Map<String, String> mMessageMacros;
     
-    // The Mineground configuration directives. Messages will be loaded from the "messages"
-    // namespace in the YML file, with the key being the message's name.
+    /**
+     * The Mineground configuration directives. Messages will be loaded from the "messages"
+     * namespace in the YAML file, with the key being the message's name.
+     */
     private static Configuration sConfiguration;
     
-    // Loads |messageName| from Mineground's configuration, and transforms 
+    /**
+     * Initializes a Message object based on |messageName| from the configuration.
+     * 
+     * @param messageName   Name of the message to load from the configuration.
+     * @return              Message object for working with the message.
+     */
     public static Message Load(String messageName) {
         final ArrayList<String> messageLines = new ArrayList<String>();
         final String canonicalMessageName = "messages." + messageName;
@@ -62,23 +75,50 @@ public class Message {
         mMessageMacros = new HashMap<String, String>();
     }
     
+    /**
+     * Creates a macro for {KEY} to be replaced with VALUE.
+     * 
+     * @param key   The key of the macro, which will be replaced.
+     * @param value The value (type: long) it should be replaced with.
+     * @return      This object, allowing call chaining.
+     */
     public Message setInteger(String key, long value) {
         mMessageMacros.put(key, String.valueOf(value));
         return this;
     }
     
+    /**
+     * Creates a macro for {KEY} to be replaced with VALUE.
+     * 
+     * @param key   The key of the macro, which will be replaced.
+     * @param value The value (type: double) it should be replaced with.
+     * @return      This object, allowing call chaining.
+     */
     public Message setDouble(String key, double value) {
         mMessageMacros.put(key, String.valueOf(value));
         return this;
     }
     
+    /**
+     * Creates a macro for {KEY} to be replaced with VALUE.
+     * 
+     * @param key   The key of the macro, which will be replaced.
+     * @param value The value (type: string) it should be replaced with.
+     * @return      This object, allowing call chaining.
+     */
     public Message setString(String key, String value) {
         mMessageMacros.put(key, value);
         return this;
     }
     
-    // CommandSender is an interface implemented by both the Player and the various console objects,
-    // allowing Messages to be used for any kind of sender in commands.
+    /**
+     * Sends the message to the indicated CommandSender. CommandSender is an interface implemented
+     * by both the Player and the various console objects, allowing Messages to be used for any kind
+     * of sender in commands.
+     * 
+     * @param destination   The player or console to send this message to.
+     * @param color         Base color of the message to send.
+     */
     public void send(CommandSender destination, String color) {
         final List<String> messageLines = compileMessage(color);
         for (String messageLine : messageLines)
@@ -87,8 +127,13 @@ public class Message {
     
     // TODO: Add a send() method to distribute a message to multiple players at once.
     
-    // Compiles the actual message which is about to be distributed. For each line that's part of
-    // this Message, fill in all the Macros and prepend messages with the intended color.
+    /**
+     * Compiles the actual message which is about to be distributed. For each line that's part of
+     * this Message, fill in all the Macros and prepend messages with the intended color.
+     * 
+     * @param color Base color of the message, which will be prepended to each message line.
+     * @return      A list containing each complete message line.
+     */
     private List<String> compileMessage(String color) {
         final ArrayList<String> messageLines = new ArrayList<String>(mMessageLines.size());
         for (String messageLine : mMessageLines) {
@@ -104,8 +149,12 @@ public class Message {
         return messageLines;
     }
     
-    // Sets the configuration instance which should be used for loading messages. This method should
-    // only be called from the Mineground class, during plugin loading or unloading, or for testing.
+    /**
+     * Sets the configuration instance which should be used for loading messages. This method should
+     * only be called from the Mineground class, during plugin loading or unloading, or for testing.
+     *
+     * @param configuration The Configuration object used for Mineground.
+     */
     public static void SetConfiguration(Configuration configuration) {
         sConfiguration = configuration;
     }

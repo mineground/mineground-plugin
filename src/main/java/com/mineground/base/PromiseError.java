@@ -15,19 +15,29 @@
 
 package com.mineground.base;
 
-// The PromiseError class contains information about why a promise has failed. More advanced systems
-// may choose to specialize this class to contain additional information.
-//
-// TODO: Should we attach a stack trace to PromiseError objects?
+/**
+ * The PromiseError class contains information about why a promise has failed. More advanced systems
+ * may choose to specialize this class to contain additional information.
+ *
+ * TODO: Should we attach a stack trace to PromiseError objects?
+ */
 public class PromiseError {
     private String mReason;
 
-    // Initializes the PromiseError object, giving |reason| as the cause of the rejection.
+    /**
+     * Initializes the PromiseError object, giving |reason| as the cause of the rejection.
+     *
+     * @param reason The reason the Promise has been rejected.
+     */
     public PromiseError(String reason) {
         mReason = reason;
     }
 
-    // Returns the reason the promise has been rejected.
+    /**
+     * Returns the reason the promise has been rejected.
+     *
+     * @return The reason the Promise has been rejected.
+     */
     public String reason() {
         return mReason;
     }

@@ -24,8 +24,10 @@ import com.mineground.FeatureManager;
 import com.mineground.account.AccountManager;
 import com.mineground.database.Database;
 
-// Initialization parameters which features receive and must pass on to their FeatureBase parent
-// class, allowing it to initialize itself to make all features available.
+/**
+ * Initialization parameters which features receive and must pass on to their FeatureBase parent
+ * class, allowing it to initialize itself to make all features available.
+ */
 public class FeatureInitParams {
     public FeatureManager featureManager;
     public CommandManager commandManager;

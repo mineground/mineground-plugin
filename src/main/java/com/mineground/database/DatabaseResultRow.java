@@ -19,14 +19,20 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
-// Represents an individual row in a database result set. Fields may be retrieved from the set by
-// using the getString, getInteger or getDouble getters, each of which may be passed in a column
-// index, or a column name.
+/**
+ * Represents an individual row in a database result set. Fields may be retrieved from the set by
+ * using the getString, getInteger or getDouble getters, each of which may be passed in a column
+ * index, or a column name.
+ */
 public class DatabaseResultRow {
-    // The result which this row belongs to, used for retrieving the column index from its name.
+    /**
+     * The result which this row belongs to, used for retrieving the column index from its name.
+     */
     private final DatabaseResult mResult;
     
-    // List of the fields in this row. They can be retrieved using the various getters.
+    /**
+     * List of the fields in this row. They can be retrieved using the various getters.
+     */
     private final List<Object> mFieldList;
     
     public DatabaseResultRow(DatabaseResult result, int columnCount) {
@@ -34,8 +40,13 @@ public class DatabaseResultRow {
         mResult = result;
     }
     
-    // Retrieves the value for field |columnIndex| as a String. Mind that column indices in this
-    // database system are one-based, to match common conventions in Java.
+    /**
+     * Retrieves the value for field |columnIndex| as a String. Mind that column indices in this
+     * database system are one-based, to match common conventions in Java.
+     *
+     * @param columnIndex   Index of the column to retrieve from the row.
+     * @return              Value of the field, as a String.
+     */
     public String getString(int columnIndex) {
         --columnIndex; // map one-based indices to zero-based ones.
         if (columnIndex < 0 || columnIndex >= mFieldList.size())
@@ -48,7 +59,12 @@ public class DatabaseResultRow {
         return (String) mFieldList.get(columnIndex);
     }
     
-    // Retrieves the value for field |columnName| as a String.
+    /**
+     * Retrieves the value for field |columnName| as a String.
+     * 
+     * @param columnName    Name of the column to retrieve as a string.
+     * @return              Value of the field, as a String.
+     */
     public String getString(String columnName) {
         int columnIndex = mResult.columnNameToIndex(columnName);
         if (columnIndex == DatabaseResult.INVALID_COLUMN_INDEX)
@@ -57,8 +73,13 @@ public class DatabaseResultRow {
         return getString(columnIndex);
     }
     
-    // Retrieves the value for field |columnIndex| as an integer. Mind that column indices in this
-    // database system are one-based, to match common conventions in Java.
+    /**
+     * Retrieves the value for field |columnIndex| as an integer. Mind that column indices in this
+     * database system are one-based, to match common conventions in Java.
+     * 
+     * @param columnIndex   Index of the column to retrieve from the row.
+     * @return              Value of the field, as an Integer.
+     */
     public Long getInteger(int columnIndex) {
         --columnIndex; // map one-based indices to zero-based ones.
         if (columnIndex < 0 || columnIndex >= mFieldList.size())
@@ -71,7 +92,12 @@ public class DatabaseResultRow {
         return (Long) mFieldList.get(columnIndex);
     }
     
-    // Retrieves the value for field |columnName| as an integer.
+    /**
+     * Retrieves the value for field |columnName| as an integer.
+     *
+     * @param columnName    Name of the column to retrieve as an integer.
+     * @return              Value of the field, as an Integer.
+     */
     public Long getInteger(String columnName) {
         int columnIndex = mResult.columnNameToIndex(columnName);
         if (columnIndex == DatabaseResult.INVALID_COLUMN_INDEX)
@@ -80,8 +106,13 @@ public class DatabaseResultRow {
         return getInteger(columnIndex);
     }
     
-    // Retrieves the value for field |columnIndex| as a double. Mind that column indices in this
-    // database system are one-based, to match common conventions in Java.
+    /**
+     * Retrieves the value for field |columnIndex| as a double. Mind that column indices in this
+     * database system are one-based, to match common conventions in Java.
+     * 
+     * @param columnIndex   Index of the column to retrieve from the row.
+     * @return              Value of the field, as a Double.
+     */
     public Double getDouble(int columnIndex) {
         --columnIndex; // map one-based indices to zero-based ones.
         if (columnIndex < 0 || columnIndex >= mFieldList.size())
@@ -94,7 +125,12 @@ public class DatabaseResultRow {
         return (Double) mFieldList.get(columnIndex);
     }
     
-    // Retrieves the value for field |columnName| as a double.
+    /**
+     * Retrieves the value for field |columnName| as a double.
+     *
+     * @param columnName    Name of the column to retrieve as a double.
+     * @return              Value of the field, as a Double.
+     */
     public Double getDouble(String columnName) {
         int columnIndex = mResult.columnNameToIndex(columnName);
         if (columnIndex == DatabaseResult.INVALID_COLUMN_INDEX)
@@ -103,8 +139,12 @@ public class DatabaseResultRow {
         return getDouble(columnIndex);
     }
     
-    // Pushes |value| on the list of fields belonging to this row. Whilst type information is of
-    // course available in Java's Object object, we don't store an explicit notion of it.
+    /**
+     * Pushes |value| on the list of fields belonging to this row. Whilst type information is of
+     * course available in Java's Object object, we don't store an explicit notion of it.
+     *
+     * @param value The field's value to add to this result row.
+     */
     public void add(Object value) {
         mFieldList.add(value);
     }

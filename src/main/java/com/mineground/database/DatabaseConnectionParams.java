@@ -15,8 +15,10 @@
 
 package com.mineground.database;
 
-// Parameters using which the database connection should be established. The values for these fields
-// will be read from the Mineground configuration file.
+/**
+ * Parameters using which the database connection should be established. The values for these fields
+ * will be read from the Mineground configuration file.
+ */
 public class DatabaseConnectionParams {
     // Hostname and port of the MySQL server which will be used.
     String hostname;

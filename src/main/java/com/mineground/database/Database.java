@@ -22,24 +22,34 @@ import org.bukkit.scheduler.BukkitScheduler;
 import com.mineground.base.Promise;
 import com.mineground.base.PromiseError;
 
-// The Database class is the public-facing API for database communications within Mineground. All
-// queries to be executed on this database will be ran asynchronously.
+/**
+ * The Database class is the public-facing API for database communications within Mineground. All
+ * queries to be executed on this database will be ran asynchronously.
+ */
 public class Database {
-    // Id of an invalid task in the Bukkit scheduler. We can safely pass this value to Bukkit as
-    // a task Id regardless of whether its ours or not, so use it as the default value.
+    /**
+     * Id of an invalid task in the Bukkit scheduler. We can safely pass this value to Bukkit as
+     * a task Id regardless of whether its ours or not, so use it as the default value.
+     */
     private static final int INVALID_TASK_ID = -1;
 
-    // Configuration (mineground.yml) based on which the connection will be established.
+    /**
+     * Configuration (mineground.yml) based on which the connection will be established.
+     */
     private FileConfiguration mConfiguration;
     
-    // Connection API through which all Database operations will communicate with the database.
-    // The connection itself will execute all queries on a separate thread.
+    /**
+     * Connection API through which all Database operations will communicate with the database.
+     * The connection itself will execute all queries on a separate thread.
+     */
     private DatabaseConnection mConnection;
     
     private JavaPlugin mPlugin;
     
-    // Task Id of the running repeating task within Bukkit's task scheduler. When the database is
-    // disconnected, the task needs to be unregistered as well.
+    /**
+     * Task Id of the running repeating task within Bukkit's task scheduler. When the database is
+     * disconnected, the task needs to be unregistered as well.
+     */
     private int mSchedulerTaskId;
     
     public Database(FileConfiguration configuration, JavaPlugin plugin) {
@@ -49,8 +59,10 @@ public class Database {
         mSchedulerTaskId = INVALID_TASK_ID;
     }
     
-    // Starts the Database Thread, which will attempt to connect to the database. The thread will
-    // automatically reconnect if the connection is lost at any point during the plugin's lifetime.
+    /**
+     * Starts the Database Thread, which will attempt to connect to the database. The thread will
+     * automatically reconnect if the connection is lost at any point during the plugin's lifetime.
+     */
     public void connect() {
         DatabaseConnectionParams params = new DatabaseConnectionParams();
         params.hostname = mConfiguration.getString("database.hostname", "localhost");
@@ -73,8 +85,10 @@ public class Database {
         }, 2, 2);
     }
     
-    // Synchronously stops the database thread after all pending queries have been executed, and
-    // disconnects the established connection with the database.
+    /**
+     * Synchronously stops the database thread after all pending queries have been executed, and
+     * disconnects the established connection with the database.
+     */
     public void disconnect() {
         if (mConnection == null)
             return;
@@ -86,17 +100,28 @@ public class Database {
         mSchedulerTaskId = INVALID_TASK_ID;
     }
     
-    // Prepares |query| as a database statement, making it more convenient and safer to perform
-    // operations on it when the query will be used in the future.
+    /**
+     * Prepares |query| as a database statement, making it more convenient and safer to perform
+     * operations on it when the query will be used in the future.
+     * 
+     * @param query The base query to create a prepared statement for.
+     * @return      DatabaseStatement instance to handle the prepared statement.
+     */
     public DatabaseStatement prepare(String query) {
         return new DatabaseStatement(this, query);
     }
     
-    // Executes |query| on the database and returns a promise which will be settled depending on the
-    // result. The |parameters| object will be used to replace parameters in the query with values
-    // specified elsewhere, using Prepared Statements, thus in a safe way. If the query succeeds,
-    // the promise will be resolved with a DatabaseResult instance, otherwise the promise will be
-    // rejected sharing the error which occurred in the database.
+    /**
+     * Executes |query| on the database and returns a promise which will be settled depending on the
+     * result. The |parameters| object will be used to replace parameters in the query with values
+     * specified elsewhere, using Prepared Statements, thus in a safe way. If the query succeeds,
+     * the promise will be resolved with a DatabaseResult instance, otherwise the promise will be
+     * rejected sharing the error which occurred in the database.
+     * 
+     * @param query         The SQL query which should be executed.
+     * @param parameters    Parameters to be processed as part of a prepared statement.
+     * @return              A Promise, which will be resolved when the query finished executing.
+     */
     public Promise<DatabaseResult> query(String query, DatabaseStatementParams parameters) {
         if (mConnection != null)
             return mConnection.enqueueQueryForExecution(query, parameters);
@@ -106,11 +131,21 @@ public class Database {
         return promise;
     }
     
-    // Executes |query| on the database and returns a promise which will be settled depending on the
-    // result. If the query succeeds, the promise will be resolved with a DatabaseResult instance,
-    // otherwise the promise will be rejected sharing the error which occurred in the database.
+    /**
+     * Executes |query| on the database and returns a promise which will be settled depending on the
+     * result. If the query succeeds, the promise will be resolved with a DatabaseResult instance,
+     * otherwise the promise will be rejected sharing the error which occurred in the database.
+     * 
+     * @param query     The SQL query which should be executed.
+     * @return          A Promise, which will be resolved when the query finished executing.
+     */
     public Promise<DatabaseResult> query(String query) { return this.query(query, null); }
     
-    // Returns the Bukkit scheduler from |mPlugin|.
+    /**
+     * Returns the Bukkit scheduler from |mPlugin|. Convenience method to make the code needing this
+     * more readable, since it's a long call-chain.
+     *
+     * @return Instance of Bukkit's task scheduler.
+     */
     private BukkitScheduler getScheduler() { return mPlugin.getServer().getScheduler(); }
 }

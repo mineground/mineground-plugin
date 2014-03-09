@@ -15,9 +15,13 @@
 
 package com.mineground.base;
 
-// Interface which declares the |execute| method that will be invoked when using a Promise's
-// Executor constructor. The executor can interact with the promise through the |promise| argument,
-// removing the need for a final instance of the promise outside of the executor's scope.
+/**
+ * Interface which declares the |execute| method that will be invoked when using a Promise's
+ * Executor constructor. The executor can interact with the promise through the |promise| argument,
+ * removing the need for a final instance of the promise outside of the executor's scope.
+ *
+ * @param <SuccessValueType> Type of the argument the Promise must be resolved with.
+ */
 public interface PromiseExecutor<SuccessValueType> {
     public void execute(Promise<SuccessValueType> promise);
 }

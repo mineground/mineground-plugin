@@ -17,7 +17,9 @@ package com.mineground.database;
 
 import java.util.HashMap;
 
-// Typename for the <Integer, Object> map which is being used for storing a statement's parameters.
+/**
+ * Typename for the <Integer, Object> map which is being used for storing a statement's parameters.
+ */
 public class DatabaseStatementParams extends HashMap<Integer, Object> {
     private static final long serialVersionUID = 6532469330995484424L;
 }

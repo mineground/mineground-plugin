@@ -15,7 +15,9 @@
 
 package com.mineground.base;
 
-// Exception which will be thrown when a Promise instance is being settled multiple times.
+/**
+ * Exception which will be thrown when a Promise instance is being settled multiple times.
+ */
 public class PromiseSettledException extends RuntimeException {
     private static final long serialVersionUID = -1632749887937726475L;
 

@@ -23,14 +23,20 @@ import com.mineground.base.FeatureBase;
 import com.mineground.base.FeatureInitParams;
 import com.mineground.base.Message;
 
-// When a player joins or leaves Mineground, we'd like to welcome them and inform the other players
-// about their presence. Furthermore, when a player joins Mineground for the first time, we may want
-// to be a little bit nicer and give them some money and inventory to start with.
+/**
+ * When a player joins or leaves Mineground, we'd like to welcome them and inform the other players
+ * about their presence. Furthermore, when a player joins Mineground for the first time, we may want
+ * to be a little bit nicer and give them some money and inventory to start with.
+ */
 public class PlayerSessionMessages extends FeatureBase {
-    // The amount of money a player will receive when they join Mineground for the first time.
+    /**
+     * The amount of money a player will receive when they join Mineground for the first time.
+     */
     private static final int MONEY_GIFT_ON_FIRST_JOIN = 100;
 
-    // Message used for welcoming players to Mineground when they join for the first time.
+    /**
+     * Message used for welcoming players to Mineground when they join for the first time.
+     */
     private final Message mWelcomeFirstTimeMessage;
     
     public PlayerSessionMessages(FeatureInitParams params) {

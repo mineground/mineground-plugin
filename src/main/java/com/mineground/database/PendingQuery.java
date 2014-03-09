@@ -17,8 +17,10 @@ package com.mineground.database;
 
 import com.mineground.base.Promise;
 
-// Class for representing a query which has not been executed yet, or which has been executed
-// but whose promise has not been settled yet.
+/**
+ * Class for representing a query which has not been executed yet, or which has been executed
+ * but whose promise has not been settled yet.
+ */
 public class PendingQuery {
     public Promise<DatabaseResult> promise;
     

@@ -15,15 +15,27 @@
 
 package com.mineground.base;
 
-// Handler class which users of |Promise.then()| need to implement in order to know whether
-// the promise has been fulfilled or rejected. The generic parameter |SuccessValueType| indicates
-// the argument type which a promise must be resolved with.
+/**
+ * Handler class which users of |Promise.then()| need to implement in order to know whether
+ * the promise has been fulfilled or rejected. The generic parameter |SuccessValueType| indicates
+ * the argument type which a promise must be resolved with.
+ *
+ * @param <SuccessValueType> Type of the argument the Promise must be resolved with.
+ */
 public interface PromiseResultHandler<SuccessValueType> {
-    // Called when a promise has been fulfilled, with |result| of type |SuccessValueType| containing
-    // the information retrieved by the resolver.
+    /**
+     * Called when a promise has been fulfilled, with |result| of type |SuccessValueType| containing
+     * the information retrieved by the resolver.
+     *
+     * @param result The result the Promise has been resolved with.
+     */
     void onFulfilled(SuccessValueType result);
 
-    // Called when a promise has been rejected, with |error| being the PromiseError object
-    // containing information about why it has been rejected.
+    /**
+     * Called when a promise has been rejected, with |error| being the PromiseError object
+     * containing information about why it has been rejected.
+     * 
+     * @param error The reason why the Promise was rejected.
+     */
     void onRejected(PromiseError error);
 }
