@@ -33,16 +33,11 @@ public class PlayerSessionMessages extends FeatureBase {
     // Message used for welcoming players to Mineground when they join for the first time.
     private final Message mWelcomeFirstTimeMessage;
     
-    // Message used for welcoming players to Mineground when they join again.
-    private final Message mWelcomeMessage;
-    
     public PlayerSessionMessages(FeatureInitParams params) {
         super(params);
         
         mWelcomeFirstTimeMessage = Message.Load("first_join");
         mWelcomeFirstTimeMessage.setInteger("money_gift", MONEY_GIFT_ON_FIRST_JOIN);
-
-        mWelcomeMessage = Message.Load("join");
     }
     
     public void onPlayerJoined(Player player) {
@@ -51,11 +46,11 @@ public class PlayerSessionMessages extends FeatureBase {
         
         final Account account = getAccountManager().getAccountForPlayer(player);
         if (account.isFirstJoin()) {
+            // TODO: We need to differentiate between a player's first join ever, and their first
+            //       join as a builder. We need to hook in to the registration system for this..
+
             mWelcomeFirstTimeMessage.setString("nickname", player.getName());
-            mWelcomeFirstTimeMessage.send(player, Color.IMPORTANT_MESSAGE);
-        } else {
-            mWelcomeMessage.setString("nickname", player.getName());
-            mWelcomeMessage.send(player, Color.IMPORTANT_MESSAGE);
+            mWelcomeFirstTimeMessage.send(player, Color.YELLOW);
         }
     }
     

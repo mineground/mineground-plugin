@@ -36,7 +36,7 @@ public class Account {
     }
     
     public boolean isFirstJoin() {
-        return false;
+        return true;
     }
     
     public AccountData getAccountData() {

@@ -150,7 +150,7 @@ public class AccountManager {
         // We cannot log them in automatically. They now have to use the /login command with their
         // password before they will be allowed to participate in playing on Mineground.
         mAuthenticationRequestMap.put(player, new PendingAuthentication(accountData, dispatcher));
-        mRequirePasswordMessage.send(player, Color.IMPORTANT_MESSAGE);
+        mRequirePasswordMessage.send(player, Color.ACTION_REQUIRED);
     }
     
     // Users have to identify with their account using the /login command, using which they specify
@@ -183,7 +183,7 @@ public class AccountManager {
         String password = arguments[0];
         try {
             if (!PasswordHash.validatePassword(password, authenticationRequest.accountData.password)) {
-                mInvalidPasswordMessage.send(player, Color.IMPORTANT_MESSAGE);
+                mInvalidPasswordMessage.send(player, Color.ACTION_REQUIRED);
             } else {
                 didAuthenticatePlayer(player, authenticationRequest.accountData, authenticationRequest.dispatcher);
                 mAuthenticationRequestMap.remove(player);

@@ -41,9 +41,9 @@ public final class Color {
     // Used for player status change messages, for example when a player joins or leaves.
     // ...
     
-    // Used for important messages which we'd like the player to notice. Welcoming them to the
-    // server could be part of this, but also more serious things such as demands from admins.
-    public static final String IMPORTANT_MESSAGE = RED;
+    // Used for important messages which we'd like the player to notice, because the player has
+    // to act on them. Could also be more serious things such as demands from administrators.
+    public static final String ACTION_REQUIRED = RED;
     
     // Used for serious errors from the Mineground plugin itself. The player won't immediately be
     // able to act upon those, but they will be of interest for administrators and developers.

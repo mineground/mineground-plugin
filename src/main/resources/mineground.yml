@@ -23,14 +23,20 @@ database:
 # Messages through which Mineground will communicate with players. Text between brackets are macros,
 # which will be replaced with actual values. Each entry can be a string, or a list of strings.
 messages:
+    # Welcome message every player sees when they join the server.
     welcome: "Welcome on Mineground! §bhttp://mineground.com"
+
+    # Message asking the user to identify themselves to their account (action required).
     login_password: "Please identify yourself: /login [password]"
+
+    # Message informing the user that the entered password is incorrect.
     login_invalid:
         - "Sorry, that's not the right password for this account..."
         - "If you forgot your password, please visit our website:"
         - "    §bhttp://mineground.com/"
 
-    join: "Welcome back on Mineground, {nickname}!"
+    # Welcoming message to players who join Mineground for the first time.
+    # Available macros: {nickname}, {money_gift}.
     first_join:
-        - "Welcome on Mineground, {nickname}, we're glad to have you!"
-        - "Please accept ${start_cash} and some tools to get you started."
+        - "Welcome on our server, {nickname}! We're glad to have you!"
+        - "Please accept ${money_gift} and some tools to get you started."

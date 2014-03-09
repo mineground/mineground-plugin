@@ -93,7 +93,7 @@ public class Message {
         final ArrayList<String> messageLines = new ArrayList<String>(mMessageLines.size());
         for (String messageLine : mMessageLines) {
             for (String macroKey : mMessageMacros.keySet())
-                messageLine.replace("{" + macroKey + "}", mMessageMacros.get(macroKey));
+                messageLine = messageLine.replace("{" + macroKey + "}", mMessageMacros.get(macroKey));
             
             // TODO: Do we really need to fix silly YAML-file encoding issues here? :-(.
             messageLine = messageLine.replace("\u00C2", "");
