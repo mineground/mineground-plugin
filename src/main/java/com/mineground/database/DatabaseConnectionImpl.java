@@ -329,6 +329,7 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
             mDatabaseThread.join(MAXIMUM_DISCONNECT_WAIT_TIME);
         } catch (InterruptedException exception) {
             mLogger.severe("Database shutdown has been interrupted: " + exception.getMessage());
+            mLogger.severe("This means that user data may have been lost due to unexecuted queries!");
         }
     }
 

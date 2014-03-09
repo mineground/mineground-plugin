@@ -17,11 +17,12 @@ package com.mineground.account;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -60,6 +61,12 @@ public class AccountManager {
      * Map between Bukkit players and their Mineground accounts.
      */
     private final Map<Player, Account> mPlayerAccountMap;
+    
+    /**
+     * List containing all the online Mineground Staff members. Included in this selection are
+     * the moderators, administrators and Management.
+     */
+    private final List<Player> mOnlineStaff;
     
     /**
      * The message which will be send to every connecting player, regardless of their account.
@@ -102,6 +109,7 @@ public class AccountManager {
         mAccountDatabase = new AccountDatabase(database);
         mPlayerAccountMap = new HashMap<Player, Account>();
         mAuthenticationRequestMap = new HashMap<Player, PendingAuthentication>();
+        mOnlineStaff = new ArrayList<Player>();
         
         mConnectionMessage = Message.Load("welcome");
         mRequirePasswordMessage = Message.Load("login_password");
@@ -254,7 +262,18 @@ public class AccountManager {
             throw new RuntimeException("|account| must not be NULL here.");
 
         // TODO: Log this with the PlayerLog class.
-        account.load(accountData);
+        account.initialize(accountData);
+        
+        // Moderators, administrators and Management members should be added to the online staff.
+        if (account.getLevel() == AccountLevel.Moderator ||
+                account.getLevel() == AccountLevel.Administrator ||
+                account.getLevel() == AccountLevel.Management) {
+            mOnlineStaff.add(player);
+        }
+        
+        // Management members will be granted server operator rights automatically.
+        if (account.getLevel() == AccountLevel.Management)
+            player.setOp(true);
         
         dispatcher.onPlayerJoined(player);
     }
@@ -268,6 +287,7 @@ public class AccountManager {
      */
     public void unloadAccount(Player player) {
         mAuthenticationRequestMap.remove(player);
+        mOnlineStaff.remove(player);
 
         final Account account = mPlayerAccountMap.get(player);
         if (account == null)
@@ -280,6 +300,16 @@ public class AccountManager {
             return;
         
         mAccountDatabase.updateAccount(accountData, player);
+    }
+    
+    /**
+     * Returns a list of online staff members. Included in this selection are moderators, admins and
+     * Management members.
+     * 
+     * @return A list of online staff members.
+     */
+    public List<Player> getOnlineStaff() {
+        return mOnlineStaff;
     }
     
     /**
