@@ -111,9 +111,20 @@ public class DatabaseConnectionImpl implements DatabaseConnection {
                     
                     mFinishedQueryQueue.add(executeQuery(query));
 
-                } catch (InterruptedException e) {
-                    // TODO: We need to recognize when a connection has been lost, and set the
-                    //       |mConnection| member to NULL so a reconnection can be started.
+                } catch (InterruptedException e) { /** It's safe to ignore this exception **/ }
+            }
+            
+            // Flush the queries which are still in the queue, instead of disregarding them
+            // altogether, which may lead to a loss of user data. At this point we discard any
+            // pending SELECT queries, given that it's likely their features are gone already.
+            if (mPendingQueryQueue.size() > 0) {
+                mLogger.info("Shutting down database thread.. flushing " + mPendingQueryQueue.size() + " queries.");
+                while (mPendingQueryQueue.size() > 0) {
+                    PendingQuery query = mPendingQueryQueue.poll();
+                    if (query == null || query.query.startsWith("SELECT"))
+                        continue;
+                    
+                    executeQuery(query);
                 }
             }
 
