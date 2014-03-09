@@ -194,7 +194,7 @@ public class AccountManager {
      * @return          Whether we could process the login attempt.
      */
     @CommandHandler("login")
-    public boolean onLoginCommand(CommandSender sender, Command command, String[] arguments) {
+    public boolean onLoginCommand(CommandSender sender, String[] arguments) {
         if (!(sender instanceof Player) || arguments.length == 0)
             return false;
         

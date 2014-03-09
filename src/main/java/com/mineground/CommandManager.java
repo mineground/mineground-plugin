@@ -110,7 +110,7 @@ public class CommandManager {
         // Execute the command by invoking the method, and returning the return value (which should
         // be a boolean) to the caller of onCommand.
         try {
-            return (boolean) observer.method.invoke(instance, sender, command, arguments);
+            return (boolean) observer.method.invoke(instance, sender, arguments);
 
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             mLogger.severe("An exception occurred while attempting to execute the command /" + command.getName() + ":");
