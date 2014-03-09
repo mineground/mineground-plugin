@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import com.mineground.EventDispatcher;
 import com.mineground.base.Color;
@@ -105,11 +106,18 @@ public class AccountManager {
      */
     private final Map<Player, PendingAuthentication> mAuthenticationRequestMap;
     
-    public AccountManager(Database database) {
+    /**
+     * The Java plugin (read: Mineground instance) this Account Manager belongs to. The plugin is
+     * required in order to attach permissions to a player.
+     */
+    private final JavaPlugin mPlugin;
+    
+    public AccountManager(Database database, JavaPlugin plugin) {
         mAccountDatabase = new AccountDatabase(database);
         mPlayerAccountMap = new HashMap<Player, Account>();
         mAuthenticationRequestMap = new HashMap<Player, PendingAuthentication>();
         mOnlineStaff = new ArrayList<Player>();
+        mPlugin = plugin;
         
         mConnectionMessage = Message.Load("welcome");
         mRequirePasswordMessage = Message.Load("login_password");
@@ -262,7 +270,7 @@ public class AccountManager {
             throw new RuntimeException("|account| must not be NULL here.");
 
         // TODO: Log this with the PlayerLog class.
-        account.initialize(accountData);
+        account.initialize(accountData, player, player.addAttachment(mPlugin));
         
         // Moderators, administrators and Management members should be added to the online staff.
         if (account.getLevel() == AccountLevel.Moderator ||
@@ -270,11 +278,7 @@ public class AccountManager {
                 account.getLevel() == AccountLevel.Management) {
             mOnlineStaff.add(player);
         }
-        
-        // Management members will be granted server operator rights automatically.
-        if (account.getLevel() == AccountLevel.Management)
-            player.setOp(true);
-        
+
         dispatcher.onPlayerJoined(player);
     }
 
@@ -293,6 +297,7 @@ public class AccountManager {
         if (account == null)
             return;
         
+        account.terminate(player);
         mPlayerAccountMap.remove(player);
         
         final AccountData accountData = account.getAccountData();

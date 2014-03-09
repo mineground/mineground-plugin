@@ -15,6 +15,9 @@
 
 package com.mineground.account;
 
+import org.bukkit.entity.Player;
+import org.bukkit.permissions.PermissionAttachment;
+
 /**
  * The Account class contains all information, settings and options in regards to an individual
  * player. The instances themselves should be retrieved through the AccountManager. All changes made
@@ -32,19 +35,47 @@ public class Account {
      * abilities of the player. Management members will be made server operators automatically.
      */
     private AccountLevel mAccountLevel;
+    
+    /**
+     * The Permission Attachment for this player, which belongs to the player but is owned by the
+     * Mineground plugin. This allows us to grant them additional permissions.
+     */
+    private PermissionAttachment mPermissionAttachment;
 
     public Account() {
         mAccountLevel = AccountLevel.Guest;
     }
     
     /**
-     * Initializes this account based on the information available in |accountData|.
+     * Initializes this account based on the information available in |accountData|. Mineground will
+     * automatically grant the "mineground.[level]" permission to this player, which basically is
+     * a list of the permissions available for that level. Management members will automatically
+     * receive server operator rights as well.
      * 
      * @param accountData The account data to be associated with this account.
      */
-    public void initialize(AccountData accountData) {
-        mAccountLevel = accountData.level;
+    public void initialize(AccountData accountData, Player player, PermissionAttachment permissionAttachment) {
         mAccountData = accountData;
+        mAccountLevel = accountData.level;
+        mPermissionAttachment = permissionAttachment;
+        
+        final String normalizedLevel = AccountLevel.toString(mAccountLevel).toLowerCase();
+
+        permissionAttachment.setPermission("mineground." + normalizedLevel, true);
+        if (mAccountLevel == AccountLevel.Management)
+            player.setOp(true);
+    }
+    
+    /**
+     * Terminates the account settings of |player|. Revoke all granted permissions by removing our
+     * permission attachment from the player.
+     * 
+     * @param player The player to terminate account settings of.
+     */
+    public void terminate(Player player) {
+        player.removeAttachment(mPermissionAttachment);
+        if (mAccountLevel == AccountLevel.Management)
+            player.setOp(false);
     }
     
     /**
