@@ -140,8 +140,8 @@ public class AccountManager {
         if (previousSessionTimeAgo < (MAXIMUM_AUTOMATIC_LOGIN_HOURS * 60 * 60 * 1000)) {
             // The player's last session was less than |MAXIMUM_AUTOMATIC_LOGIN_HOURS| hours ago, so
             // if their IP address matches we will automatically log them in again.
-            final String ipAddress = player.getAddress().getAddress().toString();
-            if (accountData.last_ip != null && accountData.last_ip == ipAddress) {
+            final String ipAddress = player.getAddress().getAddress().getHostAddress();
+            if (accountData.last_ip != null && accountData.last_ip.equals(ipAddress)) {
                 didAuthenticatePlayer(player, accountData, dispatcher);
                 return;
             }
