@@ -120,7 +120,7 @@ public class Mineground extends JavaPlugin {
         mDatabase = new Database(mConfiguration, this);
         mDatabase.connect();
 
-        mAccountManager = new AccountManager(mDatabase);
+        mAccountManager = new AccountManager(mDatabase, this);
         mChatManager = new ChatManager();
         
         mEventDispatcher = new EventDispatcher();

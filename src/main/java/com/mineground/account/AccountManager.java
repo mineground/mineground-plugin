@@ -31,9 +31,9 @@ import com.mineground.EventDispatcher;
 import com.mineground.base.Color;
 import com.mineground.base.CommandHandler;
 import com.mineground.base.Message;
-import com.mineground.base.PasswordHash;
 import com.mineground.base.PromiseError;
 import com.mineground.base.PromiseResultHandler;
+import com.mineground.base.SecurePasswordHash;
 import com.mineground.database.Database;
 
 /**
@@ -235,7 +235,7 @@ public class AccountManager {
         
         String password = arguments[0];
         try {
-            if (!PasswordHash.validatePassword(password, authenticationRequest.accountData.password)) {
+            if (!SecurePasswordHash.validatePassword(password, authenticationRequest.accountData.password)) {
                 mInvalidPasswordMessage.send(player, Color.ACTION_REQUIRED);
             } else {
                 didAuthenticatePlayer(player, authenticationRequest.accountData, authenticationRequest.dispatcher);
