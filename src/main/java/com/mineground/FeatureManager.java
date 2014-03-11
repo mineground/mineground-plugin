@@ -21,6 +21,7 @@ import java.util.Map;
 import com.mineground.base.Feature;
 import com.mineground.base.FeatureInitParams;
 import com.mineground.features.DevelopmentLog;
+import com.mineground.features.LocationManager;
 import com.mineground.features.PlayerSessionMessages;
 
 /**
@@ -55,6 +56,7 @@ public class FeatureManager {
     public void initializeFeatures() {
         // TODO: Should we implement a more formal dependency model between features? That would
         //       have quite significant impact for the initialization order of them.
+        mFeatures.put("LocationManager", new LocationManager(mInitParams));
         mFeatures.put("PlayerSessionMessages", new PlayerSessionMessages(mInitParams));
         
         // TODO: Remove this feature when Mineground is mature enough to not need constant hacking.

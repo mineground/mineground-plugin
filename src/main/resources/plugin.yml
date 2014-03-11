@@ -4,10 +4,77 @@ version: 2.0
 website: mineground.com
 author: LVM Development Team
 
+# Permission descriptions for the various features implemented in Mineground.
+permissions:
+    # ----------------------------------------------------------------------------------------------
+    # Permission groups
+    # ----------------------------------------------------------------------------------------------
+    mineground.guest:
+        description: All permissions available for guests.
+        children:
+    mineground.builder:
+        description: All permission available for builders.
+        children:
+            mineground.guest: true
+            # Permissions to grant to builders:
+            warp.create: true
+            warp.teleport: true
+            warp.remove: true
+    mineground.sbuilder:
+        description: All permissions available for sbuilders.
+        children:
+            mineground.builder: true
+            # Permissions to grant to super-builders:
+    mineground.vip:
+        description: All permissions available for VIPs.
+        children:
+            mineground.sbuilder: true
+            # Permissions to grant to VIPs:
+    mineground.moderator:
+        description: All permissions available for moderators.
+        children:
+            mineground.vip: true
+            # Permissions to grant to moderators:
+            wrap.teleport_no_password: true
+            warp.remove_all: true
+    mineground.administrator:
+        description: All permissions available for administrators.
+        children:
+            mineground.moderator: true
+            # Permissions to grant to administrators:
+    mineground.management:
+        description: All permissions available for Management members.
+        children:
+            mineground.administrator: true
+            # Permissions to grant to Management members:
+
+    # ----------------------------------------------------------------------------------------------
+    # Warp Manager - allows players to create warps, warp to them and share them with other players.
+    # ----------------------------------------------------------------------------------------------
+    warp.create:
+        description: Allows you to create a new warp location.
+        default: op
+    warp.teleport:
+        description: Allows you to teleport to warps of any player.
+        default: op
+    warp.teleport_no_password:
+        description: Allows you to teleport to warps of any player without needing a password.
+        default: op
+    warp.remove:
+        description: Allows you to remove your own warp locations.
+        default: op
+    warp.remove_all:
+        description: Allows you to remove any warp location.
+        default: op
+
 commands:
     login:
         description: Identify yourself with your account.
         usage: /login [password]
+    warp:
+        description: Stores or teleports you to a location.
+        usage: /warp
+    
     bread:
         description: Gives you 16 pieces of bread.
         usage: /bread
