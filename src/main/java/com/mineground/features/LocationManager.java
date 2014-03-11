@@ -152,7 +152,43 @@ public class LocationManager extends FeatureBase {
         // TODO: Implement this method.
         return null;
     }
+    
+    /**
+     * Implements the /home command, which is a convenient way for players to teleport back to their
+     * homes. It does not matter in which world the player currently is for this command to work.
+     * The player can update their home location at all times as well.
+     * 
+     * /home        Teleports to the stored player's home location.
+     * /home set    Updates the player's home location to their current position.
+     * 
+     * @param sender    The Player or console who executed this command.
+     * @param arguments The arguments which they passed on to this command.
+     * @return          Whether this command could be handled successfully.
+     */
+    @CommandHandler("home")
+    public boolean onHomeCommand(CommandSender sender, String[] arguments) {
+     // TODO: Implement this command.
+        return true;
+    }
 
+    /**
+     * Implements the /spawn command, which is a convenient way for players to teleport to the spawn
+     * in the world they're currently in. Certain staff members may be granted a permission which
+     * allows them to set the spawn position for a given world.
+     * 
+     * /spawn           Teleports the player to the spawn position of their current world.
+     * /spawn set       Updates the spawn position to the player's current location.
+     * 
+     * @param sender    The Player or console who executed this command.
+     * @param arguments The arguments which were passed on to this command.
+     * @return          Whether this command could be handled successfully.
+     */
+    @CommandHandler("spawn")
+    public boolean onSpawnCommand(CommandSender sender, String[] arguments) {
+     // TODO: Implement this command.
+        return true;
+    }
+    
     /**
      * Implements the /warp command, which is the primary interface for players to manage their
      * stored locations with. This is a reasonably complicated command with the following options:
@@ -164,6 +200,8 @@ public class LocationManager extends FeatureBase {
      * /warp list               Lists all warps created by the player in the current world.
      * /warp remove             Displays usage information for removing warps.
      * /warp remove NAME        Removes warp |NAME| from the current world.
+     * /warp NAME               Teleports to the warp |NAME| in the current world.
+     * /warp NAME PASS          Teleports to the warp |NAME| in the current world, using |PASS|.
      * 
      * The functionality exposed by this command is protected by a set of permissions, all defined
      * and granted to the various player levels in the plugin.yml file of Mineground.
@@ -175,15 +213,6 @@ public class LocationManager extends FeatureBase {
     @CommandHandler("warp")
     public boolean onWarpCommand(CommandSender sender, String[] arguments) {
         // TODO: Implement this command.
-        return true;
-    }
-    
-    /**
-     * 
-     */
-    @CommandHandler("spawn")
-    public boolean onSpawnCommand(CommandSender sender, String[] arguments) {
-        // TODO: Implement this method.
         return true;
     }
 }

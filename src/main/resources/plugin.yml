@@ -67,14 +67,33 @@ permissions:
         description: Allows you to remove any warp location.
         default: op
 
+# The commands which are supported by the Mineground plugin.
 commands:
+    # ----------------------------------------------------------------------------------------------
+    # AccountManager
+    # ----------------------------------------------------------------------------------------------
     login:
         description: Identify yourself with your account.
         usage: /login [password]
+
+
+    # ----------------------------------------------------------------------------------------------
+    # Feature: Location Manager
+    # ----------------------------------------------------------------------------------------------
+    home:
+        description: Teleports you directly back to your home.
+        usage: /home [set]
+    spawn:
+        description: Teleports you to the spawn position of the current world.
+        usage: /spawn [set]
     warp:
         description: Stores or teleports you to a location.
-        usage: /warp
-    
+        usage: /warp [create/list/remove/NAME]
+
+
+    # ----------------------------------------------------------------------------------------------
+    # TODO: CLEAN UP THE FOLLOWING DEBUGGING COMMANDS.
+    # ----------------------------------------------------------------------------------------------
     bread:
         description: Gives you 16 pieces of bread.
         usage: /bread
