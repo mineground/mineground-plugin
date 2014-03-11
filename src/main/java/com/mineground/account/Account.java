@@ -73,9 +73,25 @@ public class Account {
      * @param player The player to terminate account settings of.
      */
     public void terminate(Player player) {
+        if (mAccountData == null)
+            return;
+        
         player.removeAttachment(mPermissionAttachment);
         if (mAccountLevel == AccountLevel.Management)
             player.setOp(false);
+    }
+    
+    /**
+     * Returns the user Id which identifies this Id in the database. Many other tables reference to
+     * this Id to indicate which player they mean.
+     * 
+     * @return The account's user Id.
+     */
+    public int getUserId() {
+        if (mAccountData == null)
+            return 0;
+        
+        return mAccountData.user_id;
     }
     
     /**

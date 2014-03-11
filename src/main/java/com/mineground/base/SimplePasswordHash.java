@@ -33,7 +33,7 @@ public class SimplePasswordHash {
      * @param password  The password which should be hashed.
      * @return          The numeric hash calculated based on |password|.
      */
-    public static long createHash(String password) {
+    public static int createHash(String password) {
         return createHash(password.toCharArray());
     }
     
@@ -45,8 +45,8 @@ public class SimplePasswordHash {
      * @param password  The password which should be hashed.
      * @return          The numeric hash calculated based on |password|.
      */
-    public static long createHash(char[] password) {
-        long hash = 5381;
+    public static int createHash(char[] password) {
+        int hash = 5381;
         for (int index = 0; index < password.length; ++index)
             hash = ((hash << 5) + hash) + password[index];
         
@@ -61,7 +61,7 @@ public class SimplePasswordHash {
      * @param correctHash   The hash against which the password should be validated.
      * @return              Is |password| the correct password?
      */
-    public static boolean validatePassword(String password, long correctHash) {
+    public static boolean validatePassword(String password, int correctHash) {
         return validatePassword(password.toCharArray(), correctHash);
     }
     
@@ -73,7 +73,7 @@ public class SimplePasswordHash {
      * @param correctHash   The hash against which the password should be validated.
      * @return              Is |password| the correct password?
      */
-    public static boolean validatePassword(char[] password, long correctHash) {
+    public static boolean validatePassword(char[] password, int correctHash) {
         return createHash(password) == correctHash;
     }
 }

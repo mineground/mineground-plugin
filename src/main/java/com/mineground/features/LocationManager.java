@@ -22,6 +22,7 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import com.mineground.account.Account;
 import com.mineground.base.CommandHandler;
 import com.mineground.base.FeatureBase;
 import com.mineground.base.FeatureInitParams;
@@ -62,7 +63,7 @@ public class LocationManager extends FeatureBase {
         public int location_id;
         public int user_id;
         public String name;
-        public long password;
+        public int password;
         public String world;
         public int position_x;
         public int position_y;
@@ -80,7 +81,7 @@ public class LocationManager extends FeatureBase {
             location_id = resultRow.getInteger("location_id").intValue();
             user_id = resultRow.getInteger("user_id").intValue();
             name = resultRow.getString("name");
-            password = resultRow.getInteger("password");
+            password = resultRow.getInteger("password").intValue();
             world = resultRow.getString("world");
             position_x = resultRow.getInteger("position_x").intValue();
             position_y = resultRow.getInteger("position_y").intValue();
@@ -109,7 +110,13 @@ public class LocationManager extends FeatureBase {
                     "locations.world = ?"
         );
 
-        mCreateLocationStatement = getDatabase().prepare("");
+        mCreateLocationStatement = getDatabase().prepare(
+                "INSERT INTO " +
+                    "locations (user_id, name, password, world, position_x, position_y, position_z, position_yaw, position_pitch) " +
+                "VALUES " +
+                    "(?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        );
+        
         mRemoveLocationStatement = getDatabase().prepare("");
         
     }
@@ -146,19 +153,6 @@ public class LocationManager extends FeatureBase {
     }
     
     /**
-     * Asynchronously compiles a list of all locations which |player| has created in their current
-     * world. When available, the returned Promise will be resolved with an ArrayList, even if there
-     * are no locations. The Promise will only be rejected if there was a database problem.
-     * 
-     * @param player    The player to find all locations for.
-     * @return          A Promise, which will be resolved with a list of their locations.
-     */
-    private Promise<List<SavedLocation>> listLocations(final Player player) {
-        // TODO: Implement this method.
-        return null;
-    }
-    
-    /**
      * Asynchronously creates a new location in the database. The new location will be owned by
      * |player|, which is also where the initial position will be read from. It will be accessible
      * using |locationName| when searching for locations in the player's current world.
@@ -172,7 +166,62 @@ public class LocationManager extends FeatureBase {
      * @param password      Optional password with which the location should be protected.
      * @return              A promise, which will be resolved with the location Id.
      */
-    private Promise<Integer> createLocation(final Player player, String locationName, String password) {
+    private Promise<Integer> createLocation(final Player player, final String locationName, String password) {
+        final Promise<Integer> promise = new Promise<Integer>();
+        final Account account = getAccountForPlayer(player);
+        
+        // We need the player's account to get their user Id, required for creating a warp point.
+        if (account == null || account.getUserId() == 0) {
+            promise.reject("Your account has not loaded properly, please contact an administrator.");
+            return promise;
+        }
+        
+        // Hash the password using SimplePasswordHash if it's more than an empty string.
+        int passwordHash = 0;
+        if (!password.isEmpty())
+            passwordHash = SimplePasswordHash.createHash(password);
+
+        final Location location = player.getLocation();
+        
+        mCreateLocationStatement.setInteger(1, account.getUserId());
+        mCreateLocationStatement.setString(2, locationName);
+        mCreateLocationStatement.setInteger(3, passwordHash);
+        mCreateLocationStatement.setString(4, player.getWorld().getName());
+        mCreateLocationStatement.setInteger(5, (long) location.getX());
+        mCreateLocationStatement.setInteger(6, (long) (location.getY() + 0.5));
+        mCreateLocationStatement.setInteger(7, (long) location.getZ());
+        mCreateLocationStatement.setDouble(8, location.getYaw());
+        mCreateLocationStatement.setDouble(9, location.getPitch());
+        mCreateLocationStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
+            public void onFulfilled(DatabaseResult result) {
+                if (result.insertId == 0)
+                    promise.reject("The warp could not be created because of an unknown database error.");
+                else
+                    promise.resolve(result.insertId);
+            }
+            public void onRejected(PromiseError error) {
+                if (error.reason().contains("Duplicate")) {
+                    promise.reject("A warp named \"" + locationName + "\" already exists in this world.");
+                    return;
+                }
+
+                promise.reject("The warp could not be created because of an unknown database error.");
+                getLogger().severe(error.reason());
+            }
+        });
+        
+        return promise;
+    }
+    
+    /**
+     * Asynchronously compiles a list of all locations which |player| has created in their current
+     * world. When available, the returned Promise will be resolved with an ArrayList, even if there
+     * are no locations. The Promise will only be rejected if there was a database problem.
+     * 
+     * @param player    The player to find all locations for.
+     * @return          A Promise, which will be resolved with a list of their locations.
+     */
+    private Promise<List<SavedLocation>> listLocations(final Player player) {
         // TODO: Implement this method.
         return null;
     }
@@ -240,7 +289,37 @@ public class LocationManager extends FeatureBase {
         final Player player = (Player) sender;
         final World world = player.getWorld();
         
-        // TODO: Implement /warp create.
+        // Players may have the ability to create new warp locations by using the /warp create
+        // command. The locations will persist in the database.
+        if (arguments[0].equals("create")) {
+            if (!player.hasPermission("warp.create")) {
+                displayCommandError(player, "You are not allowed to create new warp locations.");
+                return;
+            }
+            
+            if (arguments.length == 1) {
+                displayCommandUsage(player, "/warp create [name] §8[password]");
+                displayCommandDescription(player, "Saves a location, optionally protected with a password.");
+                return;
+            }
+            
+            final String locationName = arguments[1];
+            final String password = (arguments.length >= 3) ? arguments[2] : "";
+            
+            createLocation(player, locationName, password).then(new PromiseResultHandler<Integer>() {
+                public void onFulfilled(Integer warpId) {
+                    // TODO: Register this new warp with the PlayerLog.
+
+                    displayCommandSuccess(player, "The warp \"" + locationName + "\" has been created!");
+                }
+                public void onRejected(PromiseError error) {
+                    displayCommandError(player, error.reason());
+                }
+            });
+            
+            return;
+        }
+
         // TODO: Implement /warp list.
         // TODO: Implement /warp remove.
         
@@ -271,7 +350,6 @@ public class LocationManager extends FeatureBase {
                 player.teleport(new Location(world, (double) location.position_x, (double) location.position_y,
                         (double) location.position_z, (float) location.position_yaw, (float) location.position_pitch));
             }
-
             public void onRejected(PromiseError error) {
                 displayCommandError(player, "The location \"" + destination + "\" is not available in this world.");
             }
