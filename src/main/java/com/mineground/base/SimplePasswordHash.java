@@ -25,19 +25,54 @@ package com.mineground.base;
  * API to SecurePasswordHash, but returns integers as the hashes instead of strings.
  */
 public class SimplePasswordHash {
-
-    public static int createHash(String password) {
+    /**
+     * Calculates a simple hash (32-bit signed integer) based on |password|. The used hash is an
+     * algorithm created by Professor Daniel J. Bernstein, DJB hash. It's very efficient, and manual
+     * testing shows that there are no duplicate values for strings up to six characters in length.
+     * 
+     * @param password  The password which should be hashed.
+     * @return          The numeric hash calculated based on |password|.
+     */
+    public static long createHash(String password) {
         return createHash(password.toCharArray());
     }
     
-    public static int createHash(char[] password) {
-        return -1;
+    /**
+     * Calculates a simple hash (32-bit signed integer) based on |password|. The used hash is an
+     * algorithm created by Professor Daniel J. Bernstein, DJB hash. It's very efficient, and manual
+     * testing shows that there are no duplicate values for strings up to six characters in length.
+     * 
+     * @param password  The password which should be hashed.
+     * @return          The numeric hash calculated based on |password|.
+     */
+    public static long createHash(char[] password) {
+        long hash = 5381;
+        for (int index = 0; index < password.length; ++index)
+            hash = ((hash << 5) + hash) + password[index];
+        
+        return hash;
     }
     
+    /**
+     * Verifies that the hash of |password| is |correctHash|, thereby validating that the given
+     * password is the correct one.
+     * 
+     * @param password      The password which should be validated.
+     * @param correctHash   The hash against which the password should be validated.
+     * @return              Is |password| the correct password?
+     */
     public static boolean validatePassword(String password, int correctHash) {
         return validatePassword(password.toCharArray(), correctHash);
     }
     
+    /**
+     * Verifies that the hash of |password| is |correctHash|, thereby validating that the given
+     * password is the correct one.
+     * 
+     * @param password      The password which should be validated.
+     * @param correctHash   The hash against which the password should be validated.
+     * @return              Is |password| the correct password?
+     */
     public static boolean validatePassword(char[] password, int correctHash) {
         return createHash(password) == correctHash;
     }
