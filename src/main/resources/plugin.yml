@@ -83,9 +83,6 @@ commands:
     home:
         description: Teleports you directly back to your home.
         usage: /home [set]
-    spawn:
-        description: Teleports you to the spawn position of the current world.
-        usage: /spawn [set]
     warp:
         description: Stores or teleports you to a location.
         usage: /warp [create/list/remove/NAME]

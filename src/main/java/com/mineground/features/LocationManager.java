@@ -328,23 +328,7 @@ public class LocationManager extends FeatureBase {
      */
     @CommandHandler("home")
     public void onHomeCommand(CommandSender sender, String[] arguments) {
-     // TODO: Implement this command.
-    }
-
-    /**
-     * Implements the /spawn command, which is a convenient way for players to teleport to the spawn
-     * in the world they're currently in. Certain staff members may be granted a permission which
-     * allows them to set the spawn position for a given world.
-     * 
-     * /spawn           Teleports the player to the spawn position of their current world.
-     * /spawn set       Updates the spawn position to the player's current location.
-     * 
-     * @param sender    The Player or console who executed this command.
-     * @param arguments The arguments which were passed on to this command.
-     */
-    @CommandHandler("spawn")
-    public void onSpawnCommand(CommandSender sender, String[] arguments) {
-     // TODO: Implement this command.
+        // TODO: Implement this command.
     }
     
     /**
@@ -457,7 +441,7 @@ public class LocationManager extends FeatureBase {
             final String locationName = arguments[1];
             
             findLocation(locationName, world.getName()).then(new PromiseResultHandler<SavedLocation>() {
-                public void onFulfilled(SavedLocation location) {
+                public void onFulfilled(final SavedLocation location) {
                     // Players normally are only allowed to remove their own warps, but members of
                     // Mineground's staff will be allowed to remove any warp from the world.
                     if (location.user_id != getUserId(player) && !player.hasPermission("warp.remove_all")) {
@@ -467,6 +451,9 @@ public class LocationManager extends FeatureBase {
                     
                     removeLocation(location).then(new PromiseResultHandler<Void>() {
                         public void onFulfilled(Void result) {
+                            // Records that the player has removed the saved location |location|.
+                            PlayerLog.record(RecordType.WARP_REMOVED, getUserId(player), location.location_id);
+                            
                             displayCommandSuccess(player, "The location \"" + locationName + "\" has been removed from this world.");
                         }
                         public void onRejected(PromiseError error) {
