@@ -61,7 +61,7 @@ public class SimplePasswordHash {
      * @param correctHash   The hash against which the password should be validated.
      * @return              Is |password| the correct password?
      */
-    public static boolean validatePassword(String password, int correctHash) {
+    public static boolean validatePassword(String password, long correctHash) {
         return validatePassword(password.toCharArray(), correctHash);
     }
     
@@ -73,7 +73,7 @@ public class SimplePasswordHash {
      * @param correctHash   The hash against which the password should be validated.
      * @return              Is |password| the correct password?
      */
-    public static boolean validatePassword(char[] password, int correctHash) {
+    public static boolean validatePassword(char[] password, long correctHash) {
         return createHash(password) == correctHash;
     }
 }

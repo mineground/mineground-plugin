@@ -17,6 +17,8 @@ package com.mineground.features;
 
 import java.util.List;
 
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -26,7 +28,9 @@ import com.mineground.base.FeatureInitParams;
 import com.mineground.base.Promise;
 import com.mineground.base.PromiseError;
 import com.mineground.base.PromiseResultHandler;
+import com.mineground.base.SimplePasswordHash;
 import com.mineground.database.DatabaseResult;
+import com.mineground.database.DatabaseResultRow;
 import com.mineground.database.DatabaseStatement;
 
 /**
@@ -54,17 +58,36 @@ public class LocationManager extends FeatureBase {
      * it for conveniently removing it. The values will be initialized from the constructor, which
      * takes a DatabaseResultRow instance as its parameter to read information from.
      */
-    class Location {
+    class SavedLocation {
         public int location_id;
         public int user_id;
         public String name;
         public long password;
         public String world;
-        public int x;
-        public int y;
-        public int z;
-        public double yaw;
-        public double pitch;
+        public int position_x;
+        public int position_y;
+        public int position_z;
+        public double position_yaw;
+        public double position_pitch;
+        
+        /**
+         * Initializes the SavedLocation instance based on information read from the database, as
+         * passed in |resultRow|, which is a single row from the "locations" table.
+         * 
+         * @param resultRow The database row containing the location information.
+         */
+        public SavedLocation(DatabaseResultRow resultRow) {
+            location_id = resultRow.getInteger("location_id").intValue();
+            user_id = resultRow.getInteger("user_id").intValue();
+            name = resultRow.getString("name");
+            password = resultRow.getInteger("password");
+            world = resultRow.getString("world");
+            position_x = resultRow.getInteger("position_x").intValue();
+            position_y = resultRow.getInteger("position_y").intValue();
+            position_z = resultRow.getInteger("position_z").intValue();
+            position_yaw = resultRow.getDouble("position_yaw");
+            position_pitch = resultRow.getDouble("position_pitch");
+        }
     }
     
     /**
@@ -100,20 +123,21 @@ public class LocationManager extends FeatureBase {
      * @param worldName     The world in which this location exists.
      * @return              A Promise, which will be resolved with the Location once available.
      */
-    private Promise<Location> findLocation(String locationName, String worldName) {
-        final Promise<Location> promise = new Promise<Location>();
+    private Promise<SavedLocation> findLocation(String locationName, String worldName) {
+        final Promise<SavedLocation> promise = new Promise<SavedLocation>();
         
         mFindLocationStatement.setString(1, locationName);
         mFindLocationStatement.setString(2, worldName);
         mFindLocationStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
             public void onFulfilled(DatabaseResult result) {
-                // TODO Auto-generated method stub
-                
+                if (result.rows.size() == 0) {
+                    promise.reject("The location does not exist in the database.");
+                    return;
+                }
+                promise.resolve(new SavedLocation(result.rows.get(0)));
             }
-
             public void onRejected(PromiseError error) {
-                
-                
+                getLogger().severe("Could not find a location in the database (table: locations): " + error.reason());
                 promise.reject("The location could not be read from the database.");
             }
         });
@@ -129,7 +153,7 @@ public class LocationManager extends FeatureBase {
      * @param player    The player to find all locations for.
      * @return          A Promise, which will be resolved with a list of their locations.
      */
-    private Promise<List<Location>> listLocations(final Player player) {
+    private Promise<List<SavedLocation>> listLocations(final Player player) {
         // TODO: Implement this method.
         return null;
     }
@@ -207,6 +231,50 @@ public class LocationManager extends FeatureBase {
      */
     @CommandHandler("warp")
     public void onWarpCommand(CommandSender sender, String[] arguments) {
-        // TODO: Implement this command.
+        if (arguments.length == 0) {
+            displayCommandUsage(sender, "/warp [create/list/remove/§nname§r]");
+            displayCommandDescription(sender, "Creates, removes, lists or teleports to your locations.");
+            return;
+        }
+        
+        final Player player = (Player) sender;
+        final World world = player.getWorld();
+        
+        // TODO: Implement /warp create.
+        // TODO: Implement /warp list.
+        // TODO: Implement /warp remove.
+        
+        // The player wants to teleport to a previously created warp in the current world. Find the
+        // warp in the database, make sure that the password matches, and then teleport them.
+        final String destination = arguments[0];
+        final String password = (arguments.length >= 2) ? arguments[1] : "";
+        
+        if (!player.hasPermission("warp.teleport")) {
+            displayCommandError(player, "You are not allowed to teleport to saved locations.");
+            return;
+        }
+
+        findLocation(destination, world.getName()).then(new PromiseResultHandler<SavedLocation>() {
+            public void onFulfilled(SavedLocation location) {
+                // If the location has been protected by a password, this needs to be verified. Only
+                // players with the warp.teleport_no_password permission are able to override this.
+                if (location.password != 0 && !player.hasPermission("warp.teleport_no_password")) {
+                    if (!SimplePasswordHash.validatePassword(password, location.password)) {
+                        displayCommandError(player, "You need to enter the right password for the location \"" + destination + "\".");
+                        return;
+                    }
+                }
+                
+                // TODO: Register this teleportation with the PlayerLog.
+                
+                displayCommandSuccess(player, "You have been teleported to " + destination + "!");
+                player.teleport(new Location(world, (double) location.position_x, (double) location.position_y,
+                        (double) location.position_z, (float) location.position_yaw, (float) location.position_pitch));
+            }
+
+            public void onRejected(PromiseError error) {
+                displayCommandError(player, "The location \"" + destination + "\" is not available in this world.");
+            }
+        });
     }
 }
