@@ -15,6 +15,7 @@
 
 package com.mineground.features;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Location;
@@ -22,6 +23,7 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import com.google.common.collect.Lists;
 import com.mineground.account.Account;
 import com.mineground.account.PlayerLog;
 import com.mineground.account.PlayerLog.RecordType;
@@ -42,6 +44,12 @@ import com.mineground.database.DatabaseStatement;
  */
 public class LocationManager extends FeatureBase {
     /**
+     * Maximum number of characters on a single line when listing a player's warps using the "/warp
+     * list" command. We should try to avoid wrapping here.
+     */
+    private static final int MAX_WARP_LIST_LINE_LENGTH = 50;
+    
+    /**
      * Database statement used to find locations in the database, based on their name and world.
      */
     private final DatabaseStatement mFindLocationStatement;
@@ -50,6 +58,12 @@ public class LocationManager extends FeatureBase {
      * Database statement used to create a new location in the database.
      */
     private final DatabaseStatement mCreateLocationStatement;
+    
+    /**
+     * Database statement used for finding the locations created by a certain player in a certain
+     * world. Only the location names will be returned.
+     */
+    private final DatabaseStatement mListLocationsStatement;
     
     /**
      * Database statement used to remove a location from the database.
@@ -117,6 +131,18 @@ public class LocationManager extends FeatureBase {
                     "locations (user_id, name, password, world, position_x, position_y, position_z, position_yaw, position_pitch) " +
                 "VALUES " +
                     "(?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        );
+        
+        mListLocationsStatement = getDatabase().prepare(
+                "SELECT " +
+                    "locations.name " +
+                "FROM " +
+                    "locations " +
+                "WHERE " +
+                    "locations.user_id = ? AND " +
+                    "locations.world = ? " +
+                "ORDER BY " +
+                    "location_id DESC"
         );
         
         mRemoveLocationStatement = getDatabase().prepare("");
@@ -217,15 +243,38 @@ public class LocationManager extends FeatureBase {
     
     /**
      * Asynchronously compiles a list of all locations which |player| has created in their current
-     * world. When available, the returned Promise will be resolved with an ArrayList, even if there
-     * are no locations. The Promise will only be rejected if there was a database problem.
+     * world. When available, the returned Promise will be resolved with an ArrayList. The Promise
+     * will be rejected when no locations could be found for the current world.
      * 
      * @param player    The player to find all locations for.
+     * @param worldName Name of the world to list the player's warps for.
      * @return          A Promise, which will be resolved with a list of their locations.
      */
-    private Promise<List<SavedLocation>> listLocations(final Player player) {
-        // TODO: Implement this method.
-        return null;
+    private Promise<List<String>> listLocations(final Player player, String worldName) {
+        final Promise<List<String>> promise = new Promise<List<String>>();
+        
+        mListLocationsStatement.setInteger(1, getUserId(player));
+        mListLocationsStatement.setString(2, worldName);
+        mListLocationsStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
+            public void onFulfilled(DatabaseResult result) {
+                if (result.rows.size() == 0) {
+                    promise.reject("You haven't saved any locations in the current world!");
+                    return;
+                }
+                
+                List<String> locations = new ArrayList<String>(result.rows.size());
+                for (DatabaseResultRow resultRow : result.rows)
+                    locations.add(resultRow.getString("name"));
+                
+                promise.resolve(locations);
+            }
+            public void onRejected(PromiseError error) {
+                getLogger().severe("Unable to list locations from the database: " + error.reason());
+                promise.reject("Unable to read your locations from the database, please talk to an administrator!");
+            }
+        });
+        
+        return promise;
     }
     
     /**
@@ -323,7 +372,35 @@ public class LocationManager extends FeatureBase {
             return;
         }
 
-        // TODO: Implement /warp list.
+        // Lists the warps created by the player, with up to ten warps per line. This can get quite
+        // spammy when the player has created a ton of warps, but then it's up to them to clean it
+        // up. Only warps in the player's current world will be returned.
+        if (arguments[0].equals("list")) {
+            listLocations(player, world.getName()).then(new PromiseResultHandler<List<String>>() {
+                public void onFulfilled(List<String> locations) {
+                    displayCommandSuccess(player, "We found " + locations.size() + " saved locations in the database!");
+
+                    StringBuilder messageBuilder = new StringBuilder();
+                    for (String location : locations) {
+                        messageBuilder.append(location);
+                        if (messageBuilder.length() >= MAX_WARP_LIST_LINE_LENGTH) {
+                            player.sendMessage(messageBuilder.toString());
+                            messageBuilder.setLength(0);
+                        } else
+                            messageBuilder.append(", ");
+                    }
+                    
+                    if (messageBuilder.length() > 0)
+                        player.sendMessage(messageBuilder.toString());
+                }
+                public void onRejected(PromiseError error) {
+                    displayCommandError(player, error.reason());
+                }
+            });
+            
+            return;
+        }
+        
         // TODO: Implement /warp remove.
         
         // The player wants to teleport to a previously created warp in the current world. Find the
