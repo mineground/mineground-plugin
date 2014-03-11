@@ -67,6 +67,7 @@ public class AccountDatabase {
                     "users.password, " +
                     "users.level, " +
                     "users.registered, " +
+                    "users_settings.home_location, " +
                     "users_settings.online_time, " +
                     "users_settings.kill_count, " +
                     "users_settings.death_count, " +
@@ -118,6 +119,7 @@ public class AccountDatabase {
                 "UPDATE " +
                     "users_settings " +
                 "SET " +
+                    "home_location = ?, " +
                     "online_time = ?, " +
                     "kill_count = ?, " +
                     "death_count = ?, " +
@@ -164,6 +166,7 @@ public class AccountDatabase {
                 } catch (ParseException exception) { /** registered will default to NOW **/ }
                 
                 // Table: users_settings
+                accountData.home_location = resultRow.getInteger("home_location").intValue();
                 accountData.online_time = resultRow.getInteger("online_time").intValue();
                 accountData.kill_count = resultRow.getInteger("kill_count").intValue();
                 accountData.death_count = resultRow.getInteger("death_count").intValue();
@@ -247,15 +250,16 @@ public class AccountDatabase {
             }
         });
         
-        mUpdateUserSettingsStatement.setInteger(1, accountData.online_time);
-        mUpdateUserSettingsStatement.setInteger(2, accountData.kill_count);
-        mUpdateUserSettingsStatement.setInteger(3, accountData.death_count);
-        mUpdateUserSettingsStatement.setInteger(4, accountData.stats_reaction);
-        mUpdateUserSettingsStatement.setInteger(5, accountData.stats_blocks_created);
-        mUpdateUserSettingsStatement.setInteger(6, accountData.stats_blocks_destroyed);
-        mUpdateUserSettingsStatement.setString(7, player.getAddress().getAddress().getHostAddress());
-        mUpdateUserSettingsStatement.setString(8, mDateFormat.format(new Date()));
-        mUpdateUserSettingsStatement.setInteger(9, accountData.user_id);
+        mUpdateUserSettingsStatement.setInteger(1, accountData.home_location);
+        mUpdateUserSettingsStatement.setInteger(2, accountData.online_time);
+        mUpdateUserSettingsStatement.setInteger(3, accountData.kill_count);
+        mUpdateUserSettingsStatement.setInteger(4, accountData.death_count);
+        mUpdateUserSettingsStatement.setInteger(5, accountData.stats_reaction);
+        mUpdateUserSettingsStatement.setInteger(6, accountData.stats_blocks_created);
+        mUpdateUserSettingsStatement.setInteger(7, accountData.stats_blocks_destroyed);
+        mUpdateUserSettingsStatement.setString(8, player.getAddress().getAddress().getHostAddress());
+        mUpdateUserSettingsStatement.setString(9, mDateFormat.format(new Date()));
+        mUpdateUserSettingsStatement.setInteger(10, accountData.user_id);
         mUpdateUserSettingsStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
             public void onFulfilled(DatabaseResult result) { /** Yippie! **/ }
             public void onRejected(PromiseError error) {

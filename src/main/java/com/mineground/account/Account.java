@@ -95,6 +95,30 @@ public class Account {
     }
     
     /**
+     * Returns the location Id of this account's home. Players have the ability to warp to this
+     * using the /home command, or update its location using the "/home set" command.
+     * 
+     * @return Location Id of their home.
+     */
+    public int getHomeLocation() {
+        if (mAccountData == null)
+            return 0;
+        
+        return mAccountData.home_location;
+    }
+    
+    /**
+     * Updates this account's home location Id to |locationId|. The /home command will now teleport
+     * them to the location stored using that Id instead.
+     * 
+     * @param locationId New Id of the location containing their home.
+     */
+    public void setHomeLocation(int locationId) {
+        if (mAccountData != null)
+            mAccountData.home_location = locationId;
+    }
+    
+    /**
      * Returns whether this account is a guest account.
      */
     public boolean isGuest() {

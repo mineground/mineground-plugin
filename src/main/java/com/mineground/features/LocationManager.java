@@ -17,6 +17,7 @@ package com.mineground.features;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -53,6 +54,11 @@ public class LocationManager extends FeatureBase {
      * Database statement used to find locations in the database, based on their name and world.
      */
     private final DatabaseStatement mFindLocationStatement;
+    
+    /**
+     * Database statement used to load saved location from the database using their location Id.
+     */
+    private final DatabaseStatement mLoadLocationStatement;
     
     /**
      * Database statement used to create a new location in the database.
@@ -126,6 +132,15 @@ public class LocationManager extends FeatureBase {
                     "locations.world = ? AND " +
                     "locations.is_valid = 1"
         );
+        
+        mLoadLocationStatement = getDatabase().prepare(
+                "SELECT " +
+                    "locations.* " +
+                "FROM " +
+                    "locations " +
+                "WHERE " +
+                    "locations.location_id = ?"
+        );
 
         mCreateLocationStatement = getDatabase().prepare(
                 "INSERT INTO " +
@@ -165,7 +180,7 @@ public class LocationManager extends FeatureBase {
      * 
      * @param locationName  Name of the location to search for.
      * @param worldName     The world in which this location exists.
-     * @return              A Promise, which will be resolved with the Location once available.
+     * @return              A Promise, which will be resolved with the SavedLocation once available.
      */
     private Promise<SavedLocation> findLocation(String locationName, String worldName) {
         final Promise<SavedLocation> promise = new Promise<SavedLocation>();
@@ -182,6 +197,34 @@ public class LocationManager extends FeatureBase {
             }
             public void onRejected(PromiseError error) {
                 getLogger().severe("Could not find a location in the database (table: locations): " + error.reason());
+                promise.reject("The location could not be read from the database.");
+            }
+        });
+        
+        return promise;
+    }
+    
+    /**
+     * Asynchronously loads a location based on the |locationId|. This method does not care about
+     * whether the promise is still valid or not. A promise will be returned, which will be resolved
+     * when the location has been loaded, or rejected if it could not be loaded.
+     * 
+     * @param locationId    Id of the location which should be loaded.
+     * @return              A Promise, which will be resolved with the SavedLocation once available.
+     */
+    private Promise<SavedLocation> findLocationById(int locationId) {
+        final Promise<SavedLocation> promise = new Promise<SavedLocation>();
+        
+        mLoadLocationStatement.setInteger(1, locationId);
+        mLoadLocationStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
+            public void onFulfilled(DatabaseResult result) {
+                if (result.rows.size() == 0)
+                    promise.reject("The location does not exist in the database.");
+                else
+                    promise.resolve(new SavedLocation(result.rows.get(0)));
+            }
+            public void onRejected(PromiseError error) {
+                getLogger().severe("Could not load a location from the database (table: locations): " + error.reason());
                 promise.reject("The location could not be read from the database.");
             }
         });
@@ -328,7 +371,30 @@ public class LocationManager extends FeatureBase {
      */
     @CommandHandler("home")
     public void onHomeCommand(CommandSender sender, String[] arguments) {
-        // TODO: Implement this command.
+        final Player player = (Player) sender;
+        final Account account = getAccountForPlayer(player);
+        
+        if (account == null)
+            return; // account issues cannot be resolved by this command.
+        
+        // TODO: Implement /home set.
+        
+        int locationId = account.getHomeLocation();
+        if (locationId == 0) {
+            displayCommandError(player, "You haven't saved your home location yet!");
+            displayCommandDescription(player, "Type \"/home set\" to update the location at any time.");
+            return;
+        }
+        
+        findLocationById(locationId).then(new PromiseResultHandler<SavedLocation>() {
+            public void onFulfilled(SavedLocation result) {
+                // TODO: Teleport the player to their home location.
+            }
+            public void onRejected(PromiseError error) {
+                displayCommandError(player, "Your home location couldn't be loaded..");
+                displayCommandDescription(player, "Type \"/home set\" to update the location at any time.");
+            }
+        });
     }
     
     /**

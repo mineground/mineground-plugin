@@ -60,6 +60,13 @@ public class AccountData {
     // ***** users_settings ************************************************************************
     
     /**
+     * The location Id of the player's home warp. The /home command allows them to teleport there
+     * instantly, regardless of the world they're currently in. The location of their home can be
+     * changed by using the "/home set" command.
+     */
+    public int home_location;
+    
+    /**
      * The total number of seconds the player has spent online on Mineground. This does include
      * time during which the player was idle.
      */
@@ -110,6 +117,7 @@ public class AccountData {
         level = AccountLevel.Guest;
         registered = new Date();
         
+        home_location = 0;
         online_time = 0;
         kill_count = 0;
         death_count = 0;
