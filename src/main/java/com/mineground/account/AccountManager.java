@@ -207,26 +207,27 @@ public class AccountManager {
      * 
      * @param sender    Player who entered the /login command.
      * @param arguments Arguments passed on to the command. Expecting one.
-     * @return          Whether we could process the login attempt.
      */
     @CommandHandler("login")
-    public boolean onLoginCommand(CommandSender sender, String[] arguments) {
-        if (!(sender instanceof Player) || arguments.length == 0)
-            return false;
+    public void onLoginCommand(CommandSender sender, String[] arguments) {
+        if (arguments.length == 0) {
+            mRequirePasswordMessage.send(sender, Color.ACTION_REQUIRED);
+            return;
+        }
         
         final Player player = (Player) sender;
 
         final PendingAuthentication authenticationRequest = mAuthenticationRequestMap.get(player);
         if (authenticationRequest == null) {
             player.sendMessage("Either you are already logged in, or your account is not yet available!");
-            return true;
+            return;
         }
         
         if (++authenticationRequest.attempts >= MAXIMUM_AUTHENTICATION_ATTEMPTS) {
             // TODO: Log this with the PlayerLog class.
             // TODO: Show a message to the user about what to do when they forgot their password.
             player.kickPlayer("Too many invalid passwords.");
-            return true;
+            return;
         }
         
         final Account account = mPlayerAccountMap.get(player);
@@ -252,8 +253,6 @@ public class AccountManager {
             player.sendMessage(Color.SCRIPT_ERROR + "The password algorithm crashed, please notify an admin!");
             e.printStackTrace();
         }
-        
-        return true;
     }
     
     /**

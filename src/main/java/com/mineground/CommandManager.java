@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.mineground.base.CommandHandler;
@@ -44,10 +45,12 @@ public class CommandManager {
     private class CommandHandlerRef {
         private WeakReference<Object> instance;
         private Method method;
+        private boolean console;
         
-        private CommandHandlerRef(Object instance_, Method method_) {
+        private CommandHandlerRef(Object instance_, Method method_, boolean console_) {
             instance = new WeakReference<Object>(instance_);
             method = method_;
+            console = console_;
         }
     }
     
@@ -80,7 +83,7 @@ public class CommandManager {
                 continue;
             
             CommandHandler command = (CommandHandler) commandAnnotation;
-            mCommandMap.put(command.value(), new CommandHandlerRef(instance, method));
+            mCommandMap.put(command.value(), new CommandHandlerRef(instance, method, command.console()));
         }
     }
 
@@ -91,7 +94,7 @@ public class CommandManager {
      * @param sender    Origin of the command, can be a Player or a console object.
      * @param command   The command which they executed.
      * @param arguments Array of arguments passed to the command. 
-     * @return          Whether the command was executed successfully.
+     * @return          Whether the command was routed successfully.
      */
     public boolean onCommand(CommandSender sender, Command command, String[] arguments) {
         final CommandHandlerRef observer = mCommandMap.get(command.getName());
@@ -107,10 +110,18 @@ public class CommandManager {
             return false;
         }
         
+        // Check whether the command may be executed on the console, if it executed by a non-Player.
+        if (!(sender instanceof Player) && observer.console == false) {
+            sender.sendMessage("The command /" + command.getName() + " is not available from the console.");
+            return true;
+        }
+        
+        
         // Execute the command by invoking the method, and returning the return value (which should
         // be a boolean) to the caller of onCommand.
         try {
-            return (boolean) observer.method.invoke(instance, sender, arguments);
+            observer.method.invoke(instance, sender, arguments);
+            return true;
 
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             mLogger.severe("An exception occurred while attempting to execute the command /" + command.getName() + ":");

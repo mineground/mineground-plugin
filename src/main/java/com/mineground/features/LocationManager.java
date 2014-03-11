@@ -163,12 +163,10 @@ public class LocationManager extends FeatureBase {
      * 
      * @param sender    The Player or console who executed this command.
      * @param arguments The arguments which they passed on to this command.
-     * @return          Whether this command could be handled successfully.
      */
     @CommandHandler("home")
-    public boolean onHomeCommand(CommandSender sender, String[] arguments) {
+    public void onHomeCommand(CommandSender sender, String[] arguments) {
      // TODO: Implement this command.
-        return true;
     }
 
     /**
@@ -181,12 +179,10 @@ public class LocationManager extends FeatureBase {
      * 
      * @param sender    The Player or console who executed this command.
      * @param arguments The arguments which were passed on to this command.
-     * @return          Whether this command could be handled successfully.
      */
     @CommandHandler("spawn")
-    public boolean onSpawnCommand(CommandSender sender, String[] arguments) {
+    public void onSpawnCommand(CommandSender sender, String[] arguments) {
      // TODO: Implement this command.
-        return true;
     }
     
     /**
@@ -208,11 +204,9 @@ public class LocationManager extends FeatureBase {
      * 
      * @param sender    The Player or console who executed this command.
      * @param arguments The arguments which they passed on to this command.
-     * @return          Whether this command could be handled successfully.
      */
     @CommandHandler("warp")
-    public boolean onWarpCommand(CommandSender sender, String[] arguments) {
+    public void onWarpCommand(CommandSender sender, String[] arguments) {
         // TODO: Implement this command.
-        return true;
     }
 }

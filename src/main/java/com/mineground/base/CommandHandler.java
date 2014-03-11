@@ -20,9 +20,29 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Methods implementing support for a command must be annotated with the @CommandHandler interface
+ * to identify the command they're handling, as well as optionally setting options such as whether
+ * the command may be executed from the console.
+ * 
+ * The CommandManager will search for methods annotated with @CommandHandler before it adds them to
+ * a map of all supported Mineground commands.
+ */
 @Target(value = ElementType.METHOD)
 @Retention(value = RetentionPolicy.RUNTIME)
 public @interface CommandHandler {
-    // Name of the command which this method should handle, without a slash.
+    /**
+     * Name of the command which this method should handle, without a slash.
+     *
+     * @return The name of this command.
+     */
     String value();
+    
+    /**
+     * Whether this command may be executed from the console. Because most commands won't make sense
+     * to be executed on the console, this defaults to false.
+     *
+     * @return Whether this command may be executed from the console.
+     */
+    boolean console() default false;
 }
