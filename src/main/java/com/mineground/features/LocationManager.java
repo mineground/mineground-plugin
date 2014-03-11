@@ -123,14 +123,15 @@ public class LocationManager extends FeatureBase {
                     "locations " +
                 "WHERE " +
                     "locations.name = ? AND " +
-                    "locations.world = ?"
+                    "locations.world = ? AND " +
+                    "locations.is_valid = 1"
         );
 
         mCreateLocationStatement = getDatabase().prepare(
                 "INSERT INTO " +
-                    "locations (user_id, name, password, world, position_x, position_y, position_z, position_yaw, position_pitch) " +
+                    "locations (user_id, name, password, world, position_x, position_y, position_z, position_yaw, position_pitch, is_valid) " +
                 "VALUES " +
-                    "(?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    "(?, ?, ?, ?, ?, ?, ?, ?, ?, 1)"
         );
         
         mListLocationsStatement = getDatabase().prepare(
@@ -140,13 +141,21 @@ public class LocationManager extends FeatureBase {
                     "locations " +
                 "WHERE " +
                     "locations.user_id = ? AND " +
-                    "locations.world = ? " +
+                    "locations.world = ? AND " +
+                    "locations.is_valid = 1 " +
                 "ORDER BY " +
                     "location_id DESC"
         );
         
-        mRemoveLocationStatement = getDatabase().prepare("");
-        
+        mRemoveLocationStatement = getDatabase().prepare(
+                "UPDATE " +
+                    "locations " +
+                "SET " +
+                    "locations.is_valid = 0 " +
+                "WHERE " +
+                    "locations.location_id = ? AND " +
+                    "locations.is_valid = 1"
+        );
     }
     
     /**
@@ -278,6 +287,35 @@ public class LocationManager extends FeatureBase {
     }
     
     /**
+     * Asynchronously removes the saved location |location| from the world it's created in. Because
+     * records in the database may depend on this record to exist, rather than actually removing
+     * the saved location we'll flip the is_valid flag to false.
+     * 
+     * @param location  The location which should no longer be usable.
+     * @return          A Promise, which will be resolved once it's been removed.
+     */
+    private Promise<Void> removeLocation(SavedLocation location) {
+        final Promise<Void> promise = new Promise<Void>();
+        
+        mRemoveLocationStatement.setInteger(1, location.location_id);
+        mRemoveLocationStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
+            public void onFulfilled(DatabaseResult result) {
+                if (result.affectedRows == 1)
+                    promise.resolve(null);
+                else
+                    promise.reject("The query was successful, but no rows were affected.");
+            }
+            public void onRejected(PromiseError error) {
+                getLogger().severe("Unable to remove a saved location from the database: " + error.reason());
+                promise.reject("The database query failed.");
+            }
+        });
+        
+        return promise;
+        
+    }
+    
+    /**
      * Implements the /home command, which is a convenient way for players to teleport back to their
      * homes. It does not matter in which world the player currently is for this command to work.
      * The player can update their home location at all times as well.
@@ -349,7 +387,7 @@ public class LocationManager extends FeatureBase {
             }
             
             if (arguments.length == 1) {
-                displayCommandUsage(player, "/warp create [name] §8[password]");
+                displayCommandUsage(player, "/warp create [name] §7[password]");
                 displayCommandDescription(player, "Saves a location, optionally protected with a password.");
                 return;
             }
@@ -401,7 +439,48 @@ public class LocationManager extends FeatureBase {
             return;
         }
         
-        // TODO: Implement /warp remove.
+        // When a warp is no longer necessary, or a player just wants to clean up the list of warps
+        // they're maintaining, the /warp remove command is just the right tool for them. Staff
+        // members have the ability to remove any warp at any time.
+        if (arguments[0].equals("remove")) {
+            if (!player.hasPermission("warp.remove")) {
+                displayCommandError(player, "You are not allowed to remove saved locations.");
+                return;
+            }
+            
+            if (arguments.length == 1) {
+                displayCommandUsage(player, "/warp remove [name]");
+                displayCommandDescription(player, "Allows you to remove a saved location from this world.");
+                return;
+            }
+            
+            final String locationName = arguments[1];
+            
+            findLocation(locationName, world.getName()).then(new PromiseResultHandler<SavedLocation>() {
+                public void onFulfilled(SavedLocation location) {
+                    // Players normally are only allowed to remove their own warps, but members of
+                    // Mineground's staff will be allowed to remove any warp from the world.
+                    if (location.user_id != getUserId(player) && !player.hasPermission("warp.remove_all")) {
+                        displayCommandError(player, "You can only remove your own saved locations!");
+                        return;
+                    }
+                    
+                    removeLocation(location).then(new PromiseResultHandler<Void>() {
+                        public void onFulfilled(Void result) {
+                            displayCommandSuccess(player, "The location \"" + locationName + "\" has been removed from this world.");
+                        }
+                        public void onRejected(PromiseError error) {
+                            displayCommandError(player, "The location could not be removed because of a database error.");
+                        }
+                    });
+                }
+                public void onRejected(PromiseError error) {
+                    displayCommandError(player, "The location \"" + locationName + "\" does not exist in this world.");
+                }
+            });
+            
+            return;
+        }
         
         // The player wants to teleport to a previously created warp in the current world. Find the
         // warp in the database, make sure that the password matches, and then teleport them.
@@ -432,7 +511,7 @@ public class LocationManager extends FeatureBase {
                         (double) location.position_z, (float) location.position_yaw, (float) location.position_pitch));
             }
             public void onRejected(PromiseError error) {
-                displayCommandError(player, "The location \"" + destination + "\" is not available in this world.");
+                displayCommandError(player, "The location \"" + destination + "\" does not exist in this world.");
             }
         });
     }
