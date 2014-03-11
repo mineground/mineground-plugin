@@ -18,6 +18,7 @@ package com.mineground.base;
 import java.util.logging.Logger;
 
 import org.bukkit.Server;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.entity.Player;
 
@@ -52,6 +53,59 @@ public class FeatureBase implements Feature {
         // Registers all commands defined in this feature with the CommandManager.
         params.commandManager.registerCommands(this);
     }
+    
+    /* ****************************************************************************************** *
+     * Convenience methods for dealing with commands.                                             *
+     * ****************************************************************************************** */
+    
+    /**
+     * Displays |message| as a description for the command which was just executed, and probably
+     * misunderstood by the player. The description will be formatted in a consistent way.
+     * 
+     * @param destination   The player or console to inform.
+     * @param message       The description of the executed command.
+     */
+    protected void displayCommandDescription(CommandSender destination, String message) {
+        destination.sendMessage("§f" + message);
+    }
+    
+    /**
+     * Displays |usage| as the proper way to use the command which was just executed by the player.
+     * The message will be formatted in a consistent way.
+     * 
+     * @param destination   The player or console to inform.
+     * @param usage         The proper way to use the executed command.
+     */
+    protected void displayCommandUsage(CommandSender destination, String usage) {
+        destination.sendMessage("§2Usage§r: " + usage);
+    }
+    
+    /**
+     * Displays |message| to |destination| to inform them that a recently executed command has been
+     * executed successfully, and the action has been put through as well.
+     * 
+     * @param destination   The player to inform about the executed command.
+     * @param message       The message to share with them.
+     */
+    protected void displayCommandSuccess(CommandSender destination, String message) {
+        destination.sendMessage("§2" + message);
+    }
+    
+    /**
+     * Displays |message| to |destination| to inform them of something which went wrong when they
+     * just executed a command. This should not be used when the command was used wrongly, but
+     * rather when the requested option is not available.
+     * 
+     * @param destination   The player to inform about the error.
+     * @param message       The error which occurred while running this command.
+     */
+    protected void displayCommandError(CommandSender destination, String message) {
+        destination.sendMessage("§c" + message);
+    }
+    
+    /* ****************************************************************************************** *
+     * Getters for common functionality in Mineground                                             *
+     * ****************************************************************************************** */
     
     /**
      * Returns the Logger instance, to which this feature can output information intended to the
