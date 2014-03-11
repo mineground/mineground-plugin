@@ -25,6 +25,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.mineground.account.AccountManager;
+import com.mineground.account.PlayerLog;
 import com.mineground.base.FeatureInitParams;
 import com.mineground.base.Message;
 import com.mineground.database.Database;
@@ -120,6 +121,8 @@ public class Mineground extends JavaPlugin {
         mDatabase = new Database(mConfiguration, this);
         mDatabase.connect();
 
+        PlayerLog.setDatabase(mDatabase);
+        
         mAccountManager = new AccountManager(mDatabase, this);
         mChatManager = new ChatManager();
         
@@ -188,6 +191,8 @@ public class Mineground extends JavaPlugin {
         
         mChatManager = null;
         mAccountManager = null;
+        
+        PlayerLog.setDatabase(null);
         
         mDatabase.disconnect();
         mDatabase = null;

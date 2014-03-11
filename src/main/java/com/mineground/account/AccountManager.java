@@ -28,6 +28,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.mineground.EventDispatcher;
+import com.mineground.account.PlayerLog.RecordType;
 import com.mineground.base.Color;
 import com.mineground.base.CommandHandler;
 import com.mineground.base.Message;
@@ -268,8 +269,8 @@ public class AccountManager {
         if (account == null)
             throw new RuntimeException("|account| must not be NULL here.");
 
-        // TODO: Log this with the PlayerLog class.
         account.initialize(accountData, player, player.addAttachment(mPlugin));
+        PlayerLog.record(RecordType.CONNECTED, accountData.user_id);
         
         // Moderators, administrators and Management members should be added to the online staff.
         if (account.getLevel() == AccountLevel.Moderator ||
@@ -296,14 +297,14 @@ public class AccountManager {
         if (account == null)
             return;
         
-        account.terminate(player);
-        mPlayerAccountMap.remove(player);
-        
         final AccountData accountData = account.getAccountData();
-        if (accountData == null)
-            return;
-        
-        mAccountDatabase.updateAccount(accountData, player);
+        if (accountData != null) {
+            PlayerLog.record(RecordType.DISCONNECTED, accountData.user_id);
+            mAccountDatabase.updateAccount(accountData, player);
+        }
+
+        mPlayerAccountMap.remove(player);
+        account.terminate(player);
     }
     
     /**

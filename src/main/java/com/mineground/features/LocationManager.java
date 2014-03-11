@@ -23,6 +23,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import com.mineground.account.Account;
+import com.mineground.account.PlayerLog;
+import com.mineground.account.PlayerLog.RecordType;
 import com.mineground.base.CommandHandler;
 import com.mineground.base.FeatureBase;
 import com.mineground.base.FeatureInitParams;
@@ -307,8 +309,9 @@ public class LocationManager extends FeatureBase {
             final String password = (arguments.length >= 3) ? arguments[2] : "";
             
             createLocation(player, locationName, password).then(new PromiseResultHandler<Integer>() {
-                public void onFulfilled(Integer warpId) {
-                    // TODO: Register this new warp with the PlayerLog.
+                public void onFulfilled(Integer locationId) {
+                    // Records that the player created a new warp with Id |locationId|.
+                    PlayerLog.record(RecordType.WARP_CREATED, getUserId(player), locationId);
 
                     displayCommandSuccess(player, "The warp \"" + locationName + "\" has been created!");
                 }
@@ -344,7 +347,8 @@ public class LocationManager extends FeatureBase {
                     }
                 }
                 
-                // TODO: Register this teleportation with the PlayerLog.
+                // Records that the player teleported to |location|.
+                PlayerLog.record(RecordType.WARP_TELEPORTED, getUserId(player), location.location_id);
                 
                 displayCommandSuccess(player, "You have been teleported to " + destination + "!");
                 player.teleport(new Location(world, (double) location.position_x, (double) location.position_y,

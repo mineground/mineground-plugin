@@ -190,6 +190,20 @@ public class FeatureBase implements Feature {
     }
     
     /**
+     * Returns the user Id associated with |player|'s account.
+     * 
+     * @param player    Player to retrieve the user Id for.
+     * @return          The user Id of the player's account.
+     */
+    protected int getUserId(Player player) {
+        final Account account = mInitParams.accountManager.getAccountForPlayer(player);
+        if (account == null)
+            return 0;
+        
+        return account.getUserId();
+    }
+    
+    /**
      * Returns the Bukkit Server instance, which allows an individual feature to integrate much more
      * deeply with Bukkit. Please do keep in mind that any dependency on Bukkit will increase the
      * chance of the plugin breaking during an update.
