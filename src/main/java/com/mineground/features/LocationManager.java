@@ -34,7 +34,7 @@ import com.mineground.base.FeatureInitParams;
 import com.mineground.base.Promise;
 import com.mineground.base.PromiseError;
 import com.mineground.base.PromiseResultHandler;
-import com.mineground.base.SimplePasswordHash;
+import com.mineground.base.SimpleHash;
 import com.mineground.database.DatabaseResult;
 import com.mineground.database.DatabaseResultRow;
 import com.mineground.database.DatabaseStatement;
@@ -86,7 +86,7 @@ public class LocationManager extends FeatureBase {
         public int user_id;
         public String name;
         public int password;
-        public String world;
+        public int world_hash;
         public int position_x;
         public int position_y;
         public int position_z;
@@ -104,7 +104,7 @@ public class LocationManager extends FeatureBase {
             user_id = resultRow.getInteger("user_id").intValue();
             name = resultRow.getString("name");
             password = resultRow.getInteger("password").intValue();
-            world = resultRow.getString("world");
+            world_hash = resultRow.getInteger("world_hash").intValue();
             position_x = resultRow.getInteger("position_x").intValue();
             position_y = resultRow.getInteger("position_y").intValue();
             position_z = resultRow.getInteger("position_z").intValue();
@@ -129,7 +129,7 @@ public class LocationManager extends FeatureBase {
                     "locations " +
                 "WHERE " +
                     "locations.name = ? AND " +
-                    "locations.world = ? AND " +
+                    "locations.world_hash = ? AND " +
                     "locations.is_valid = 1"
         );
         
@@ -144,7 +144,7 @@ public class LocationManager extends FeatureBase {
 
         mCreateLocationStatement = getDatabase().prepare(
                 "INSERT INTO " +
-                    "locations (user_id, name, password, world, position_x, position_y, position_z, position_yaw, position_pitch, is_valid) " +
+                    "locations (user_id, name, password, world_hash, position_x, position_y, position_z, position_yaw, position_pitch, is_valid) " +
                 "VALUES " +
                     "(?, ?, ?, ?, ?, ?, ?, ?, ?, 1)"
         );
@@ -156,7 +156,7 @@ public class LocationManager extends FeatureBase {
                     "locations " +
                 "WHERE " +
                     "locations.user_id = ? AND " +
-                    "locations.world = ? AND " +
+                    "locations.world_hash = ? AND " +
                     "locations.is_valid = 1 " +
                 "ORDER BY " +
                     "location_id DESC"
@@ -174,19 +174,19 @@ public class LocationManager extends FeatureBase {
     }
     
     /**
-     * Asynchronously finds a location based on the |locationName| in |worldName|. A promise will
-     * be returned, which will be resolved when the location is available. If the location could
-     * not be found, or there are database issues, then the promise will be rejected.
+     * Asynchronously finds a location based on the |locationName| in |world|. A promise will be
+     * returned, which will be resolved when the location is available. If the location could not be
+     * found, or there are database issues, then the promise will be rejected.
      * 
      * @param locationName  Name of the location to search for.
-     * @param worldName     The world in which this location exists.
+     * @param world         The world in which this location exists.
      * @return              A Promise, which will be resolved with the SavedLocation once available.
      */
-    private Promise<SavedLocation> findLocation(String locationName, String worldName) {
+    private Promise<SavedLocation> findLocation(String locationName, World world) {
         final Promise<SavedLocation> promise = new Promise<SavedLocation>();
         
         mFindLocationStatement.setString(1, locationName);
-        mFindLocationStatement.setString(2, worldName);
+        mFindLocationStatement.setInteger(2, getWorldHash(world));
         mFindLocationStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
             public void onFulfilled(DatabaseResult result) {
                 if (result.rows.size() == 0) {
@@ -256,17 +256,17 @@ public class LocationManager extends FeatureBase {
             return promise;
         }
         
-        // Hash the password using SimplePasswordHash if it's more than an empty string.
+        // Hash the password using SimpleHash if it's more than an empty string.
         int passwordHash = 0;
         if (!password.isEmpty())
-            passwordHash = SimplePasswordHash.createHash(password);
+            passwordHash = SimpleHash.createHash(password);
 
         final Location location = player.getLocation();
         
         mCreateLocationStatement.setInteger(1, account.getUserId());
         mCreateLocationStatement.setString(2, locationName);
         mCreateLocationStatement.setInteger(3, passwordHash);
-        mCreateLocationStatement.setString(4, player.getWorld().getName());
+        mCreateLocationStatement.setInteger(4, getWorldHash(player.getWorld()));
         mCreateLocationStatement.setInteger(5, (long) location.getX());
         mCreateLocationStatement.setInteger(6, (long) (location.getY() + 0.5));
         mCreateLocationStatement.setInteger(7, (long) location.getZ());
@@ -299,14 +299,14 @@ public class LocationManager extends FeatureBase {
      * will be rejected when no locations could be found for the current world.
      * 
      * @param player    The player to find all locations for.
-     * @param worldName Name of the world to list the player's warps for.
+     * @param world     The world to get the player's saved locations for.
      * @return          A Promise, which will be resolved with a list of their locations.
      */
-    private Promise<List<String>> listLocations(final Player player, String worldName) {
+    private Promise<List<String>> listLocations(final Player player, World world) {
         final Promise<List<String>> promise = new Promise<List<String>>();
         
         mListLocationsStatement.setInteger(1, getUserId(player));
-        mListLocationsStatement.setString(2, worldName);
+        mListLocationsStatement.setInteger(2, getWorldHash(world));
         mListLocationsStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
             public void onFulfilled(DatabaseResult result) {
                 if (result.rows.size() == 0) {
@@ -464,7 +464,7 @@ public class LocationManager extends FeatureBase {
         // spammy when the player has created a ton of warps, but then it's up to them to clean it
         // up. Only warps in the player's current world will be returned.
         if (arguments[0].equals("list")) {
-            listLocations(player, world.getName()).then(new PromiseResultHandler<List<String>>() {
+            listLocations(player, world).then(new PromiseResultHandler<List<String>>() {
                 public void onFulfilled(List<String> locations) {
                     displayCommandSuccess(player, "We found " + locations.size() + " saved locations in the database!");
 
@@ -506,7 +506,7 @@ public class LocationManager extends FeatureBase {
             
             final String locationName = arguments[1];
             
-            findLocation(locationName, world.getName()).then(new PromiseResultHandler<SavedLocation>() {
+            findLocation(locationName, world).then(new PromiseResultHandler<SavedLocation>() {
                 public void onFulfilled(final SavedLocation location) {
                     // Players normally are only allowed to remove their own warps, but members of
                     // Mineground's staff will be allowed to remove any warp from the world.
@@ -545,12 +545,12 @@ public class LocationManager extends FeatureBase {
             return;
         }
 
-        findLocation(destination, world.getName()).then(new PromiseResultHandler<SavedLocation>() {
+        findLocation(destination, world).then(new PromiseResultHandler<SavedLocation>() {
             public void onFulfilled(SavedLocation location) {
                 // If the location has been protected by a password, this needs to be verified. Only
                 // players with the warp.teleport_no_password permission are able to override this.
                 if (location.password != 0 && !player.hasPermission("warp.teleport_no_password")) {
-                    if (!SimplePasswordHash.validatePassword(password, location.password)) {
+                    if (SimpleHash.createHash(password) != location.password) {
                         displayCommandError(player, "You need to enter the right password for the location \"" + destination + "\".");
                         return;
                     }
