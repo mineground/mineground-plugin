@@ -109,6 +109,27 @@ public class LocationManager extends FeatureBase {
             position_yaw = resultRow.getDouble("position_yaw");
             position_pitch = resultRow.getDouble("position_pitch");
         }
+        
+        /**
+         * Creates a new instance of Bukkit's Location class based on this SavedLocation data. The
+         * active list of worlds will be retrieved from 
+         * 
+         * @return A Bukkit Location object representing this saved location.
+         */
+        public Location toBukkitLocation() {
+            for (World world : getServer().getWorlds()) {
+                if (getWorldHash(world) != world_hash)
+                    continue;
+                
+                // TODO: We should probably do some check here to see if the world should still be
+                //       accessible by players. Let's do that once we've got a WorldManager.
+                
+                return new Location(world, (double) position_x, (double) position_y,
+                        (double) position_z, (float) position_yaw, (float) position_pitch);
+            }
+            
+            return null;
+        }
     }
     
     /**
@@ -345,7 +366,6 @@ public class LocationManager extends FeatureBase {
         });
         
         return promise;
-        
     }
     
     /**
@@ -378,7 +398,15 @@ public class LocationManager extends FeatureBase {
         
         findLocationById(locationId).then(new PromiseResultHandler<SavedLocation>() {
             public void onFulfilled(SavedLocation result) {
-                // TODO: Teleport the player to their home location.
+                Location destination = result.toBukkitLocation();
+                if (destination == null) {
+                    displayCommandError(player, "Your home location isn't in a valid world anymore!");
+                    displayCommandDescription(player, "Type \"/home set\" to update the location at any time.");
+                    return;
+                }
+                
+                displayCommandSuccess(player, "Welcome home, " + player.getName() + "!");
+                player.teleport(destination);
             }
             public void onRejected(PromiseError error) {
                 displayCommandError(player, "Your home location couldn't be loaded..");
@@ -567,8 +595,7 @@ public class LocationManager extends FeatureBase {
                 PlayerLog.record(RecordType.WARP_TELEPORTED, getUserId(player), location.location_id);
                 
                 displayCommandSuccess(player, "You have been teleported to " + destination + "!");
-                player.teleport(new Location(world, (double) location.position_x, (double) location.position_y,
-                        (double) location.position_z, (float) location.position_yaw, (float) location.position_pitch));
+                player.teleport(location.toBukkitLocation());
             }
             public void onRejected(PromiseError error) {
                 displayCommandError(player, "The location \"" + destination + "\" does not exist in this world.");
