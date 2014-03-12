@@ -17,14 +17,12 @@ package com.mineground.features;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.google.common.collect.Lists;
 import com.mineground.account.Account;
 import com.mineground.account.PlayerLog;
 import com.mineground.account.PlayerLog.RecordType;
@@ -242,27 +240,24 @@ public class LocationManager extends FeatureBase {
      * rejected with an error message containing more information.
      * 
      * @param player        The player who is creating the new location.
+     * @param location      Exact location which should be saved in the database.
      * @param locationName  Name of the location, as it should be available.
      * @param password      Optional password with which the location should be protected.
      * @return              A promise, which will be resolved with the location Id.
      */
-    private Promise<Integer> createLocation(final Player player, final String locationName, String password) {
+    private Promise<Integer> createLocation(final Player player, Location location, final String locationName, String password) {
         final Promise<Integer> promise = new Promise<Integer>();
         final Account account = getAccountForPlayer(player);
         
         // We need the player's account to get their user Id, required for creating a warp point.
         if (account == null || account.getUserId() == 0) {
-            promise.reject("Your account has not loaded properly, please contact an administrator.");
+            promise.reject("Your account has not loaded properly, please reconnect or contact an administrator.");
             return promise;
         }
         
         // Hash the password using SimpleHash if it's more than an empty string.
-        int passwordHash = 0;
-        if (!password.isEmpty())
-            passwordHash = SimpleHash.createHash(password);
+        int passwordHash = password.isEmpty() ? 0 : SimpleHash.createHash(password);
 
-        final Location location = player.getLocation();
-        
         mCreateLocationStatement.setInteger(1, account.getUserId());
         mCreateLocationStatement.setString(2, locationName);
         mCreateLocationStatement.setInteger(3, passwordHash);
@@ -280,11 +275,6 @@ public class LocationManager extends FeatureBase {
                     promise.resolve(result.insertId);
             }
             public void onRejected(PromiseError error) {
-                if (error.reason().contains("Duplicate")) {
-                    promise.reject("A warp named \"" + locationName + "\" already exists in this world.");
-                    return;
-                }
-
                 promise.reject("The warp could not be created because of an unknown database error.");
                 getLogger().severe(error.reason());
             }
@@ -445,18 +435,32 @@ public class LocationManager extends FeatureBase {
             final String locationName = arguments[1];
             final String password = (arguments.length >= 3) ? arguments[2] : "";
             
-            createLocation(player, locationName, password).then(new PromiseResultHandler<Integer>() {
-                public void onFulfilled(Integer locationId) {
-                    // Records that the player created a new warp with Id |locationId|.
-                    PlayerLog.record(RecordType.WARP_CREATED, getUserId(player), locationId);
-
-                    displayCommandSuccess(player, "The warp \"" + locationName + "\" has been created!");
+            // Note that we need to store the player's location here because findLocation() will
+            // be resolved asynchronously, at which time the player may have moved.
+            final Location location = player.getLocation();
+            
+            findLocation(locationName, world).then(new PromiseResultHandler<SavedLocation>() {
+                public void onFulfilled(SavedLocation result) {
+                    displayCommandError(player, "A warp named \"" + locationName + "\" already exists in this world.");
                 }
                 public void onRejected(PromiseError error) {
-                    displayCommandError(player, error.reason());
+                    // It may seem odd to do the work in onRejected(), but in case of findLocation
+                    // it means that the location was *not* found, which is what we want when the
+                    // player tries to create a new location in a certain world.
+                    createLocation(player, location, locationName, password).then(new PromiseResultHandler<Integer>() {
+                        public void onFulfilled(Integer locationId) {
+                            // Records that the player created a new warp with Id |locationId|.
+                            PlayerLog.record(RecordType.WARP_CREATED, getUserId(player), locationId);
+
+                            displayCommandSuccess(player, "The warp \"" + locationName + "\" has been created!");
+                        }
+                        public void onRejected(PromiseError error) {
+                            displayCommandError(player, error.reason());
+                        }
+                    });
                 }
             });
-            
+
             return;
         }
 
@@ -478,8 +482,11 @@ public class LocationManager extends FeatureBase {
                             messageBuilder.append(", ");
                     }
                     
-                    if (messageBuilder.length() > 0)
-                        player.sendMessage(messageBuilder.toString());
+                    int length = messageBuilder.length();
+                    if (length == 0)
+                        return;
+                    
+                    player.sendMessage(messageBuilder.delete(length - 2, length).toString());
                 }
                 public void onRejected(PromiseError error) {
                     displayCommandError(player, error.reason());
