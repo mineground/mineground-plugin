@@ -72,6 +72,14 @@ public class DatabaseThread extends Thread {
      */
     private Connection mConnection;
     
+    /**
+     * Exception which will be thrown by the executeQuery() method when it notices that the open
+     * connection with the database server has been lost.
+     */
+    private class ConnectionLostException extends Exception {
+        private static final long serialVersionUID = -8502977559194885378L;
+    }
+    
     public DatabaseThread(DatabaseConnectionParams connectionParams) {
         mConnectionParams = connectionParams;
         mShutdownRequested = false;
@@ -118,7 +126,11 @@ public class DatabaseThread extends Thread {
                 
                 mFinishedQueryQueue.add(executeQuery(query));
 
-            } catch (InterruptedException e) { /** It's safe to ignore this exception **/ }
+            } catch (InterruptedException exception) {
+                /** It's safe to ignore this exception **/
+            } catch (ConnectionLostException exception) {
+                
+            }
         }
         
         // Flush the queries which are still in the queue, instead of disregarding them
@@ -131,7 +143,16 @@ public class DatabaseThread extends Thread {
                 if (query == null || query.query.startsWith("SELECT"))
                     continue;
                 
-                executeQuery(query);
+                try {
+                    executeQuery(query);
+
+                } catch (ConnectionLostException e) {
+                    // If we *did* lose connection at this point, we're just going to give up. It's
+                    // likely that the plugin is being reloaded because of database connectivity
+                    // issues as it is, and reconnecting would just block the database further.
+                    mLogger.severe("Could not cleanly shut down the database thread. Queries lost.");
+                    return;
+                }
             }
         }
 
@@ -150,7 +171,8 @@ public class DatabaseThread extends Thread {
      * @param query The query which needs to be executed on the database.
      * @return      The same query, but in a finished state.
      */
-    private PendingQuery executeQuery(PendingQuery query) {
+    private PendingQuery executeQuery(PendingQuery query) throws ConnectionLostException {
+        boolean executed = false;
         try {
             final PreparedStatement statement = mConnection.prepareStatement(query.query, Statement.RETURN_GENERATED_KEYS);
             final DatabaseResult result = new DatabaseResult();
@@ -177,6 +199,8 @@ public class DatabaseThread extends Thread {
             }
 
             if (statement.execute()) {
+                executed = true; // so that we don't accidentially run the query again.
+
                 ResultSet resultSet = statement.getResultSet();
                 ResultSetMetaData meta = statement.getMetaData();
                 
@@ -196,6 +220,8 @@ public class DatabaseThread extends Thread {
                     result.rows.add(resultRow);
                 }
             } else {
+                executed = true; // so that we don't accidentially run the query again.
+
                 result.affectedRows = statement.getUpdateCount();
                 
                 ResultSet generatedKeysResultSet = statement.getGeneratedKeys();
@@ -206,6 +232,15 @@ public class DatabaseThread extends Thread {
             query.result = result;
             
         } catch (SQLException exception) {
+            // If the connection has been lost, queue the query for execution again if necessary
+            // and throw a ConnectionLostException allowing the thread to reconnect itself.
+            if (isErrorCodeConnectionLost(exception)) {
+                if (!executed)
+                    mPendingQueryQueue.add(query);
+                
+                throw new ConnectionLostException();
+            }
+
             String message = "Error while executing the MySQL query (" + 
                     exception.getErrorCode() + "): " + exception.getMessage();
 
@@ -213,6 +248,24 @@ public class DatabaseThread extends Thread {
         }
         
         return query;
+    }
+    
+    /**
+     * If we can recognize the |exception| thrown by the database driver as something which means
+     * that the connection has been lost, Mineground should automatically reconnect to the server.
+     * 
+     * @param errorCode 
+     * @return
+     */
+    private boolean isErrorCodeConnectionLost(SQLException exception) {
+        // 08S01 represents a "communication link failure", e.g. connection timed out.
+        if (exception.getSQLState() == "08S01")
+            return true;
+
+        // TODO: Remove this once reconnecting is relatively stable.
+        mLogger.severe("SQL State: " + exception.getSQLState());
+        
+        return false;
     }
     
     /**
