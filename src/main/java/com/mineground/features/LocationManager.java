@@ -165,7 +165,7 @@ public class LocationManager extends FeatureBase {
                 "INSERT INTO " +
                     "locations (user_id, name, password, world_hash, position_x, position_y, position_z, position_yaw, position_pitch, is_valid) " +
                 "VALUES " +
-                    "(?, ?, ?, ?, ?, ?, ?, ?, ?, 1)"
+                    "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
         
         mListLocationsStatement = getDatabase().prepare(
@@ -266,9 +266,18 @@ public class LocationManager extends FeatureBase {
      * @param password      Optional password with which the location should be protected.
      * @return              A promise, which will be resolved with the location Id.
      */
-    private Promise<Integer> createLocation(final Player player, Location location, final String locationName, String password) {
+    private Promise<Integer> createLocation(final Player player, Location location, String locationName, String password) {
         final Promise<Integer> promise = new Promise<Integer>();
         final Account account = getAccountForPlayer(player);
+        
+        boolean disabledByDefault = false;
+        
+        // A little bit of magic which allows us to more conveniently create home warp Ids. If the
+        // locationName hasn't been supplied, then this will be the home warp of a player.
+        if (locationName.isEmpty()) {
+            disabledByDefault = true;
+            locationName = "[home]";
+        }
         
         // We need the player's account to get their user Id, required for creating a warp point.
         if (account == null || account.getUserId() == 0) {
@@ -288,6 +297,7 @@ public class LocationManager extends FeatureBase {
         mCreateLocationStatement.setInteger(7, (long) location.getZ());
         mCreateLocationStatement.setDouble(8, location.getYaw());
         mCreateLocationStatement.setDouble(9, location.getPitch());
+        mCreateLocationStatement.setInteger(10, disabledByDefault ? 0 : 1);
         mCreateLocationStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
             public void onFulfilled(DatabaseResult result) {
                 if (result.insertId == 0)
@@ -387,7 +397,30 @@ public class LocationManager extends FeatureBase {
         if (account == null)
             return; // account issues cannot be resolved by this command.
         
-        // TODO: Implement /home set.
+        // Players are able to update their home location by typing "/home set", which will create
+        // a new (hidden) warp location at their exact position, and save it so that is persists.
+        if (arguments.length > 0 && arguments[0].equals("set")) {
+            if (!player.hasPermission("warp.create")) {
+                displayCommandError(player, "You are not allowed to store your home location.");
+                return;
+            }
+
+            final Location location = player.getLocation();
+            createLocation(player, location, "", "").then(new PromiseResultHandler<Integer>() {
+                public void onFulfilled(Integer locationId) {
+                    // Records that the player created a new warp with Id |locationId|.
+                    PlayerLog.record(RecordType.HOME_CREATED, getUserId(player), locationId);
+
+                    displayCommandSuccess(player, "Your home location has been updated!");
+                    account.setHomeLocation(locationId);
+                }
+                public void onRejected(PromiseError error) {
+                    displayCommandError(player, error.reason());
+                }
+            });
+            
+            return;
+        }
         
         int locationId = account.getHomeLocation();
         if (locationId == 0) {
@@ -397,13 +430,16 @@ public class LocationManager extends FeatureBase {
         }
         
         findLocationById(locationId).then(new PromiseResultHandler<SavedLocation>() {
-            public void onFulfilled(SavedLocation result) {
-                Location destination = result.toBukkitLocation();
+            public void onFulfilled(SavedLocation location) {
+                Location destination = location.toBukkitLocation();
                 if (destination == null) {
                     displayCommandError(player, "Your home location isn't in a valid world anymore!");
                     displayCommandDescription(player, "Type \"/home set\" to update the location at any time.");
                     return;
                 }
+                
+                // Records that the player has warped to their home location.
+                PlayerLog.record(RecordType.HOME_TELEPORTED, getUserId(player), location.location_id);
                 
                 displayCommandSuccess(player, "Welcome home, " + player.getName() + "!");
                 player.teleport(destination);
