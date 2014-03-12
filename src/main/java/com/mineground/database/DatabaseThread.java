@@ -259,7 +259,8 @@ public class DatabaseThread extends Thread {
      */
     private boolean isErrorCodeConnectionLost(SQLException exception) {
         // 08S01 represents a "communication link failure", e.g. connection timed out.
-        if (exception.getSQLState() == "08S01")
+        if (exception.getSQLState() == "08S01" /** communication link failed **/ ||
+            exception.getSQLState() == "08003" /** connection implicitly closed **/)
             return true;
 
         // TODO: Remove this once reconnecting is relatively stable.

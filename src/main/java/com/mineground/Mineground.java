@@ -181,6 +181,13 @@ public class Mineground extends JavaPlugin {
         
         Mineground.Lifetime = PluginLifetime.Idle;
 
+        // Close the database connection first, since that may depend on other instances which (at
+        // this point) are still alive, and GC wise Java seems to have some trouble with that.
+        mDatabase.disconnect();
+        mDatabase = null;
+        
+        PlayerLog.setDatabase(null);
+        
         // And NULL all the main instances in Mineground, which should clean up all remaining state,
         // close open connections, so that we can leave with a clear conscience.
         mFeatureManager = null;
@@ -191,11 +198,6 @@ public class Mineground extends JavaPlugin {
         
         mChatManager = null;
         mAccountManager = null;
-        
-        PlayerLog.setDatabase(null);
-        
-        mDatabase.disconnect();
-        mDatabase = null;
         
         Message.SetConfiguration(null);
         

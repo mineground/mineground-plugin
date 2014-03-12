@@ -20,7 +20,7 @@ Players have the ability to save locations in the world for the purpose of being
   
 + **/warp remove** *[name]*
 
-  Removes the saved location from the world. No one will be able to teleport to it anymore, but any player will be able to create a new warp with this name again. You can only remove your own saved locations, although staff members can override this restriction.
+  Removes the saved location, indicated by **name**, from the world. No one will be able to teleport to it anymore, but any player will be able to create a new warp with this name again. You can only remove your own saved locations, although staff members can override this restriction.
 
 ----------
 

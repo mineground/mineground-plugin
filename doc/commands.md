@@ -1,4 +1,4 @@
-Mineground Commands
+Mineground commands
 ==========
 
 There is a wide variety of commands available on Mineground, each of which adds to the player's in-game experience. Sometimes a command requires a player to be at least a certain level, for example for administrative features, but we intent to make as much functionality available to all players as is reasonable.
