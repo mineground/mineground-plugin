@@ -129,7 +129,7 @@ public class DatabaseThread extends Thread {
             } catch (InterruptedException exception) {
                 /** It's safe to ignore this exception **/
             } catch (ConnectionLostException exception) {
-                
+                mConnection = null;
             }
         }
         

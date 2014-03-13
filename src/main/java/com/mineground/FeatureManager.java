@@ -23,6 +23,7 @@ import com.mineground.base.FeatureInitParams;
 import com.mineground.features.DevelopmentLog;
 import com.mineground.features.LocationManager;
 import com.mineground.features.PlayerSessionMessages;
+import com.mineground.features.WorldManager;
 
 /**
  * The feature manager is responsible for --and owns-- all features available on Mineground. While
@@ -58,6 +59,7 @@ public class FeatureManager {
         //       have quite significant impact for the initialization order of them.
         mFeatures.put("LocationManager", new LocationManager(mInitParams));
         mFeatures.put("PlayerSessionMessages", new PlayerSessionMessages(mInitParams));
+        mFeatures.put("WorldManager", new WorldManager(mInitParams));
         
         // TODO: Remove this feature when Mineground is mature enough to not need constant hacking.
         mFeatures.put("DevelopmentLog", new DevelopmentLog(mInitParams));

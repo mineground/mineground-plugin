@@ -42,6 +42,7 @@ permissions:
         children:
             mineground.moderator: true
             # Permissions to grant to administrators:
+            world.list: true
     mineground.management:
         description: All permissions available for Management members.
         children:
@@ -67,6 +68,14 @@ permissions:
         description: Allows you to remove any warp location.
         default: op
 
+    # ----------------------------------------------------------------------------------------------
+    # World Manager - allows staff to manipulate the available worlds on Mineground.
+    # ----------------------------------------------------------------------------------------------
+    world.list:
+        description: Allows you to list existing worlds on Mineground.
+        default: op
+
+
 # The commands which are supported by the Mineground plugin.
 commands:
     # ----------------------------------------------------------------------------------------------
@@ -86,6 +95,14 @@ commands:
     warp:
         description: Stores or teleports you to a location.
         usage: /warp [create/list/remove/NAME]
+
+
+    # ----------------------------------------------------------------------------------------------
+    # Feature: World Manager
+    # ----------------------------------------------------------------------------------------------
+    world:
+        description: Manage the worlds available on Mineground.
+        usage: /world
 
 
     # ----------------------------------------------------------------------------------------------
