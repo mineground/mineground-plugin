@@ -18,6 +18,7 @@ package com.mineground.features;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.bukkit.Difficulty;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -93,8 +94,9 @@ public class WorldManager extends FeatureBase {
      * /world                   Displays usage information for the /world command.
      * /world list              Lists the existing worlds on Mineground.
      * /world set               Lists options which can be set for the current world.
-     * /world set spawn         Changes the spawn position. A value is necessary to change it.
+     * /world set difficulty    Changes the difficulty of this world.
      * /world set pvp           Changes whether player-versus-player is allowed in this world.
+     * /world set spawn         Changes the spawn position. A value is necessary to change it.
      * 
      * For each option in "/world set" the rule is that it will display the value of the setting,
      * unless a fourth argument has been passed with the new value.
@@ -119,6 +121,51 @@ public class WorldManager extends FeatureBase {
         // of the world the player is currently in. While more basic features such as the time and
         // weather can be control by more players, these are the more powerful settings.
         if (arguments.length >= 1 && arguments[0].equals("set")) {
+            // Changing the difficulty level of a Minecraft world determines what kind of mobs will
+            // spawn, how much damage they will do and whether hunger can kill the player.
+            if (arguments.length >= 2 && arguments[1].equals("difficulty")) {
+                if (!player.hasPermission("world.set.difficulty")) {
+                    displayCommandError(player, "You don't have permission to change the world's difficulty.");
+                    return;
+                }
+                
+                if (arguments.length >= 3) {
+                    Difficulty difficulty = Difficulty.PEACEFUL;
+                    if (arguments[2].equals("easy"))
+                        difficulty = Difficulty.EASY;
+                    else if (arguments[2].equals("normal"))
+                        difficulty = Difficulty.NORMAL;
+                    else if (arguments[2].equals("hard"))
+                        difficulty = Difficulty.HARD;
+                    
+                    // TODO: Announce to administrators that the difficulty level has changed.
+                    
+                    displayCommandSuccess(player, "The world's difficulty level has been changed!");
+                    world.setDifficulty(difficulty);
+                    return;
+                }
+                
+                String value = "unknown";
+                switch (world.getDifficulty()) {
+                    case PEACEFUL:
+                        value = "peaceful";
+                        break;
+                    case EASY:
+                        value = "easy";
+                        break;
+                    case NORMAL:
+                        value = "normal";
+                        break;
+                    case HARD:
+                        value = "hard";
+                        break;
+                }
+                
+                displayCommandDescription(player, "The difficulty level for this world is: §2" + value);
+                displayCommandDescription(player, "Change this using §b/world set difficulty [peaceful, easy, normal, hard]§f.");
+                return;
+            }
+            
             // /world spawn displays the spawn coordinates of the world when called without passing
             // any further arguments. With "here" as the final argument, it will be updated. We do
             // this to be consistent with the other /world set commands.
@@ -147,7 +194,7 @@ public class WorldManager extends FeatureBase {
                         "y:(" + (int) location.getY() + "), " +
                         "z:(" + (int) location.getZ() + ").");
 
-                displayCommandDescription(player, "Execute §b/world set spawn here§f to update the spawn position.");
+                displayCommandDescription(player, "Change this using §b/world set spawn here§f.");
                 return;
             }
             
@@ -191,13 +238,13 @@ public class WorldManager extends FeatureBase {
                 }
                 
                 displayCommandDescription(player, "The PVP setting for this world is: §2" + value);
-                displayCommandDescription(player, "Execute §b/world set pvp [allowed, disallowed, default]§f to change this.");
+                displayCommandDescription(player, "Change this using §b/world set pvp [allowed, disallowed, default]§f.");
                 return;
             }
             
             // If no recognized sub-command for /world set has been passed, show them general usage
             // information, which includes a list of the available sub-commands.
-            displayCommandUsage(player, "/world set [pvp/spawn]");
+            displayCommandUsage(player, "/world set [difficulty/pvp/spawn]");
             displayCommandDescription(player, "Changes various settings related to worlds on Mineground.");
             return;
         }
