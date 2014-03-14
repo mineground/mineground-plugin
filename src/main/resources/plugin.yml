@@ -50,6 +50,7 @@ permissions:
             # Permissions to grant to Management members:
             world.set.animals: true
             world.set.difficulty: true
+            world.set.mobs: true
             world.set.pvp: true
             world.set.spawn: true
 
@@ -79,10 +80,13 @@ permissions:
         description: Allows you to list existing worlds on Mineground.
         default: op
     world.set.animals:
-        description: Allows you to change how many animals should spawn in a world.
+        description: Allows you to change how many animals should spawn per chunk in a world.
         default: op
     world.set.difficulty:
         description: Allows you to change the difficulty of a world on Mineground.
+        default: op
+    world.set.mobs:
+        description: Allows you to change how many mobs should spawn per chunk in a world.
         default: op
     world.set.pvp:
         description: Allows you to change whether player-versus-player fights are allowed.

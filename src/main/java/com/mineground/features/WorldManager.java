@@ -17,7 +17,6 @@ package com.mineground.features;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import org.bukkit.Difficulty;
 import org.bukkit.Location;
@@ -38,7 +37,7 @@ import com.mineground.base.FeatureInitParams;
  */
 public class WorldManager extends FeatureBase {
     // The maximum number of entities which may be spawned per chunk in a world.
-    private final static int ENTITY_SPAWN_LIMIT = 50;
+    private final static int ENTITY_SPAWN_LIMIT = 150;
 
     // Possible values for setting whether player-versus-player fighting is allowed in the world.
     private enum PvpSetting {
@@ -98,8 +97,9 @@ public class WorldManager extends FeatureBase {
      * /world                   Displays usage information for the /world command.
      * /world list              Lists the existing worlds on Mineground.
      * /world set               Lists options which can be set for the current world.
-     * /world set animals       Changes how many animals should spawn in this world.
+     * /world set animals       Changes how many animals should spawn per chunk in this world.
      * /world set difficulty    Changes the difficulty of this world.
+     * /world set mobs          Changes how many mobs should spawn per chunk in this world.
      * /world set pvp           Changes whether player-versus-player is allowed in this world.
      * /world set spawn         Changes the spawn position. A value is necessary to change it.
      * 
@@ -146,7 +146,7 @@ public class WorldManager extends FeatureBase {
                     
                     // TODO: Announce to administrators that the animal spawn limit has changed.
                     
-                    displayCommandSuccess(player, "The animal spawn limits have been changed!");
+                    displayCommandSuccess(player, "The animal spawn limit has been changed to " + value + "!");
                     world.setAnimalSpawnLimit(value);
                     return;
                 }
@@ -198,6 +198,35 @@ public class WorldManager extends FeatureBase {
                 
                 displayCommandDescription(player, "The difficulty level for this world is: §2" + value);
                 displayCommandDescription(player, "Change this using §b/world set difficulty [peaceful, easy, normal, hard]§f.");
+                return;
+            }
+            
+            // Changes how many mobs can spawn in a chunk at any given moment. Like with the animals
+            // setting, the maximum value of this setting is capped by |ENTITY_SPAWN_LIMIT|.
+            if (arguments.length >= 2 && arguments[1].equals("mobs")) {
+                if (!player.hasPermission("world.set.mobs")) {
+                    displayCommandError(player, "You don't have permission to change the mob spawn count.");
+                    return;
+                }
+                
+                if (arguments.length >= 3) {
+                    int value = -1;
+                    try {
+                        int inputValue = Integer.parseInt(arguments[2]);
+                        if (inputValue >= 0 && inputValue < ENTITY_SPAWN_LIMIT)
+                            value = inputValue;
+                        
+                    } catch (NumberFormatException exception) { }
+                    
+                    // TODO: Announce to administrators that the mob spawn limit has changed.
+                    
+                    displayCommandSuccess(player, "The mob spawn limit has been changed to " + value + "!");
+                    world.setMonsterSpawnLimit(value);
+                    return;
+                }
+                
+                displayCommandDescription(player, "The per-chunk mob spawn limit for this world is: §2" + world.getMonsterSpawnLimit());
+                displayCommandDescription(player, "Change this using §b/world set mobs [default, 0-" + ENTITY_SPAWN_LIMIT + "]§f.");
                 return;
             }
             
@@ -279,7 +308,7 @@ public class WorldManager extends FeatureBase {
             
             // If no recognized sub-command for /world set has been passed, show them general usage
             // information, which includes a list of the available sub-commands.
-            displayCommandUsage(player, "/world set [difficulty/pvp/spawn]");
+            displayCommandUsage(player, "/world set [animals/difficulty/mobs/pvp/spawn]");
             displayCommandDescription(player, "Changes various settings related to worlds on Mineground.");
             return;
         }
