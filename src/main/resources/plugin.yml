@@ -48,6 +48,7 @@ permissions:
         children:
             mineground.administrator: true
             # Permissions to grant to Management members:
+            world.set.animals: true
             world.set.difficulty: true
             world.set.pvp: true
             world.set.spawn: true
@@ -76,6 +77,9 @@ permissions:
     # ----------------------------------------------------------------------------------------------
     world.list:
         description: Allows you to list existing worlds on Mineground.
+        default: op
+    world.set.animals:
+        description: Allows you to change how many animals should spawn in a world.
         default: op
     world.set.difficulty:
         description: Allows you to change the difficulty of a world on Mineground.

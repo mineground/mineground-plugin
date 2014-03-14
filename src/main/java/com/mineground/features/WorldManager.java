@@ -17,6 +17,7 @@ package com.mineground.features;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.bukkit.Difficulty;
 import org.bukkit.Location;
@@ -36,6 +37,9 @@ import com.mineground.base.FeatureInitParams;
  * forth between certain ones of them.
  */
 public class WorldManager extends FeatureBase {
+    // The maximum number of entities which may be spawned per chunk in a world.
+    private final static int ENTITY_SPAWN_LIMIT = 50;
+
     // Possible values for setting whether player-versus-player fighting is allowed in the world.
     private enum PvpSetting {
         PvpAllowed,     // PVP is always allowed, regardless of the player's preference.
@@ -45,7 +49,7 @@ public class WorldManager extends FeatureBase {
     
     // Map between a world's hash and whether PVP is allowed in there.
     private final Map<Integer, PvpSetting> mWorldPvpSetting;
-    
+
     public WorldManager(FeatureInitParams params) {
         super(params);
         
@@ -94,6 +98,7 @@ public class WorldManager extends FeatureBase {
      * /world                   Displays usage information for the /world command.
      * /world list              Lists the existing worlds on Mineground.
      * /world set               Lists options which can be set for the current world.
+     * /world set animals       Changes how many animals should spawn in this world.
      * /world set difficulty    Changes the difficulty of this world.
      * /world set pvp           Changes whether player-versus-player is allowed in this world.
      * /world set spawn         Changes the spawn position. A value is necessary to change it.
@@ -121,6 +126,36 @@ public class WorldManager extends FeatureBase {
         // of the world the player is currently in. While more basic features such as the time and
         // weather can be control by more players, these are the more powerful settings.
         if (arguments.length >= 1 && arguments[0].equals("set")) {
+            // Changes the number of animals which should be spawned per chunk in the current world.
+            // When there is a larger number of players in-game, this could significantly stress the
+            // server's CPU, so it should be kept within reasonable limits.
+            if (arguments.length >= 2 && arguments[1].equals("animals")) {
+                if (!player.hasPermission("world.set.animals")) {
+                    displayCommandError(player, "You don't have permission to change the animal spawn count.");
+                    return;
+                }
+                
+                if (arguments.length >= 3) {
+                    int value = -1;
+                    try {
+                        int inputValue = Integer.parseInt(arguments[2]);
+                        if (inputValue >= 0 && inputValue < ENTITY_SPAWN_LIMIT)
+                            value = inputValue;
+                        
+                    } catch (NumberFormatException exception) { }
+                    
+                    // TODO: Announce to administrators that the animal spawn limit has changed.
+                    
+                    displayCommandSuccess(player, "The animal spawn limits have been changed!");
+                    world.setAnimalSpawnLimit(value);
+                    return;
+                }
+                
+                displayCommandDescription(player, "The per-chunk animal spawn limit for this world is: §2" + world.getAnimalSpawnLimit());
+                displayCommandDescription(player, "Change this using §b/world set animals [default, 0-" + ENTITY_SPAWN_LIMIT + "]§f.");
+                return;
+            }
+
             // Changing the difficulty level of a Minecraft world determines what kind of mobs will
             // spawn, how much damage they will do and whether hunger can kill the player.
             if (arguments.length >= 2 && arguments[1].equals("difficulty")) {
