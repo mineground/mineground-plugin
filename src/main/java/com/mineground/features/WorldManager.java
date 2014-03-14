@@ -48,6 +48,9 @@ public class WorldManager extends FeatureBase {
     
     // Map between a world's hash and whether PVP is allowed in there.
     private final Map<Integer, PvpSetting> mWorldPvpSetting;
+    
+    // Map containing the game rule mappings supported by Mineground.
+    private final Map<String, String> mGameRulesMap;
 
     public WorldManager(FeatureInitParams params) {
         super(params);
@@ -55,6 +58,29 @@ public class WorldManager extends FeatureBase {
         // TODO: Implement enforcing the PvpSetting directive if it's PvpDefault.
         // TODO: Implement loading PvpSettings and other world settings from the database.
         mWorldPvpSetting = new HashMap<Integer, PvpSetting>();
+        
+        // The following map contains the game rules which may be changed using the /world set rule
+        // command on Mineground. Update this map if Bukkit introduces new ones.
+        mGameRulesMap = new HashMap<String, String>();
+        mGameRulesMap.put("block-drops", "doTileDrops"); // whether breaking a block drops something.
+        mGameRulesMap.put("command-block-notify", "commandBlockOutput"); // command block operations to inform ops?
+        mGameRulesMap.put("daylight-cycle", "doDaylightCycle"); // whether the day/night cycle should be on.
+        mGameRulesMap.put("fire-spread", "doFireTick"); // whether fire should spread between tiles.
+        mGameRulesMap.put("keep-inventory", "keepInventory"); // whether to keep one's inventory on death.
+        mGameRulesMap.put("mobs-damage", "mobGriefing"); // whether mobs can do damage to blocks.
+        mGameRulesMap.put("mobs-loot", "doMobLoot"); // whether mobs should drop items.
+        mGameRulesMap.put("mobs-spawn", "doMobSpawning"); // whether mobs should be spawned at all.
+        mGameRulesMap.put("health-regeneration", "naturalRegeneration"); // whether to regenerate health.
+        
+        // Verify that all existing game-rules have got a mapping in the |mGameRulesMap| map. If
+        // a new entry was added, display a warning in the server's console and add the value as
+        // a mapping to itself, making new Minecraft functionality available as soon as possible.
+        for (String gameRule : getServer().getWorlds().get(0).getGameRules()) {
+            if (!mGameRulesMap.containsValue(gameRule)) {
+                getLogger().warning("WorldManager: the game rule \"" + gameRule + "\" has not been defined.");
+                mGameRulesMap.put(gameRule, gameRule);
+            }
+        }
     }
     
     /**
@@ -139,7 +165,7 @@ public class WorldManager extends FeatureBase {
                     int value = -1;
                     try {
                         int inputValue = Integer.parseInt(arguments[2]);
-                        if (inputValue >= 0 && inputValue < ENTITY_SPAWN_LIMIT)
+                        if (inputValue >= 0 && inputValue <= ENTITY_SPAWN_LIMIT)
                             value = inputValue;
                         
                     } catch (NumberFormatException exception) { }
@@ -213,7 +239,7 @@ public class WorldManager extends FeatureBase {
                     int value = -1;
                     try {
                         int inputValue = Integer.parseInt(arguments[2]);
-                        if (inputValue >= 0 && inputValue < ENTITY_SPAWN_LIMIT)
+                        if (inputValue >= 0 && inputValue <= ENTITY_SPAWN_LIMIT)
                             value = inputValue;
                         
                     } catch (NumberFormatException exception) { }
@@ -227,38 +253,6 @@ public class WorldManager extends FeatureBase {
                 
                 displayCommandDescription(player, "The per-chunk mob spawn limit for this world is: §2" + world.getMonsterSpawnLimit());
                 displayCommandDescription(player, "Change this using §b/world set mobs [default, 0-" + ENTITY_SPAWN_LIMIT + "]§f.");
-                return;
-            }
-            
-            // /world spawn displays the spawn coordinates of the world when called without passing
-            // any further arguments. With "here" as the final argument, it will be updated. We do
-            // this to be consistent with the other /world set commands.
-            if (arguments.length >= 2 && arguments[1].equals("spawn")) {
-                if (!player.hasPermission("world.set.spawn")) {
-                    displayCommandError(player, "You don't have permission to change the world's spawn position.");
-                    return;
-                }
-                
-                if (arguments.length >= 3 && arguments[2].equals("here")) {
-                    Location location = player.getLocation();
-                    if (!world.setSpawnLocation((int) location.getX(), (int) location.getY(), (int) location.getZ())) {
-                        displayCommandError(player, "The spawn position could not be updated due to a Bukkit issue.");
-                        return;
-                    }
-                    
-                    // TODO: Announce to in-game staff that the spawn position has been changed.
-                    
-                    displayCommandSuccess(player, "The spawn position of this world has been changed!");
-                    return;
-                }
-                
-                Location location = world.getSpawnLocation();
-                displayCommandDescription(player, "The spawn position is located at " +
-                        "x:(" + (int) location.getX() + "), " +
-                        "y:(" + (int) location.getY() + "), " +
-                        "z:(" + (int) location.getZ() + ").");
-
-                displayCommandDescription(player, "Change this using §b/world set spawn here§f.");
                 return;
             }
             
@@ -306,9 +300,78 @@ public class WorldManager extends FeatureBase {
                 return;
             }
             
+            // Bukkit has a system called "game rules" which sets various additional options for
+            // the world. We implement these in a single option, "rule", followed by a brief text
+            // representing the setting which should be changed.
+            if (arguments.length >= 2 && arguments[1].equals("rule")) {
+                if (!player.hasPermission("world.set.rule")) {
+                    displayCommandError(player, "You don't have permission to change the world's game rules.");
+                    return;
+                }
+                
+                String gameRule = null;
+                if (arguments.length >= 3)
+                    gameRule = mGameRulesMap.get(arguments[2]);
+                    
+                if (gameRule == null) {
+                    String gameRulesList = "";
+                    for (String rule : mGameRulesMap.keySet())
+                        gameRulesList += "§e" + rule + "§f, ";
+                    
+                    displayCommandDescription(player, "Available game rules: " + gameRulesList);
+                    return;
+                }
+               
+                // We found the game rule which should be changed. If the player supplied a fourth
+                // argument (either "true" or "false"), change the value, otherwise display it.
+                if (arguments.length >= 4 && (arguments[3].equals("true") || arguments[3].equals("false"))) {
+                    // TODO: Announce to in-game staff that the spawn position has been changed.
+                    
+                    displayCommandSuccess(player, "The game rule has been updated for this world!");
+                    world.setGameRuleValue(gameRule, arguments[3]);
+                    return;
+                }
+                
+                displayCommandDescription(player, "The game rule §2" + arguments[2] + "§f is set to: §2" + world.getGameRuleValue(gameRule));
+                displayCommandDescription(player, "Change this using §b/world set rule " + arguments[2] + " [true, false]§f.");
+                return;
+            }
+            
+            // /world spawn displays the spawn coordinates of the world when called without passing
+            // any further arguments. With "here" as the final argument, it will be updated. We do
+            // this to be consistent with the other /world set commands.
+            if (arguments.length >= 2 && arguments[1].equals("spawn")) {
+                if (!player.hasPermission("world.set.spawn")) {
+                    displayCommandError(player, "You don't have permission to change the world's spawn position.");
+                    return;
+                }
+                
+                if (arguments.length >= 3 && arguments[2].equals("here")) {
+                    Location location = player.getLocation();
+                    if (!world.setSpawnLocation((int) location.getX(), (int) location.getY(), (int) location.getZ())) {
+                        displayCommandError(player, "The spawn position could not be updated due to a Bukkit issue.");
+                        return;
+                    }
+                    
+                    // TODO: Announce to in-game staff that the spawn position has been changed.
+                    
+                    displayCommandSuccess(player, "The spawn position of this world has been changed!");
+                    return;
+                }
+                
+                Location location = world.getSpawnLocation();
+                displayCommandDescription(player, "The spawn position is located at " +
+                        "x:(" + (int) location.getX() + "), " +
+                        "y:(" + (int) location.getY() + "), " +
+                        "z:(" + (int) location.getZ() + ").");
+
+                displayCommandDescription(player, "Change this using §b/world set spawn here§f.");
+                return;
+            }
+            
             // If no recognized sub-command for /world set has been passed, show them general usage
             // information, which includes a list of the available sub-commands.
-            displayCommandUsage(player, "/world set [animals/difficulty/mobs/pvp/spawn]");
+            displayCommandUsage(player, "/world set [animals/difficulty/mobs/pvp/rule/spawn]");
             displayCommandDescription(player, "Changes various settings related to worlds on Mineground.");
             return;
         }

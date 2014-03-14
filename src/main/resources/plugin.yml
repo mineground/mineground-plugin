@@ -52,6 +52,7 @@ permissions:
             world.set.difficulty: true
             world.set.mobs: true
             world.set.pvp: true
+            world.set.rule: true
             world.set.spawn: true
 
     # ----------------------------------------------------------------------------------------------
@@ -90,6 +91,9 @@ permissions:
         default: op
     world.set.pvp:
         description: Allows you to change whether player-versus-player fights are allowed.
+        default: op
+    world.set.rule:
+        description: Allows you to change more advanced game rules for a world.
         default: op
     world.set.spawn:
         description: Allows you to change the spawn position of any world.
