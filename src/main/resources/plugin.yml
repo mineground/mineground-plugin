@@ -48,6 +48,7 @@ permissions:
         children:
             mineground.administrator: true
             # Permissions to grant to Management members:
+            world.set.spawn: true
 
     # ----------------------------------------------------------------------------------------------
     # Warp Manager - allows players to create warps, warp to them and share them with other players.
@@ -73,6 +74,9 @@ permissions:
     # ----------------------------------------------------------------------------------------------
     world.list:
         description: Allows you to list existing worlds on Mineground.
+        default: op
+    world.set.spawn:
+        description: Allows you to change the spawn position of any world.
         default: op
 
 
