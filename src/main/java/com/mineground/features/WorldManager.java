@@ -15,6 +15,9 @@
 
 package com.mineground.features;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -32,7 +35,55 @@ import com.mineground.base.FeatureInitParams;
  * forth between certain ones of them.
  */
 public class WorldManager extends FeatureBase {
-    public WorldManager(FeatureInitParams params) { super(params); }
+    // Possible values for setting whether player-versus-player fighting is allowed in the world.
+    private enum PvpSetting {
+        PvpAllowed,     // PVP is always allowed, regardless of the player's preference.
+        PvpDisallowed,  // PVP is never allowed, regardless of the player's preference.
+        PvpDefault      // PVP is allowed or disallowed based on the player's preference.
+    }
+    
+    // Map between a world's hash and whether PVP is allowed in there.
+    private final Map<Integer, PvpSetting> mWorldPvpSetting;
+    
+    public WorldManager(FeatureInitParams params) {
+        super(params);
+        
+        // TODO: Implement enforcing the PvpSetting directive if it's PvpDefault.
+        // TODO: Implement loading PvpSettings and other world settings from the database.
+        mWorldPvpSetting = new HashMap<Integer, PvpSetting>();
+    }
+    
+    /**
+     * Returns whether PVP is allowed for |world|. If the setting is not yet available in the
+     * |mWorldPvpSetting| map, it will be assumed based on the world's own settings.
+     * 
+     * @param world The world to get to know about whether PVP is allowed.
+     * @return      Whether PVP is allowed in the given world.
+     */
+    private PvpSetting getPlayerVersusPlayer(World world) {
+        PvpSetting value = mWorldPvpSetting.get(getWorldHash(world));
+        if (value != null)
+            return value;
+        
+        return world.getPVP() ? PvpSetting.PvpAllowed : PvpSetting.PvpDisallowed;
+    }
+    
+    /**
+     * Sets whether PVP should be allowed for |world|. The value will be stored in the database and
+     * will thus persist between Mineground plugin reloads.
+     * 
+     * @param world     The world to change the PVP setting for.
+     * @param setting   Whether PVP should be allowed, disallowed or by choice.
+     */
+    private void setPlayerVersusPlayer(World world, PvpSetting setting) {
+        // TODO: Update the PVP value of this world in the database.
+        
+        mWorldPvpSetting.put(getWorldHash(world), setting);
+        if (setting == PvpSetting.PvpDisallowed)
+            world.setPVP(false);
+        else
+            world.setPVP(true);
+    }
     
     /**
      * The /world command is the primary entry point for Management members to manipulate the worlds
@@ -42,8 +93,11 @@ public class WorldManager extends FeatureBase {
      * /world                   Displays usage information for the /world command.
      * /world list              Lists the existing worlds on Mineground.
      * /world set               Lists options which can be set for the current world.
-     * /world set spawn         Displays the spawn position. A value is necessary to change it.
-     * /world set spawn here    Changes the spawn position to the current location of the player.
+     * /world set spawn         Changes the spawn position. A value is necessary to change it.
+     * /world set pvp           Changes whether player-versus-player is allowed in this world.
+     * 
+     * For each option in "/world set" the rule is that it will display the value of the setting,
+     * unless a fourth argument has been passed with the new value.
      * 
      * @param sender    The player who executed this command.
      * @param arguments The arguments which they passed on whilst executing.
@@ -93,15 +147,63 @@ public class WorldManager extends FeatureBase {
                         "y:(" + (int) location.getY() + "), " +
                         "z:(" + (int) location.getZ() + ").");
 
-                displayCommandDescription(player, "Execute \"/world set spawn here\" to update the spawn position.");
+                displayCommandDescription(player, "Execute §b/world set spawn here§f to update the spawn position.");
                 return;
             }
             
-            displayCommandUsage(player, "/world set [spawn]");
+            // The /world set pvp command allows staff to change whether player-versus-player (PVP)
+            // fighting should be allowed. There are three options available: "default", "allowed"
+            // and "disallowed". The first option allows users to set it for themselves using /pvp.
+            // "allowed" always allows it; "disallowed" always disabled it, regardless of settings.
+            if (arguments.length >= 2 && arguments[1].equals("pvp")) {
+                if (!player.hasPermission("world.set.pvp")) {
+                    displayCommandError(player, "You don't have permission to change whether PVP is allowed.");
+                    return;
+                }
+                
+                if (arguments.length >= 3) {
+                    PvpSetting value = null;
+                    if (arguments[2].equals("allowed"))
+                        value = PvpSetting.PvpAllowed;
+                    else if (arguments[2].equals("disallowed"))
+                        value = PvpSetting.PvpDisallowed;
+                    else
+                        value = PvpSetting.PvpDefault;
+                    
+                    // TODO: Announce to in-game staff that the spawn position has been changed.
+                    
+                    displayCommandSuccess(player, "The PVP settings for this world have been updated!");
+                    setPlayerVersusPlayer(world, value);
+                    return;
+                }
+                
+                String value = "unknown";
+                switch (getPlayerVersusPlayer(world)) {
+                    case PvpAllowed:
+                        value = "allowed";
+                        break;
+                    case PvpDisallowed:
+                        value = "disallowed";
+                        break;
+                    default:
+                        value = "default";
+                        break;
+                }
+                
+                displayCommandDescription(player, "The PVP setting for this world is: §2" + value);
+                displayCommandDescription(player, "Execute §b/world set pvp [allowed, disallowed, default]§f to change this.");
+                return;
+            }
+            
+            // If no recognized sub-command for /world set has been passed, show them general usage
+            // information, which includes a list of the available sub-commands.
+            displayCommandUsage(player, "/world set [pvp/spawn]");
             displayCommandDescription(player, "Changes various settings related to worlds on Mineground.");
             return;
         }
         
+        // If no valid command for /world has been passed, show them general usage information. This
+        // also displays all the individual /world options available.
         displayCommandUsage(player, "/world [list/set]");
         displayCommandDescription(player, "Creates and manages the worlds available on Mineground.");
     }
