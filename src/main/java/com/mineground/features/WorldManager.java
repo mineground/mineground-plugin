@@ -127,6 +127,7 @@ public class WorldManager extends FeatureBase {
      * /world set difficulty    Changes the difficulty of this world.
      * /world set mobs          Changes how many mobs should spawn per chunk in this world.
      * /world set pvp           Changes whether player-versus-player is allowed in this world.
+     * /world set rule          Changes various advanced game rule values exposed by Minecraft.
      * /world set spawn         Changes the spawn position. A value is necessary to change it.
      * 
      * For each option in "/world set" the rule is that it will display the value of the setting,
@@ -146,7 +147,14 @@ public class WorldManager extends FeatureBase {
             return;
         }
         
-        // TODO: Implement /world list.
+        // Displays a list of the worlds created on Mineground.
+        if (arguments.length >= 1 && arguments[0].equals("list")) {
+            displayCommandSuccess(player, "The following worlds are available on Mineground:");
+            for (World w : getServer().getWorlds())
+                displayCommandDescription(player, "  " + w.getName());
+
+            return;
+        }
         
         // The /world set command exposes a wide variety of functions available to change settings
         // of the world the player is currently in. While more basic features such as the time and
