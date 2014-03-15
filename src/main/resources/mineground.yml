@@ -63,3 +63,7 @@ messages:
     # the weapon used by the killer had a special name, that will be included in the message.
     # Available macros: {nickname}, {killer}, {reason}
     player_killed: "» §e{nickname}§6 has been killed by §e{killer}§6{reason}."
+    
+    # Announcement to staff members about miscellaneous events occurring.
+    # Available macros: {message}
+    staff_announcement: "» {message}"

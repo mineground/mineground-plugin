@@ -124,7 +124,7 @@ public class Mineground extends JavaPlugin {
         PlayerLog.setDatabase(mDatabase);
         
         mAccountManager = new AccountManager(mDatabase, this);
-        mChatManager = new ChatManager();
+        mChatManager = new ChatManager(mAccountManager);
         
         mEventDispatcher = new EventDispatcher();
         mEventListener = new EventListener(mEventDispatcher, mAccountManager, mChatManager);
