@@ -205,17 +205,6 @@ public class FeatureBase implements Feature {
     }
     
     /**
-     * Returns a signed 32-bit integer representing a hashed value of |world|'s unique Id. This Id
-     * will be persistent between server restarts, and is not dependent on the world's name.
-     * 
-     * @param world The world to get a hash of.
-     * @return      A signed 32-bit integer representing |world|.
-     */
-    protected int getWorldHash(World world) {
-        return SimpleHash.createHash(world.getUID().toString());
-    }
-    
-    /**
      * Returns the Bukkit Server instance, which allows an individual feature to integrate much more
      * deeply with Bukkit. Please do keep in mind that any dependency on Bukkit will increase the
      * chance of the plugin breaking during an update.

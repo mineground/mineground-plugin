@@ -28,6 +28,7 @@ import com.mineground.account.Account;
 import com.mineground.base.CommandHandler;
 import com.mineground.base.FeatureBase;
 import com.mineground.base.FeatureInitParams;
+import com.mineground.base.WorldUtils;
 
 /**
  * Minecraft supports an arbitrary amount of worlds existing simultaneously, each with their own
@@ -91,7 +92,7 @@ public class WorldManager extends FeatureBase {
      * @return      Whether PVP is allowed in the given world.
      */
     private PvpSetting getPlayerVersusPlayer(World world) {
-        PvpSetting value = mWorldPvpSetting.get(getWorldHash(world));
+        PvpSetting value = mWorldPvpSetting.get(WorldUtils.getWorldHash(world));
         if (value != null)
             return value;
         
@@ -108,7 +109,7 @@ public class WorldManager extends FeatureBase {
     private void setPlayerVersusPlayer(World world, PvpSetting setting) {
         // TODO: Update the PVP value of this world in the database.
         
-        mWorldPvpSetting.put(getWorldHash(world), setting);
+        mWorldPvpSetting.put(WorldUtils.getWorldHash(world), setting);
         if (setting == PvpSetting.PvpDisallowed)
             world.setPVP(false);
         else

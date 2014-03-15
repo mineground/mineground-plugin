@@ -33,6 +33,7 @@ import com.mineground.base.Promise;
 import com.mineground.base.PromiseError;
 import com.mineground.base.PromiseResultHandler;
 import com.mineground.base.SimpleHash;
+import com.mineground.base.WorldUtils;
 import com.mineground.database.DatabaseResult;
 import com.mineground.database.DatabaseResultRow;
 import com.mineground.database.DatabaseStatement;
@@ -73,64 +74,6 @@ public class LocationManager extends FeatureBase {
      * Database statement used to remove a location from the database.
      */
     private final DatabaseStatement mRemoveLocationStatement;
-    
-    /**
-     * Represents a location entry in the database, and allows the remove() method to be used on
-     * it for conveniently removing it. The values will be initialized from the constructor, which
-     * takes a DatabaseResultRow instance as its parameter to read information from.
-     */
-    class SavedLocation {
-        public int location_id;
-        public int user_id;
-        public String name;
-        public int password;
-        public int world_hash;
-        public int position_x;
-        public int position_y;
-        public int position_z;
-        public double position_yaw;
-        public double position_pitch;
-        
-        /**
-         * Initializes the SavedLocation instance based on information read from the database, as
-         * passed in |resultRow|, which is a single row from the "locations" table.
-         * 
-         * @param resultRow The database row containing the location information.
-         */
-        public SavedLocation(DatabaseResultRow resultRow) {
-            location_id = resultRow.getInteger("location_id").intValue();
-            user_id = resultRow.getInteger("user_id").intValue();
-            name = resultRow.getString("name");
-            password = resultRow.getInteger("password").intValue();
-            world_hash = resultRow.getInteger("world_hash").intValue();
-            position_x = resultRow.getInteger("position_x").intValue();
-            position_y = resultRow.getInteger("position_y").intValue();
-            position_z = resultRow.getInteger("position_z").intValue();
-            position_yaw = resultRow.getDouble("position_yaw");
-            position_pitch = resultRow.getDouble("position_pitch");
-        }
-        
-        /**
-         * Creates a new instance of Bukkit's Location class based on this SavedLocation data. The
-         * active list of worlds will be retrieved from 
-         * 
-         * @return A Bukkit Location object representing this saved location.
-         */
-        public Location toBukkitLocation() {
-            for (World world : getServer().getWorlds()) {
-                if (getWorldHash(world) != world_hash)
-                    continue;
-                
-                // TODO: We should probably do some check here to see if the world should still be
-                //       accessible by players. Let's do that once we've got a WorldManager.
-                
-                return new Location(world, (double) position_x, (double) position_y,
-                        (double) position_z, (float) position_yaw, (float) position_pitch);
-            }
-            
-            return null;
-        }
-    }
     
     /**
      * Initializes the LocationManager class by preparing the queries which will be used for
@@ -201,18 +144,18 @@ public class LocationManager extends FeatureBase {
      * @param world         The world in which this location exists.
      * @return              A Promise, which will be resolved with the SavedLocation once available.
      */
-    private Promise<SavedLocation> findLocation(String locationName, World world) {
-        final Promise<SavedLocation> promise = new Promise<SavedLocation>();
+    private Promise<LocationRecord> findLocation(String locationName, World world) {
+        final Promise<LocationRecord> promise = new Promise<LocationRecord>();
         
         mFindLocationStatement.setString(1, locationName);
-        mFindLocationStatement.setInteger(2, getWorldHash(world));
+        mFindLocationStatement.setInteger(2, WorldUtils.getWorldHash(world));
         mFindLocationStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
             public void onFulfilled(DatabaseResult result) {
                 if (result.rows.size() == 0) {
                     promise.reject("The location does not exist in the database.");
                     return;
                 }
-                promise.resolve(new SavedLocation(result.rows.get(0)));
+                promise.resolve(new LocationRecord(result.rows.get(0)));
             }
             public void onRejected(PromiseError error) {
                 getLogger().severe("Could not find a location in the database (table: locations): " + error.reason());
@@ -231,8 +174,8 @@ public class LocationManager extends FeatureBase {
      * @param locationId    Id of the location which should be loaded.
      * @return              A Promise, which will be resolved with the SavedLocation once available.
      */
-    private Promise<SavedLocation> findLocationById(int locationId) {
-        final Promise<SavedLocation> promise = new Promise<SavedLocation>();
+    private Promise<LocationRecord> findLocationById(int locationId) {
+        final Promise<LocationRecord> promise = new Promise<LocationRecord>();
         
         mLoadLocationStatement.setInteger(1, locationId);
         mLoadLocationStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
@@ -240,7 +183,7 @@ public class LocationManager extends FeatureBase {
                 if (result.rows.size() == 0)
                     promise.reject("The location does not exist in the database.");
                 else
-                    promise.resolve(new SavedLocation(result.rows.get(0)));
+                    promise.resolve(new LocationRecord(result.rows.get(0)));
             }
             public void onRejected(PromiseError error) {
                 getLogger().severe("Could not load a location from the database (table: locations): " + error.reason());
@@ -291,7 +234,7 @@ public class LocationManager extends FeatureBase {
         mCreateLocationStatement.setInteger(1, account.getUserId());
         mCreateLocationStatement.setString(2, locationName);
         mCreateLocationStatement.setInteger(3, passwordHash);
-        mCreateLocationStatement.setInteger(4, getWorldHash(player.getWorld()));
+        mCreateLocationStatement.setInteger(4, WorldUtils.getWorldHash(player.getWorld()));
         mCreateLocationStatement.setInteger(5, (long) location.getX());
         mCreateLocationStatement.setInteger(6, (long) (location.getY() + 0.5));
         mCreateLocationStatement.setInteger(7, (long) location.getZ());
@@ -327,7 +270,7 @@ public class LocationManager extends FeatureBase {
         final Promise<List<String>> promise = new Promise<List<String>>();
         
         mListLocationsStatement.setInteger(1, getUserId(player));
-        mListLocationsStatement.setInteger(2, getWorldHash(world));
+        mListLocationsStatement.setInteger(2, WorldUtils.getWorldHash(world));
         mListLocationsStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
             public void onFulfilled(DatabaseResult result) {
                 if (result.rows.size() == 0) {
@@ -358,7 +301,7 @@ public class LocationManager extends FeatureBase {
      * @param location  The location which should no longer be usable.
      * @return          A Promise, which will be resolved once it's been removed.
      */
-    private Promise<Void> removeLocation(SavedLocation location) {
+    private Promise<Void> removeLocation(LocationRecord location) {
         final Promise<Void> promise = new Promise<Void>();
         
         mRemoveLocationStatement.setInteger(1, location.location_id);
@@ -429,9 +372,9 @@ public class LocationManager extends FeatureBase {
             return;
         }
         
-        findLocationById(locationId).then(new PromiseResultHandler<SavedLocation>() {
-            public void onFulfilled(SavedLocation location) {
-                Location destination = location.toBukkitLocation();
+        findLocationById(locationId).then(new PromiseResultHandler<LocationRecord>() {
+            public void onFulfilled(LocationRecord location) {
+                Location destination = location.toBukkitLocation(getServer().getWorlds());
                 if (destination == null) {
                     displayCommandError(player, "Your home location isn't in a valid world anymore!");
                     displayCommandDescription(player, "Type \"/home set\" to update the location at any time.");
@@ -503,8 +446,8 @@ public class LocationManager extends FeatureBase {
             // be resolved asynchronously, at which time the player may have moved.
             final Location location = player.getLocation();
             
-            findLocation(locationName, world).then(new PromiseResultHandler<SavedLocation>() {
-                public void onFulfilled(SavedLocation result) {
+            findLocation(locationName, world).then(new PromiseResultHandler<LocationRecord>() {
+                public void onFulfilled(LocationRecord result) {
                     displayCommandError(player, "A warp named \"" + locationName + "\" already exists in this world.");
                 }
                 public void onRejected(PromiseError error) {
@@ -577,8 +520,8 @@ public class LocationManager extends FeatureBase {
             
             final String locationName = arguments[1];
             
-            findLocation(locationName, world).then(new PromiseResultHandler<SavedLocation>() {
-                public void onFulfilled(final SavedLocation location) {
+            findLocation(locationName, world).then(new PromiseResultHandler<LocationRecord>() {
+                public void onFulfilled(final LocationRecord location) {
                     // Players normally are only allowed to remove their own warps, but members of
                     // Mineground's staff will be allowed to remove any warp from the world.
                     if (location.user_id != getUserId(player) && !player.hasPermission("warp.remove_all")) {
@@ -616,8 +559,8 @@ public class LocationManager extends FeatureBase {
             return;
         }
 
-        findLocation(destination, world).then(new PromiseResultHandler<SavedLocation>() {
-            public void onFulfilled(SavedLocation location) {
+        findLocation(destination, world).then(new PromiseResultHandler<LocationRecord>() {
+            public void onFulfilled(LocationRecord location) {
                 // If the location has been protected by a password, this needs to be verified. Only
                 // players with the warp.teleport_no_password permission are able to override this.
                 if (location.password != 0 && !player.hasPermission("warp.teleport_no_password")) {
@@ -631,7 +574,7 @@ public class LocationManager extends FeatureBase {
                 PlayerLog.record(RecordType.WARP_TELEPORTED, getUserId(player), location.location_id);
                 
                 displayCommandSuccess(player, "You have been teleported to " + destination + "!");
-                player.teleport(location.toBukkitLocation());
+                player.teleport(location.toBukkitLocation(getServer().getWorlds()));
             }
             public void onRejected(PromiseError error) {
                 displayCommandError(player, "The location \"" + destination + "\" does not exist in this world.");
