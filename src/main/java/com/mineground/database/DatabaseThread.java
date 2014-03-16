@@ -254,8 +254,8 @@ public class DatabaseThread extends Thread {
      * If we can recognize the |exception| thrown by the database driver as something which means
      * that the connection has been lost, Mineground should automatically reconnect to the server.
      * 
-     * @param errorCode 
-     * @return
+     * @param exception The SQLException to read the SQL state from.
+     * @return          True if the error code indicates that the connection was lost.
      */
     private boolean isErrorCodeConnectionLost(SQLException exception) {
         // 08S01 represents a "communication link failure", e.g. connection timed out.

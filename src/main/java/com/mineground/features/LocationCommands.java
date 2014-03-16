@@ -15,6 +15,7 @@
 
 package com.mineground.features;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Location;
@@ -25,6 +26,7 @@ import org.bukkit.entity.Player;
 import com.mineground.account.Account;
 import com.mineground.account.PlayerLog;
 import com.mineground.account.PlayerLog.RecordType;
+import com.mineground.base.CommandCompletionHandler;
 import com.mineground.base.CommandHandler;
 import com.mineground.base.FeatureComponent;
 import com.mineground.base.FeatureInitParams;
@@ -117,6 +119,41 @@ public class LocationCommands extends FeatureComponent<LocationManager> {
     }
     
     /**
+     * Provides auto-completion suggestions for the /warp command. This will make it significantly
+     * easier for players to work with their warps, as they can use <tab> to complete long names.
+     * 
+     * @param sender    The Player or console who executed this command.
+     * @param arguments The arguments which they passed on to this command.
+     * @return          A list of auto-completion suggestions based on their current input.
+     */
+    @CommandCompletionHandler("warp")
+    public List<String> onWarpCompletion(CommandSender sender, String[] arguments) {
+        if (arguments.length >= 2 && arguments[0].equals("list"))
+            return null; // no auto-completions for /warp list.
+        if (arguments.length >= 2 && arguments[0].equals("create"))
+            return null; // no auto-completions for /warp create.
+ 
+        List<String> suggestions = new ArrayList<String>();
+        String completionWord = "";
+        
+        if (arguments.length == 1) {
+            completionWord = arguments[0];
+            if ("create".startsWith(completionWord))
+                suggestions.add("create");
+            if ("list".startsWith(completionWord))
+                suggestions.add("list");
+            if ("remove".startsWith(completionWord))
+                suggestions.add("remove");
+            
+        } else if (arguments.length >= 2)
+            completionWord = arguments[1];
+        
+        // TODO: Suggest warp names based on |completionWord|.
+
+        return suggestions;
+    }
+    
+    /**
      * Implements the /warp command, which is the primary interface for players to manage their
      * stored locations with. This is a reasonably complicated command with the following options:
      * 
@@ -199,7 +236,7 @@ public class LocationCommands extends FeatureComponent<LocationManager> {
         if (arguments[0].equals("list")) {
             getFeature().listLocations(player, world).then(new PromiseResultHandler<List<String>>() {
                 public void onFulfilled(List<String> locations) {
-                    displayCommandSuccess(player, "We found " + locations.size() + " saved locations in the database!");
+                    displayCommandSuccess(player, "You currently have " + locations.size() + " saved locations!");
 
                     StringBuilder messageBuilder = new StringBuilder();
                     for (String location : locations) {
@@ -287,7 +324,7 @@ public class LocationCommands extends FeatureComponent<LocationManager> {
                 // players with the warp.teleport_no_password permission are able to override this.
                 if (location.password != 0 && !player.hasPermission("warp.teleport_no_password")) {
                     if (SimpleHash.createHash(password) != location.password) {
-                        displayCommandError(player, "You need to enter the right password for the location \"" + destination + "\".");
+                        displayCommandError(player, "You need to enter the correct password for the location \"" + destination + "\".");
                         return;
                     }
                 }
