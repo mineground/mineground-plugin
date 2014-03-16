@@ -18,7 +18,6 @@ package com.mineground.base;
 import java.util.logging.Logger;
 
 import org.bukkit.Server;
-import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.entity.Player;

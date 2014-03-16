@@ -126,8 +126,8 @@ import java.util.List;
  * TODO: Can we somehow allow Promise.then() to return another promise, allowing chaining?
  *
  * @param <SuccessValueType> Type of the argument the Promise must be resolved with.
- * @see http://www.html5rocks.com/en/tutorials/es6/promises/
- * @see http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/Future.html
+ * @see <a href="http://www.html5rocks.com/en/tutorials/es6/promises/">JavaScript Promises</a>
+ * @see <a href="http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/Future.html">Interface Future<V></a>
  */
 public class Promise<SuccessValueType> {
     enum PromiseState {

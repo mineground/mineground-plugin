@@ -56,8 +56,10 @@ public class SecurePasswordHash
     /**
      * Returns a salted PBKDF2 hash of the password.
      *
-     * @param   password    the password to hash
-     * @return              a salted PBKDF2 hash of the password
+     * @param   password                The password to hash.
+     * @throws NoSuchAlgorithmException When the SecretKeyFactory does not support PBKDF2.
+     * @throws InvalidKeySpecException  When the key specification is incorrect.
+     * @return                          A salted PBKDF2 hash of the password.
      */
     public static String createHash(String password)
         throws NoSuchAlgorithmException, InvalidKeySpecException
@@ -68,8 +70,10 @@ public class SecurePasswordHash
     /**
      * Returns a salted PBKDF2 hash of the password.
      *
-     * @param   password    the password to hash
-     * @return              a salted PBKDF2 hash of the password
+     * @param   password                The password to hash.
+     * @throws NoSuchAlgorithmException When the SecretKeyFactory does not support PBKDF2.
+     * @throws InvalidKeySpecException  When the key specification is incorrect.
+     * @return                          A salted PBKDF2 hash of the password.
      */
     public static String createHash(char[] password)
         throws NoSuchAlgorithmException, InvalidKeySpecException
@@ -88,9 +92,11 @@ public class SecurePasswordHash
     /**
      * Validates a password using a hash.
      *
-     * @param   password        the password to check
-     * @param   correctHash     the hash of the valid password
-     * @return                  true if the password is correct, false if not
+     * @param   password                The password to check.
+     * @param   correctHash             The hash of the valid password.
+     * @throws NoSuchAlgorithmException When the SecretKeyFactory does not support PBKDF2.
+     * @throws InvalidKeySpecException  When the key specification is incorrect.
+     * @return                          True if the password is correct, false if not.
      */
     public static boolean validatePassword(String password, String correctHash)
         throws NoSuchAlgorithmException, InvalidKeySpecException
@@ -101,9 +107,11 @@ public class SecurePasswordHash
     /**
      * Validates a password using a hash.
      *
-     * @param   password        the password to check
-     * @param   correctHash     the hash of the valid password
-     * @return                  true if the password is correct, false if not
+     * @param   password                The password to check.
+     * @param   correctHash             The hash of the valid password.
+     * @throws NoSuchAlgorithmException When the SecretKeyFactory does not support PBKDF2.
+     * @throws InvalidKeySpecException  When the key specification is incorrect.
+     * @return                          True if the password is correct, false if not.
      */
     public static boolean validatePassword(char[] password, String correctHash)
         throws NoSuchAlgorithmException, InvalidKeySpecException
@@ -139,7 +147,7 @@ public class SecurePasswordHash
     }
 
     /**
-     *  Computes the PBKDF2 hash of a password.
+     * Computes the PBKDF2 hash of a password.
      *
      * @param   password    the password to hash.
      * @param   salt        the salt

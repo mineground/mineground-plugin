@@ -32,7 +32,7 @@
 
     <properties>
         <java.version>1.7</java.version>
-        <craftbukkit.version>1.7.2-R0.3</craftbukkit.version>
+        <bukkit.version>1.7.2-R0.3</bukkit.version>
         <junit.version>4.10</junit.version>
         <mysqlConnector.version>5.1.29</mysqlConnector.version>
 
@@ -83,8 +83,8 @@
     <dependencies>
         <dependency>
             <groupId>org.bukkit</groupId>
-            <artifactId>craftbukkit</artifactId>
-            <version>${craftbukkit.version}</version>
+            <artifactId>bukkit</artifactId>
+            <version>${bukkit.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

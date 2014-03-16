@@ -62,8 +62,9 @@ public class LocationRecord {
     /**
      * Creates a new instance of Bukkit's Location class based on this SavedLocation data. The
      * active list of worlds will be retrieved from 
-     * 
-     * @return A Bukkit Location object representing this saved location.
+     *
+     * @param worlds    A list of Worlds currently available on Mineground.
+     * @return          A Bukkit Location object representing this saved location.
      */
     public Location toBukkitLocation(List<World> worlds) {
         for (World world : worlds) {

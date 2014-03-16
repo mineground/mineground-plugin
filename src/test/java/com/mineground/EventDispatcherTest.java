@@ -43,10 +43,12 @@ public class EventDispatcherTest extends TestCase {
     // be invoked as expected, and in the order they should be invoked in.
     public void testBasicRegistrationAndInvokation() {
         Feature myFeature = new FeatureTestBase() {
+            @SuppressWarnings("unused")
             public void onMinegroundLoaded() {
                 assertEquals(0, mInvocationCount++);
             }
             
+            @SuppressWarnings("unused")
             public void onMinegroundUnloaded() {
                 assertEquals(1, mInvocationCount++);
             }
@@ -64,10 +66,12 @@ public class EventDispatcherTest extends TestCase {
     // reference to the active Feature instances.
     public void testFeatureLifetimeIsWeak() {
         Feature myFeature = new FeatureTestBase() {
+            @SuppressWarnings("unused")
             public void onMinegroundLoaded() {
                 assertEquals(0, mInvocationCount++);
             }
             
+            @SuppressWarnings("unused")
             public void onMinegroundUnloaded() {
                 fail("onMinegroundUnloaded must not be invoked after losing strong references.");
             }

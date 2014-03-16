@@ -19,6 +19,8 @@ package com.mineground.base;
  * Features have the ability to create components, which have to live alongside their own instance.
  * These components get access to the same parts of the Mineground plugin, but also have an extra
  * getFeature() method to retrieve the instance of the feature which owns them.
+ *
+ * @param <FeatureClass> Type of the feature which owns this component.
  */
 public class FeatureComponent<FeatureClass> extends FeatureBase {
     /**
@@ -28,6 +30,9 @@ public class FeatureComponent<FeatureClass> extends FeatureBase {
     
     /**
      * Initializes both the FeatureBase class, as well as the |mFeature| member of the component.
+     *
+     * @param feature   The feature which owns this component.
+     * @param params    Initialization parameters, required for initializing FeatureBase.
      */
     public FeatureComponent(FeatureClass feature, FeatureInitParams params) {
         super(params);

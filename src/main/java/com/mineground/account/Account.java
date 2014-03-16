@@ -52,7 +52,9 @@ public class Account {
      * a list of the permissions available for that level. Management members will automatically
      * receive server operator rights as well.
      * 
-     * @param accountData The account data to be associated with this account.
+     * @param accountData           The account data to be associated with this account.
+     * @param player                The player who owns this account, for applying permissions.
+     * @param permissionAttachment  The Mineground-owned permission attachment for this player.
      */
     public void initialize(AccountData accountData, Player player, PermissionAttachment permissionAttachment) {
         mAccountData = accountData;
@@ -120,6 +122,8 @@ public class Account {
     
     /**
      * Returns whether this account is a guest account.
+     *
+     * @return Whether this account represents a guest.
      */
     public boolean isGuest() {
         return mAccountLevel == AccountLevel.Guest || mAccountData == null;
@@ -137,6 +141,8 @@ public class Account {
     
     /**
      * Returns the level of this account.
+     *
+     * @return The level of the player owning this account.
      */
     public AccountLevel getLevel() {
         return mAccountLevel;
