@@ -24,4 +24,6 @@ Players have the ability to save locations in the world for the purpose of being
 
 ----------
 
-This command is implemented in the [LocationManager](../../src/main/java/com/mineground/features/LocationManager.java) feature.
+Tab completion is available for the sub-commands of /warp. Implementing completion of warp names is tracked in [issue 1](https://github.com/mineground/mineground-plugin/issues/1).
+
+This command is implemented in the commands for the [LocationManager](../../src/main/java/com/mineground/features/LocationCommands.java) feature.
