@@ -44,7 +44,7 @@ Gives administrators the ability to list, create, remove and manage the worlds a
 
 * **/world set spawn** *here*
 
-  Sets the spawn position of the current world.
+  Sets the spawn position of the current world. The player will always be looking towards the south when spawning.
 
 ----------
 

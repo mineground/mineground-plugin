@@ -29,6 +29,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import com.mineground.account.Account;
+import com.mineground.account.PlayerLog;
+import com.mineground.account.PlayerLog.RecordType;
 import com.mineground.base.CommandCompletionHandler;
 import com.mineground.base.CommandHandler;
 import com.mineground.base.FeatureComponent;
@@ -71,6 +73,27 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
                 mGameRulesMap.put(gameRule, gameRule);
             }
         }
+    }
+    
+    /**
+     * Immediately teleports the player back to the spawn location of their current world. This
+     * location may be updated by staff members using the "/world set spawn" command.
+     * 
+     * @param sender    The player who would like to teleport to the spawn position.
+     * @param arguments Additional arguments to the /spawn command - not used.
+     */
+    @CommandHandler("spawn")
+    public void onSpawnCommand(CommandSender sender, String[] arguments) {
+        final Player player = (Player) sender;
+        if (!player.hasPermission("spawn")) {
+            displayCommandError(player, "You don't have permission to use the /spawn command.");
+            return;
+        }
+        
+        PlayerLog.record(RecordType.SPAWN_TELEPORTED, getUserId(player));
+        
+        displayCommandSuccess(player, "You have been teleported back to the spawn!");
+        player.teleport(player.getWorld().getSpawnLocation());
     }
     
     /**

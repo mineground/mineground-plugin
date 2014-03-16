@@ -12,6 +12,8 @@ permissions:
     mineground.guest:
         description: All permissions available for guests.
         children:
+            # Permissions to grant to all the players:
+            spawn: true
     mineground.builder:
         description: All permission available for builders.
         children:
@@ -77,6 +79,9 @@ permissions:
     # ----------------------------------------------------------------------------------------------
     # World Manager - allows staff to manipulate the available worlds on Mineground.
     # ----------------------------------------------------------------------------------------------
+    spawn:
+        description: Allows you to teleport to the current world's spawn location.
+        default: op
     world.list:
         description: Allows you to list existing worlds on Mineground.
         default: op
@@ -124,6 +129,9 @@ commands:
     # ----------------------------------------------------------------------------------------------
     # Feature: World Manager
     # ----------------------------------------------------------------------------------------------
+    spawn:
+        description: Teleports you back to this world's spawn.
+        usage: /warp
     world:
         description: Manage the worlds available on Mineground.
         usage: /world

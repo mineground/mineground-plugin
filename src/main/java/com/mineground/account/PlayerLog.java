@@ -49,6 +49,7 @@ public class PlayerLog {
         WARP_REMOVED(5),        // Records when a player has removed a saved location.
         HOME_TELEPORTED(6),     // Records when a player uses the /home to teleport back home.
         HOME_CREATED(7),        // Records when a player uses /home set to move their home location.
+        SPAWN_TELEPORTED(8),    // Records when a player uses /spawn to teleport to the spawn.
         
         // -----------------------------------------------------------------------------------------
         
