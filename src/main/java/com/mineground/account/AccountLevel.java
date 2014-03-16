@@ -15,6 +15,8 @@
 
 package com.mineground.account;
 
+import com.mineground.base.Color;
+
 /**
  * This class contains enumerations for the account levels supported by Mineground. These must match
  * the "level" enumeration in the "users" table in the database.
@@ -110,6 +112,31 @@ public enum AccountLevel {
         }
         
         return "Guest";
+    }
+    
+    /**
+     * Returns a color, if any, which can be used to identify players of a certain level.
+     * 
+     * @param level The level to return the color for.
+     * @return      The color to represent the level.
+     */
+    public static String colorFor(AccountLevel level) {
+        switch (level) {
+            case Management:
+                return Color.RED;
+            case Administrator:
+                return Color.RED;
+            case Moderator:
+                return Color.BLUE;
+            case VIP:
+                return Color.DARK_GREEN;
+            case SBuilder:
+                return Color.BLUE;
+            case Builder:
+                return Color.BLUE;
+        }
+        
+        return Color.WHITE;
     }
     
     /**

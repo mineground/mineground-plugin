@@ -39,6 +39,13 @@ public @interface CommandHandler {
     String value();
     
     /**
+     * Returns a list of aliases which this command handler is also responsible for.
+     * 
+     * @return A list of aliases this command should also listen to.
+     */
+    String[] aliases() default {};
+    
+    /**
      * Whether this command may be executed from the console. Because most commands won't make sense
      * to be executed on the console, this defaults to false.
      *

@@ -20,6 +20,7 @@ import java.util.Map;
 
 import com.mineground.base.Feature;
 import com.mineground.base.FeatureInitParams;
+import com.mineground.features.GeneralCommands;
 import com.mineground.features.LocationManager;
 import com.mineground.features.PlayerSessionMessages;
 import com.mineground.features.WorldManager;
@@ -56,6 +57,7 @@ public class FeatureManager {
     public void initializeFeatures() {
         // TODO: Should we implement a more formal dependency model between features? That would
         //       have quite significant impact for the initialization order of them.
+        mFeatures.put("GeneralCommands", new GeneralCommands(mInitParams));
         mFeatures.put("LocationManager", new LocationManager(mInitParams));
         mFeatures.put("PlayerSessionMessages", new PlayerSessionMessages(mInitParams));
         mFeatures.put("WorldManager", new WorldManager(mInitParams));

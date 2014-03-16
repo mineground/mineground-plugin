@@ -74,6 +74,11 @@ public class CommandManager implements TabCompleter {
     private final Map<String, CommandHandlerRef> mCommandMap;
     
     /**
+     * Map between an alias name and the command it should map to.
+     */
+    private final Map<String, String> mCommandAliasMap;
+    
+    /**
      * The plugin which owns the command manager. This is used to get existing command handlers, in
      * case we have to bolt functionality on top (e.g. tab completion handlers).
      */
@@ -86,6 +91,8 @@ public class CommandManager implements TabCompleter {
 
     public CommandManager(JavaPlugin plugin) {
         mCommandMap = new HashMap<String, CommandHandlerRef>();
+        mCommandAliasMap = new HashMap<String, String>();
+
         mLogger = Logger.getLogger(CommandManager.class.getCanonicalName());
         mPlugin = plugin;
     }
@@ -114,6 +121,9 @@ public class CommandManager implements TabCompleter {
                     handler.console = command.console();
                     continue;
                 }
+                
+                for (String alias : command.aliases())
+                    mCommandAliasMap.put(alias, command.value());
                 
                 mCommandMap.put(command.value(), new CommandHandlerRef(instance, method, command.console()));
                 continue;
@@ -156,6 +166,9 @@ public class CommandManager implements TabCompleter {
      * @return          The command observer if available, otherwise NULL.
      */
     private CommandHandlerRef getCommandObserver(String command) {
+        if (mCommandAliasMap.containsKey(command))
+            command = mCommandAliasMap.get(command);
+        
         final CommandHandlerRef observer = mCommandMap.get(command);
         if (observer == null)
             return null;

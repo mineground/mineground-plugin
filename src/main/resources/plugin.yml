@@ -135,3 +135,12 @@ commands:
     world:
         description: Manage the worlds available on Mineground.
         usage: /world
+
+    # ----------------------------------------------------------------------------------------------
+    # General commands
+    # ----------------------------------------------------------------------------------------------
+    staff:
+        description: Displays a list of online staff members.
+        aliases:
+            - admins
+        usage: /staff
