@@ -60,9 +60,6 @@ public class FeatureManager {
         mFeatures.put("LocationManager", new LocationManager(mInitParams));
         mFeatures.put("PlayerSessionMessages", new PlayerSessionMessages(mInitParams));
         mFeatures.put("WorldManager", new WorldManager(mInitParams));
-        
-        // TODO: Remove this feature when Mineground is mature enough to not need constant hacking.
-        mFeatures.put("DevelopmentLog", new DevelopmentLog(mInitParams));
     }
     
     

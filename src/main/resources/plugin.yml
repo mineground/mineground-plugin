@@ -127,17 +127,3 @@ commands:
     world:
         description: Manage the worlds available on Mineground.
         usage: /world
-
-
-    # ----------------------------------------------------------------------------------------------
-    # TODO: CLEAN UP THE FOLLOWING DEBUGGING COMMANDS.
-    # ----------------------------------------------------------------------------------------------
-    bread:
-        description: Gives you 16 pieces of bread.
-        usage: /bread
-    get:
-        description: Gives you any arbitrary item.
-        usage: /get [id] [amount=16]
-    test:
-        description: Tests something undefined.
-        usage: /test
