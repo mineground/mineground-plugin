@@ -11,5 +11,6 @@ The following table should list all of the supported commands on Mineground. If 
 | Builders       | [/home](commands/home.md)   | Teleports the player back to their home.                   |
 | Builders       | [/login](commands/login.md) | Allows a player to identify themselves with their account. |
 | Builders       | [/warp](commands/warp.md)   | Saves locations and allows a player to teleport to them.   |
+| Administrators | [/world](commands/world.md) | Manages the available worlds and their settings.           |
 
 Requests for new commands may also be [filed as issues](https://github.com/mineground/mineground-plugin/issues/new) on the mineground-plugin project.

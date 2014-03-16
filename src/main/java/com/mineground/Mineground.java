@@ -104,7 +104,7 @@ public class Mineground extends JavaPlugin {
     @Override
     public void onEnable() {
         Mineground.Lifetime = PluginLifetime.Loading;
-        
+
         // Initializes the Mineground-specific configuration (which should reside in the plugin's
         // data folder). If the data folder does not exist yet, it will be created.
         final File dataFolder = getDataFolder();

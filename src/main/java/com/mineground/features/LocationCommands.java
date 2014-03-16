@@ -16,6 +16,7 @@
 package com.mineground.features;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.bukkit.Location;
@@ -150,6 +151,7 @@ public class LocationCommands extends FeatureComponent<LocationManager> {
         
         // TODO: Suggest warp names based on |completionWord|.
 
+        Collections.sort(suggestions);
         return suggestions;
     }
     
