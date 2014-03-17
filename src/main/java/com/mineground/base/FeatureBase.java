@@ -213,4 +213,21 @@ public class FeatureBase implements Feature {
     protected Server getServer() {
         return mInitParams.server;
     }
+    
+    // ---------------------------------------------------------------------------------------------
+    // TODO: Move these elsewhere.
+    // ---------------------------------------------------------------------------------------------
+    
+    /**
+     * Converts |argument| to a boolean. The booleansy values accepted as true are "yes", "on" and
+     * "true", where all other values will return false.
+     * 
+     * @param argument  The argument string to convert to a boolean value.
+     * @return          Whether the argument could resemble true.
+     */
+    protected boolean argumentAsBoolean(String argument) {
+        return argument.equalsIgnoreCase("true") ||
+               argument.equalsIgnoreCase("yes") ||
+               argument.equalsIgnoreCase("on");
+    }
 }

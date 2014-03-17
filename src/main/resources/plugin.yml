@@ -13,7 +13,7 @@ permissions:
         description: All permissions available for guests.
         children:
             # Permissions to grant to all the players:
-            spawn: true
+            command.spawn: true
     mineground.builder:
         description: All permission available for builders.
         children:
@@ -27,6 +27,7 @@ permissions:
         children:
             mineground.builder: true
             # Permissions to grant to super-builders:
+            command.fly: true
     mineground.vip:
         description: All permissions available for VIPs.
         children:
@@ -79,7 +80,7 @@ permissions:
     # ----------------------------------------------------------------------------------------------
     # World Manager - allows staff to manipulate the available worlds on Mineground.
     # ----------------------------------------------------------------------------------------------
-    spawn:
+    command.spawn:
         description: Allows you to teleport to the current world's spawn location.
         default: op
     world.list:
@@ -102,6 +103,13 @@ permissions:
         default: op
     world.set.spawn:
         description: Allows you to change the spawn position of any world.
+        default: op
+
+    # ----------------------------------------------------------------------------------------------
+    # General permissions, which don't belong to a specific feature.
+     ----------------------------------------------------------------------------------------------
+    command.fly:
+        description: Allows you to enable flying around in the current world.
         default: op
 
 
@@ -139,6 +147,9 @@ commands:
     # ----------------------------------------------------------------------------------------------
     # General commands
     # ----------------------------------------------------------------------------------------------
+    fly:
+        description: Enables you to fly around in the current world.
+        usage: /fly [on/off]
     staff:
         description: Displays a list of online staff members.
         aliases:

@@ -85,7 +85,7 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
     @CommandHandler("spawn")
     public void onSpawnCommand(CommandSender sender, String[] arguments) {
         final Player player = (Player) sender;
-        if (!player.hasPermission("spawn")) {
+        if (!player.hasPermission("command.spawn")) {
             displayCommandError(player, "You don't have permission to use the /spawn command.");
             return;
         }

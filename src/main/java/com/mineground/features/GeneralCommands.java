@@ -22,10 +22,13 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bukkit.GameMode;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import com.mineground.account.AccountLevel;
+import com.mineground.account.PlayerLog;
+import com.mineground.account.PlayerLog.RecordType;
 import com.mineground.base.CommandHandler;
 import com.mineground.base.FeatureBase;
 import com.mineground.base.FeatureInitParams;
@@ -86,5 +89,35 @@ public class GeneralCommands extends FeatureBase {
             // Clear the message so it can be used for the next level, without reallocating.
             message.setLength(0);
         }
+    }
+    
+    /**
+     * SBuilders and higher have the ability to toggle whether to fly around in the world. This can
+     * be done through the /fly command. It's automatically enabled for all players in creative.
+     * 
+     * @param sender    The player who is planning on flying about.
+     * @param arguments Additional arguments (booleansy arguments are accepted).
+     */
+    @CommandHandler("fly")
+    public void onFlyCommand(CommandSender sender, String[] arguments) {
+        final Player player = (Player) sender;
+        if (player.getGameMode() == GameMode.CREATIVE) {
+            displayCommandError(player, "You're currently playing in creative mode, so flying is already possible!");
+            return;
+        }
+        
+        if (!player.hasPermission("command.fly")) {
+            displayCommandError(player, "Sorry, you don't have permission yet to use the /fly command.");
+            return;
+        }
+        
+        boolean enableFlying = !player.getAllowFlight();
+        if (arguments.length > 0)
+            enableFlying = argumentAsBoolean(arguments[0]);
+        
+        PlayerLog.record(RecordType.COMMAND_FLY, getUserId(player), enableFlying ? 1 : 0);
+        player.setAllowFlight(enableFlying);
+        
+        displayCommandSuccess(player, "You have " + (enableFlying ? "enabled" : "disabled") + " the ability to fly!");
     }
 }

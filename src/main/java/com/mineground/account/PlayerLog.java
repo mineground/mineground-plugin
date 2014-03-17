@@ -52,6 +52,12 @@ public class PlayerLog {
         SPAWN_TELEPORTED(8),    // Records when a player uses /spawn to teleport to the spawn.
         
         // -----------------------------------------------------------------------------------------
+        // Group: Generic commands, measuring usage of them.
+        // -----------------------------------------------------------------------------------------
+        
+        COMMAND_FLY(9),         // Records when a player executes the /fly command.
+        
+        // -----------------------------------------------------------------------------------------
         
         INVALID(-1);
         
