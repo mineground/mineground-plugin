@@ -19,12 +19,16 @@ import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockIgniteEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import com.mineground.account.Account;
 import com.mineground.account.AccountManager;
 
 /**
@@ -62,7 +66,7 @@ public class EventListener implements Listener {
      */
     @EventHandler(priority=EventPriority.HIGH)
     public void onPlayerMove(PlayerMoveEvent event) {
-        if (!mAccountManager.ensureAuthenticated(event.getPlayer())) {
+        if (mAccountManager.ensureAuthenticatedAccount(event.getPlayer()) == null) {
             final Location from = event.getFrom();
             final Location to = event.getTo();
             
@@ -77,6 +81,63 @@ public class EventListener implements Listener {
         
         // TODO: Distribute this event within Mineground if we need to.
     }
+    
+    /**
+     * Invoked when the player places a new block in the world. The account manager will be
+     * consulted to see whether the player has logged in yet.
+     * 
+     * @param event The Bukkit BlockPlaceEvent object.
+     */
+    @EventHandler(priority=EventPriority.HIGH)
+    public void onBlockPlace(BlockPlaceEvent event) {
+        final Account account = mAccountManager.ensureAuthenticatedAccount(event.getPlayer());
+        if (account == null) {
+            event.setCancelled(true);
+            return;
+        }
+        
+        // TODO: Increase blocks-placed statistics on |account|.
+        // TODO: Distribute this event within Mineground if we need to.
+    }
+    
+    /**
+     * Invoked when the player removes a block from the world. The account manager will be consulted
+     * to see whether the player has logged in yet.
+     * 
+     * @param event The Bukkit BlockBreakEvent object.
+     */
+    @EventHandler(priority=EventPriority.HIGH)
+    public void onBlockBreak(BlockBreakEvent event) {
+        final Account account = mAccountManager.ensureAuthenticatedAccount(event.getPlayer());
+        if (account == null) {
+            event.setCancelled(true);
+            return;
+        }
+        
+        // TODO: Increase blocks-broken statistics on |account|.
+        // TODO: Distribute this event within Mineground if we need to.
+    }
+    
+    /**
+     * Invoked when the player ignites a block in the world. The account manager will be consulted
+     * to see whether the player has logged in yet.
+     * 
+     * @param event The Bukkit BlockIgniteEvent object.
+     */
+    @EventHandler(priority=EventPriority.HIGH)
+    public void onBlockIgnite(BlockIgniteEvent event) {
+        final Account account = mAccountManager.ensureAuthenticatedAccount(event.getPlayer());
+        if (account == null) {
+            event.setCancelled(true);
+            return;
+        }
+        
+        // TODO: Distribute this event within Mineground if we need to.
+    }
+    
+    // TODO: Do we need to cancel onPlayerInteract for non-authenticated accounts?
+    // TODO: Do we need to cancel onPlayerTeleport for non-authenticated accounts?
+    // TODO: Cancel onEntityDamageEvent for non-authenticated accounts.
     
     /**
      * Invoked when a player chats with other players. All features will be able to receive all

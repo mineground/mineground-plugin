@@ -298,16 +298,15 @@ public class AccountManager {
     
     /**
      * Ensures that |player| is authenticated, and sends them a message if they're not. The method
-     * will return whether |player| has authenticated with Mineground. New players who automatically
-     * get a new account created for them will be considered authenticated.
+     * will return whether the player's account only if they have authenticated with Mineground.
      * 
      * @param player    The player to check the authentication status for.
-     * @return          Whether this player has authenticated with an account.
+     * @return          The players account, but only if they're authenticated.
      */
-    public boolean ensureAuthenticated(Player player) {
+    public Account ensureAuthenticatedAccount(Player player) {
         final Account account = mPlayerAccountMap.get(player);
         if (account != null && account.isAuthenticated())
-            return true;
+            return account;
         
         Long lastLoginReminder = mPlayerLastLoginMessageMap.get(player);
         long currentTime = System.currentTimeMillis();
@@ -317,7 +316,7 @@ public class AccountManager {
             mPlayerLastLoginMessageMap.put(player, currentTime);
         }
 
-        return false;
+        return null;
     }
 
     /**
