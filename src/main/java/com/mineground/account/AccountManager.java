@@ -55,6 +55,11 @@ public class AccountManager {
     private static final int MAXIMUM_AUTOMATIC_LOGIN_HOURS = 24;
     
     /**
+     * The number of milliseconds between reminder messages to the player about having to login.
+     */
+    private static final int LOGIN_ENFORCED_REMINDER_TIME_MS = 1000;
+    
+    /**
      * Interface between the account manager and the database.
      */
     private final AccountDatabase mAccountDatabase;
@@ -63,6 +68,12 @@ public class AccountManager {
      * Map between Bukkit players and their Mineground accounts.
      */
     private final Map<Player, Account> mPlayerAccountMap;
+    
+    /**
+     * Map between a Bukkit player and a timestamp (with millisecond resolution) of the last time
+     * they were send a reminder to log in to their account.
+     */
+    private final Map<Player, Long> mPlayerLastLoginMessageMap;
     
     /**
      * List containing all the online Mineground Staff members. Included in this selection are
@@ -117,6 +128,7 @@ public class AccountManager {
         mAccountDatabase = new AccountDatabase(database);
         mPlayerAccountMap = new HashMap<Player, Account>();
         mAuthenticationRequestMap = new HashMap<Player, PendingAuthentication>();
+        mPlayerLastLoginMessageMap = new HashMap<Player, Long>();
         mOnlineStaff = new ArrayList<Player>();
         mPlugin = plugin;
         
@@ -198,6 +210,8 @@ public class AccountManager {
         // We cannot log them in automatically. They now have to use the /login command with their
         // password before they will be allowed to participate in playing on Mineground.
         mAuthenticationRequestMap.put(player, new PendingAuthentication(accountData, dispatcher));
+        mPlayerLastLoginMessageMap.put(player, System.currentTimeMillis());
+        
         mRequirePasswordMessage.send(player, Color.ACTION_REQUIRED);
     }
     
@@ -211,13 +225,13 @@ public class AccountManager {
      */
     @CommandHandler("login")
     public void onLoginCommand(CommandSender sender, String[] arguments) {
+        final Player player = (Player) sender;
         if (arguments.length == 0) {
+            mPlayerLastLoginMessageMap.put(player, System.currentTimeMillis());
             mRequirePasswordMessage.send(sender, Color.ACTION_REQUIRED);
             return;
         }
         
-        final Player player = (Player) sender;
-
         final PendingAuthentication authenticationRequest = mAuthenticationRequestMap.get(player);
         if (authenticationRequest == null) {
             player.sendMessage("Either you are already logged in, or your account is not yet available!");
@@ -281,6 +295,30 @@ public class AccountManager {
 
         dispatcher.onPlayerJoined(player);
     }
+    
+    /**
+     * Ensures that |player| is authenticated, and sends them a message if they're not. The method
+     * will return whether |player| has authenticated with Mineground. New players who automatically
+     * get a new account created for them will be considered authenticated.
+     * 
+     * @param player    The player to check the authentication status for.
+     * @return          Whether this player has authenticated with an account.
+     */
+    public boolean ensureAuthenticated(Player player) {
+        final Account account = mPlayerAccountMap.get(player);
+        if (account != null && account.isAuthenticated())
+            return true;
+        
+        Long lastLoginReminder = mPlayerLastLoginMessageMap.get(player);
+        long currentTime = System.currentTimeMillis();
+        
+        if (lastLoginReminder == null || (currentTime - lastLoginReminder) >= LOGIN_ENFORCED_REMINDER_TIME_MS) {
+            mRequirePasswordMessage.send(player, Color.ACTION_REQUIRED);
+            mPlayerLastLoginMessageMap.put(player, currentTime);
+        }
+
+        return false;
+    }
 
     /**
      * Called when the player is leaving the server, meaning we should store the latest updates to
@@ -290,6 +328,7 @@ public class AccountManager {
      * @param player    The player whose account should be unloaded.
      */
     public void unloadAccount(Player player) {
+        mPlayerLastLoginMessageMap.remove(player);
         mAuthenticationRequestMap.remove(player);
         mOnlineStaff.remove(player);
 

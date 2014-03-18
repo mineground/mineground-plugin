@@ -15,12 +15,14 @@
 
 package com.mineground;
 
+import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import com.mineground.account.AccountManager;
@@ -50,6 +52,30 @@ public class EventListener implements Listener {
     public void onPlayerJoined(PlayerJoinEvent event) {
         mAccountManager.loadAccount(event.getPlayer(), mEventDispatcher);
         event.setJoinMessage(null);
+    }
+    
+    /**
+     * Invoked when a player on the server moves, which can be once per player per tick. The account
+     * manager will be consulted to see if the player is allowed to move yet. They may look around.
+     * 
+     * @param event The Bukkit PlayerMoveEvent object.
+     */
+    @EventHandler(priority=EventPriority.HIGH)
+    public void onPlayerMove(PlayerMoveEvent event) {
+        if (!mAccountManager.ensureAuthenticated(event.getPlayer())) {
+            final Location from = event.getFrom();
+            final Location to = event.getTo();
+            
+            if (from.getX() != to.getX() || from.getY() != to.getY() || from.getZ() != to.getZ()) {
+                from.setPitch(to.getPitch());
+                from.setYaw(to.getYaw());
+                
+                event.setTo(from);
+                return;
+            }
+        }
+        
+        // TODO: Distribute this event within Mineground if we need to.
     }
     
     /**

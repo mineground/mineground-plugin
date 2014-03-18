@@ -47,6 +47,15 @@ public class Account {
     }
     
     /**
+     * Returns whether the owner of this account has authenticated with it.
+     * 
+     * @return True if the account is authenticated.
+     */
+    public boolean isAuthenticated() {
+        return mAccountData != null;
+    }
+    
+    /**
      * Initializes this account based on the information available in |accountData|. Mineground will
      * automatically grant the "mineground.[level]" permission to this player, which basically is
      * a list of the permissions available for that level. Management members will automatically
@@ -81,6 +90,8 @@ public class Account {
         player.removeAttachment(mPermissionAttachment);
         if (mAccountLevel == AccountLevel.Management)
             player.setOp(false);
+        
+        mAccountData = null;
     }
     
     /**

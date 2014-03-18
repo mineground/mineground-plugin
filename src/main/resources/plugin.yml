@@ -107,7 +107,7 @@ permissions:
 
     # ----------------------------------------------------------------------------------------------
     # General permissions, which don't belong to a specific feature.
-     ----------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------
     command.fly:
         description: Allows you to enable flying around in the current world.
         default: op
