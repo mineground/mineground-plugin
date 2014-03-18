@@ -33,12 +33,10 @@ import com.mineground.account.AccountManager;
 public class EventListener implements Listener {
     private EventDispatcher mEventDispatcher;
     private AccountManager mAccountManager;
-    private ChatManager mChatManager;
     
-    public EventListener(EventDispatcher eventDispatcher, AccountManager accountManager, ChatManager chatManager) {
+    public EventListener(EventDispatcher eventDispatcher, AccountManager accountManager) {
         mEventDispatcher = eventDispatcher;
         mAccountManager = accountManager;
-        mChatManager = chatManager;
     }
     
     /**
@@ -55,8 +53,8 @@ public class EventListener implements Listener {
     }
     
     /**
-     * Invoked when a player chats with other players. We route all incoming chat messages through
-     * the ChatManager to make sure we can filter it, before dispatching it to features.
+     * Invoked when a player chats with other players. All features will be able to receive all
+     * incoming chat messages, but should check whether the player is logged in manually.
      * 
      * This event is being called "asynchronous" by Bukkit. By this they mean that it gets executed
      * on another thread, but it still gives us the ability to cancel the event if we want. Features
@@ -66,9 +64,11 @@ public class EventListener implements Listener {
      */
     @EventHandler(priority=EventPriority.HIGH)
     public void onPlayerChat(AsyncPlayerChatEvent event) {
-        mChatManager.onIncomingMessage(event,
-                                       mAccountManager.getAccountForPlayer(event.getPlayer()),
-                                       mEventDispatcher);
+        if (event.isCancelled())
+            return;
+
+        event.setCancelled(true);
+        mEventDispatcher.onPlayerChat(event.getPlayer(), event.getMessage());
     }
     
     /**

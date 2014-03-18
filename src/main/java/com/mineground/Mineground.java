@@ -64,12 +64,6 @@ public class Mineground extends JavaPlugin {
     private AccountManager mAccountManager;
     
     /**
-     * Features have the ability to add filters to respond quickly to incoming chat messages. The
-     * Chat Manager implements that, on top of support for various message channels.
-     */
-    private ChatManager mChatManager;
-    
-    /**
      * Enumaration containing the lifetimes the plugin can be in, allowing features to adjust their
      * behavior based on the context they're running in. As an example, when the plugin reloads we
      * shouldn't spam everyone's chat with join messages.
@@ -124,10 +118,9 @@ public class Mineground extends JavaPlugin {
         PlayerLog.setDatabase(mDatabase);
         
         mAccountManager = new AccountManager(mDatabase, this);
-        mChatManager = new ChatManager(mAccountManager);
-        
+
         mEventDispatcher = new EventDispatcher();
-        mEventListener = new EventListener(mEventDispatcher, mAccountManager, mChatManager);
+        mEventListener = new EventListener(mEventDispatcher, mAccountManager);
         
         mCommandManager = new CommandManager(this);
         mCommandManager.registerCommands(mAccountManager);
@@ -196,7 +189,6 @@ public class Mineground extends JavaPlugin {
         mEventListener = null;
         mEventDispatcher = null;
         
-        mChatManager = null;
         mAccountManager = null;
         
         Message.SetConfiguration(null);
