@@ -15,7 +15,9 @@
 
 package com.mineground;
 
+import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -23,6 +25,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -54,7 +57,11 @@ public class EventListener implements Listener {
      */
     @EventHandler(priority=EventPriority.HIGH)
     public void onPlayerJoined(PlayerJoinEvent event) {
-        mAccountManager.loadAccount(event.getPlayer(), mEventDispatcher);
+        final Player player = event.getPlayer();
+        
+        player.setGameMode(GameMode.SURVIVAL);
+        
+        mAccountManager.loadAccount(player, mEventDispatcher);
         event.setJoinMessage(null);
     }
     
@@ -77,6 +84,25 @@ public class EventListener implements Listener {
                 event.setTo(from);
                 return;
             }
+        }
+        
+        // TODO: Distribute this event within Mineground if we need to.
+    }
+    
+    /**
+     * Invoked when a player clicks on an item in their inventory. Like many other functionalities,
+     * this should be disabled for players before they have authenticated with their account.
+     * 
+     * @param event The Bukkit InventoryClickEvent object.
+     */
+    @EventHandler(priority=EventPriority.HIGH)
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player))
+            return;
+        
+        if (mAccountManager.ensureAuthenticatedAccount((Player) event.getWhoClicked()) == null) {
+            event.setCancelled(true);
+            return;
         }
         
         // TODO: Distribute this event within Mineground if we need to.
@@ -135,8 +161,7 @@ public class EventListener implements Listener {
         // TODO: Distribute this event within Mineground if we need to.
     }
     
-    // TODO: Do we need to cancel onPlayerInteract for non-authenticated accounts?
-    // TODO: Do we need to cancel onPlayerTeleport for non-authenticated accounts?
+    // TODO: Cancel onPlayerInteract for non-authenticated accounts.
     // TODO: Cancel onEntityDamageEvent for non-authenticated accounts.
     
     /**
