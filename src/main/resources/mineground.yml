@@ -67,3 +67,18 @@ messages:
     # Announcement to staff members about miscellaneous events occurring.
     # Available macros: {message}
     staff_announcement: "» {message}"
+
+    # Format in which staff chat will be shared with the players.
+    # Available macros: {nickname}, {message}
+    staff_chat_format: "Admin §e{nickname}§6: {message}"
+
+    # Message displayed to tell people that staff has been notified about their message, report
+    # or other action. No macros are available for this message.
+    staff_notified: "Your message has been sent to all online staff members!"
+
+    # Message displayed to players when they're trying to contact staff members, but no staff is
+    # currently online on Mineground. No macros are available for this message.
+    no_staff_online:
+        - "There are currently no Mineground staff members online."
+        - "If your problem is urgent, contact us through our website:"
+        - "§b    http://mineground.com/contact-us/"

@@ -15,19 +15,49 @@
 
 package com.mineground.features;
 
+import java.util.List;
+
 import org.bukkit.entity.Player;
 
 import com.mineground.account.Account;
+import com.mineground.base.Color;
 import com.mineground.base.FeatureBase;
 import com.mineground.base.FeatureInitParams;
+import com.mineground.base.Message;
 
 /**
  * The communication manager is responsible for the different communication channels, e.g. normal,
  * gang and staff chat, as well as various commands related to private messaging.
  */
 public class CommunicationManager extends FeatureBase {
+    /**
+     * Prefix used for only distributing the following message to administrators. All players can
+     * send messages to this channel, but only staff members can read them.
+     */
+    private static final String StaffCommunicationPrefix = "@";
+    
+    /**
+     * Message containing the format in which staff chat will be displayed.
+     */
+    private final Message mStaffChatMessage;
+    
+    /**
+     * Message displayed to a non-staff user when they contacted the online staff.
+     */
+    private final Message mStaffNotifiedMessage;
+    
+    /**
+     * Message displayed to a non-staff user when sending a message to staff members, while no
+     * staff members are currently online on Mineground.
+     */
+    private final Message mStaffOfflineMessage;
+    
     public CommunicationManager(FeatureInitParams params) {
         super(params);
+        
+        mStaffChatMessage = Message.Load("staff_chat_format");
+        mStaffNotifiedMessage = Message.Load("staff_notified");
+        mStaffOfflineMessage = Message.Load("no_staff_online");
     }
     
     /**
@@ -39,9 +69,24 @@ public class CommunicationManager extends FeatureBase {
      * @param message   The message which they wrote.
      */
     public void onPlayerChat(Player player, String message) {
-        // TODO: Implement support for staff chat. Even unauthenticated players should be able to
-        //       use it, as they need to be able to contact staff when they're stuck.
-        
+        if (message.startsWith(StaffCommunicationPrefix)) {
+            List<Player> staff = getAccountManager().getOnlineStaff();
+            if (staff.size() > 0) {
+                mStaffChatMessage.setString("nickname", player.getName());
+                mStaffChatMessage.setString("message", message.substring(1));
+                mStaffChatMessage.send(staff, Color.PLAYER_EVENT);
+                
+                if (!staff.contains(player)) {
+                    mStaffNotifiedMessage.send(player, Color.GREEN);
+                }
+            } else {
+                mStaffOfflineMessage.send(player, Color.ACTION_REQUIRED);
+            }
+            
+            // TODO: Send this message to IRC so that folks there can read.
+            return;
+        }
+
         final Account account = getAccountManager().ensureAuthenticatedAccount(player);
         if (account == null)
             return;

@@ -152,7 +152,11 @@ public class EventListener implements Listener {
      */
     @EventHandler(priority=EventPriority.HIGH)
     public void onBlockIgnite(BlockIgniteEvent event) {
-        final Account account = mAccountManager.ensureAuthenticatedAccount(event.getPlayer());
+        final Player player = event.getPlayer();
+        if (player == null)
+            return;
+        
+        final Account account = mAccountManager.ensureAuthenticatedAccount(player);
         if (account == null) {
             event.setCancelled(true);
             return;
