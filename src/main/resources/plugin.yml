@@ -45,6 +45,7 @@ permissions:
         children:
             mineground.moderator: true
             # Permissions to grant to administrators:
+            command.mode: true
             world.list: true
     mineground.management:
         description: All permissions available for Management members.
@@ -111,6 +112,9 @@ permissions:
     command.fly:
         description: Allows you to enable flying around in the current world.
         default: op
+    command.mode:
+        description: Allows you to change your game mode regardless of where you are.
+        default: op
 
 
 # The commands which are supported by the Mineground plugin.
@@ -158,6 +162,9 @@ commands:
     fly:
         description: Enables you to fly around in the current world.
         usage: /fly [on/off]
+    mode:
+        description: Enables you to change your current gamemode.
+        usage: /mode [player] [adventure, creative, survival]
     staff:
         description: Displays a list of online staff members.
         aliases:

@@ -15,6 +15,7 @@ The following table should list all of the supported commands on Mineground. If 
 | Builders       | [/login](commands/login.md)   | Used to enter your password for logging in to your account. |
 | Builders       | [/warp](commands/warp.md)     | Creates and teleports you to saved locations in the world.  |
 | SBuilders      | [/fly](commands/fly.md)       | Toggles the ability to fly around in the world.             |
+| Administrators | [/mode](commands/mode.md)     | Changes the gamemode for yourself or another player.        |
 | Administrators | [/world](commands/world.md)   | Manages the available worlds and their settings.            |
 
 Furthermore, Mineground supports the following command aliases: [/admins](commands/staff.md).

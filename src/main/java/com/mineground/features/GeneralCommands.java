@@ -34,8 +34,7 @@ import com.mineground.base.FeatureBase;
 import com.mineground.base.FeatureInitParams;
 
 /**
- * Various generic commands may be implemented in this class. In order to keep this class reasonably
- * workable, commands implemented in here must not need any members or helper functions.
+ * Various generic commands may be implemented in this class.
  */
 public class GeneralCommands extends FeatureBase {
     public GeneralCommands(FeatureInitParams params) { super(params); }
@@ -119,5 +118,87 @@ public class GeneralCommands extends FeatureBase {
         player.setAllowFlight(enableFlying);
         
         displayCommandSuccess(player, "You have " + (enableFlying ? "enabled" : "disabled") + " the ability to fly!");
+    }
+    
+    /**
+     * Tries to interpret |argument| as a GameMode type. If no exact type could be found, then NULL
+     * will be returned instead.
+     * 
+     * @param argument  The argument to interpret as a GameMode type.
+     * @return          The GameMode it could map to, or NULL.
+     */
+    private GameMode argumentAsGameMode(String argument) {
+        if (argument.equalsIgnoreCase("adventure"))
+            return GameMode.ADVENTURE;
+        
+        if (argument.equalsIgnoreCase("creative"))
+            return GameMode.CREATIVE;
+        
+        if (argument.equalsIgnoreCase("survival"))
+            return GameMode.SURVIVAL;
+        
+        return null;
+    }
+    
+    /**
+     * Administrators and Management members have the ability to enable creative mode for both
+     * themselves and for other players, in any world, regardless of the gamemode of that world.
+     * 
+     * By default, /mode will toggle between survival and creative mode. However, it's also possible
+     * to move to adventure mode by passing that as an argument.
+     * 
+     * /mode [survival, creative, adventure]
+     * /mode [player] [survival, creative, adventure]
+     * 
+     * @param sender    The player who intends to change their mode.
+     * @param arguments Additional arguments passed on.
+     */
+    @CommandHandler("mode")
+    public void onModeCommand(CommandSender sender, String[] arguments) {
+        final Player player = (Player) sender;
+        if (!player.hasPermission("command.mode")) {
+            displayCommandError(player, "Sorry, you don't have permission to use the /mode command.");
+            return;
+        }
+        
+        GameMode targetMode = null;
+        Player targetPlayer = null;
+        
+        if (arguments.length >= 1) {
+            targetPlayer = getServer().getPlayer(arguments[0]);
+            if (targetPlayer != null && arguments.length >= 2)
+                targetMode = argumentAsGameMode(arguments[1]);
+            else if (targetPlayer == null)
+                targetMode = argumentAsGameMode(arguments[0]);
+        }
+        
+        if (targetPlayer == null)
+            targetPlayer = player;
+        
+        if (targetMode == null) {
+            targetMode = targetPlayer.getGameMode() == GameMode.CREATIVE ?
+                    GameMode.SURVIVAL : GameMode.CREATIVE;
+        }
+        
+        targetPlayer.setGameMode(targetMode);
+        
+        StringBuilder messageBuilder = new StringBuilder();
+        messageBuilder.append("§2The gamemode of §a");
+        messageBuilder.append(targetPlayer.getName());
+        messageBuilder.append(" §2has been updated to §a");
+        
+        if (targetMode == GameMode.ADVENTURE)
+            messageBuilder.append("adventure");
+        else if (targetMode == GameMode.CREATIVE)
+            messageBuilder.append("creative");
+        else if (targetMode == GameMode.SURVIVAL)
+            messageBuilder.append("survival");
+        
+        messageBuilder.append("§2.");
+        
+        // TODO: Inform other administrators about this.
+        // TODO: Record usage of the /mode command.
+        
+        player.sendMessage(messageBuilder.toString());
     }
 }
