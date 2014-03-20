@@ -72,6 +72,10 @@ messages:
     # Available macros: {nickname}, {message}
     staff_chat_format: "Admin §e{nickname}§6: {message}"
 
+    # Format in which staff will be notified about reports being made by players.
+    # Available macros: {nickname}, {message}
+    report_format: "Report by §e{nickname}§6: {message}"
+
     # Message displayed to tell people that staff has been notified about their message, report
     # or other action. No macros are available for this message.
     staff_notified: "Your message has been sent to all online staff members!"

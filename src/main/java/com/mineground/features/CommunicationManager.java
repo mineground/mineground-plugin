@@ -37,6 +37,13 @@ public class CommunicationManager extends FeatureBase {
     private static final String StaffCommunicationPrefix = "@";
     
     /**
+     * Instance of the CommunicationCommandsCommands class, which implements all the commands
+     * related to communication on Mineground.
+     */
+    @SuppressWarnings("unused")
+    private final CommunicationCommands mCommands;
+    
+    /**
      * Message containing the format in which staff chat will be displayed.
      */
     private final Message mStaffChatMessage;
@@ -54,6 +61,9 @@ public class CommunicationManager extends FeatureBase {
     
     public CommunicationManager(FeatureInitParams params) {
         super(params);
+        
+        // Initialize the commands component of the Communication Manager.
+        mCommands = new CommunicationCommands(this, params);
         
         mStaffChatMessage = Message.Load("staff_chat_format");
         mStaffNotifiedMessage = Message.Load("staff_notified");
