@@ -65,7 +65,7 @@ public class DatabaseThread extends Thread {
     /**
      * Logger used for outputting warnings and errors occurring on the database thread.
      */
-    private final Logger mLogger = Logger.getLogger(getClass().getCanonicalName());
+    private final Logger mLogger;
     
     /**
      * The database connection which will be servicing this database thread.
@@ -82,6 +82,8 @@ public class DatabaseThread extends Thread {
     
     public DatabaseThread(DatabaseConnectionParams connectionParams) {
         mConnectionParams = connectionParams;
+        
+        mLogger = Logger.getLogger(getClass().getCanonicalName());
         mShutdownRequested = false;
         mPendingQueryQueue = new LinkedBlockingQueue<PendingQuery>();
         
