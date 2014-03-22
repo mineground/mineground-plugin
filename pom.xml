@@ -44,6 +44,10 @@
             <id>bukkit</id>
             <url>http://repo.bukkit.org/content/repositories/releases/</url>
         </repository>
+        <repository>
+            <id>public</id>
+            <url>http://nexus.grapendaal.sh/content/groups/public/</url>
+        </repository>
     </repositories>
 
     <build>
@@ -96,6 +100,11 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>${mysqlConnector.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.pircbot</groupId>
+            <artifactId>pircbot</artifactId>
+            <version>1.5.5-ppf-ssl</version>
         </dependency>
     </dependencies>
 
