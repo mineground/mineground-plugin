@@ -33,6 +33,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import com.mineground.account.Account;
 import com.mineground.account.AccountManager;
+import com.mineground.base.DisconnectReason;
 
 /**
  * The Event Listener class is responsible for listening to incoming Bukkit plugins which we'd like
@@ -209,7 +210,7 @@ public class EventListener implements Listener {
      */
     @EventHandler(priority=EventPriority.HIGH)
     public void onPlayerQuit(PlayerQuitEvent event) {
-        mEventDispatcher.onPlayerQuit(event.getPlayer());
+        mEventDispatcher.onPlayerDisconnect(event.getPlayer(), DisconnectReason.QUIT);
         mAccountManager.unloadAccount(event.getPlayer());
         event.setQuitMessage(null);
     }

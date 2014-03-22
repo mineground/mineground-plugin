@@ -26,6 +26,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.mineground.account.AccountManager;
 import com.mineground.account.PlayerLog;
+import com.mineground.base.DisconnectReason;
 import com.mineground.base.FeatureInitParams;
 import com.mineground.base.Message;
 import com.mineground.database.Database;
@@ -165,7 +166,7 @@ public class Mineground extends JavaPlugin {
         // If there still are players on the server, inform the account manager and all the features
         // as if they're all leaving the server at the same time right now.
         for (Player player : getServer().getOnlinePlayers()) {
-            mEventDispatcher.onPlayerQuit(player);
+            mEventDispatcher.onPlayerDisconnect(player, DisconnectReason.SHUTDOWN);
             mAccountManager.unloadAccount(player);
         }
         

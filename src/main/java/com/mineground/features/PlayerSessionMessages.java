@@ -28,6 +28,7 @@ import com.mineground.Mineground;
 import com.mineground.account.Account;
 import com.mineground.account.AccountLevel;
 import com.mineground.base.Color;
+import com.mineground.base.DisconnectReason;
 import com.mineground.base.FeatureBase;
 import com.mineground.base.FeatureInitParams;
 import com.mineground.base.Message;
@@ -178,8 +179,9 @@ public class PlayerSessionMessages extends FeatureBase {
      * Announces that |player| is leaving the server to all online players.
      * 
      * @param player The player who is leaving the server.
+     * @param reason The reason why the player disconnected from Mineground.
      */
-    public void onPlayerQuit(Player player) {
+    public void onPlayerDisconnect(Player player, DisconnectReason reason) {
         if (Mineground.Lifetime == Mineground.PluginLifetime.Stopping)
             return;
 

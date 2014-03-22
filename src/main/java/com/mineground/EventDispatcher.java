@@ -27,6 +27,8 @@ import java.util.Map;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 
+import com.mineground.base.DisconnectReason;
+
 /** 
  * The EventDispatcher listens to all incoming events from Bukkit, validates them, and invokes all
  * observers within the Mineground plugin which depend on them.
@@ -65,7 +67,7 @@ public class EventDispatcher {
          * Invoked when a player disconnects from Mineground. Their account information is still
          * mutable during this call, but it will be serialized immediately after.
          */
-        PlayerQuitEvent("onPlayerQuit");
+        PlayerDisconnectEvent("onPlayerDisconnect");
         
         // -----------------------------------------------------------------------------------------
         
@@ -174,5 +176,5 @@ public class EventDispatcher {
     public void onPlayerJoined(Player player) { dispatch(EventTypes.PlayerJoinedEvent, player); }
     public void onPlayerChat(Player player, String message) { dispatch(EventTypes.PlayerChatEvent, player, message); }
     public void onPlayerDeath(PlayerDeathEvent event) { dispatch(EventTypes.PlayerDeathEvent, event); }
-    public void onPlayerQuit(Player player) { dispatch(EventTypes.PlayerQuitEvent, player); }
+    public void onPlayerDisconnect(Player player, DisconnectReason reason) { dispatch(EventTypes.PlayerDisconnectEvent, player, reason); }
 }
