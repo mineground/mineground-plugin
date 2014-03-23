@@ -58,7 +58,7 @@ public class Settings extends YamlConfiguration {
     /**
      * Saves the current state of Mineground's settings to the settings file.
      */
-    void save() {
+    public void save() {
         try {
             save(mSettingsFile);
         } catch (IOException exception) {

@@ -78,7 +78,9 @@ public class WorldManager extends FeatureBase {
         // TODO: Implement loading PvpSettings and other world settings from the database.
         mWorldPvpSetting = new HashMap<Integer, PvpSetting>();
         
-        // TODO: Get |mDefaultWorld| from somewhere.
+        mDefaultWorld = getServer().getWorld(getSettings().getString("worlds.default", ""));
+        if (mDefaultWorld == null)
+            mDefaultWorld = getServer().getWorlds().get(0);
     }
     
     /**
@@ -97,6 +99,9 @@ public class WorldManager extends FeatureBase {
      * @param defaultWorld  The world which should become Mineground's default world.
      */
     public void setDefaultWorld(World defaultWorld) {
+        getSettings().set("worlds.default", defaultWorld.getName());
+        getSettings().save();
+
         mDefaultWorld = defaultWorld;
     }
     
