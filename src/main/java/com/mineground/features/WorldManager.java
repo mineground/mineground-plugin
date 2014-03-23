@@ -64,10 +64,23 @@ public class WorldManager extends FeatureBase {
     private final Map<Integer, PvpSetting> mWorldPvpSetting;
     
     /**
-     * The default world on Mineground. This is where all new players will spawn in.
+     * The default world on Mineground. This is where all new players will spawn in. It can be
+     * reached by using the /survival command as well.
      */
     private World mDefaultWorld;
 
+    /**
+     * The creative world on Mineground. This is where players will be teleported when they use
+     * the /creative command. It can be updated by administrators using /world.
+     */
+    private World mCreativeWorld;
+    
+    /**
+     * The classic world on Mineground. This is where players will be teleported when they use the
+     * /classic command. It can be updated by administrators using /world.
+     */
+    private World mClassicWorld;
+    
     public WorldManager(FeatureInitParams params) {
         super(params);
         
@@ -81,6 +94,9 @@ public class WorldManager extends FeatureBase {
         mDefaultWorld = getServer().getWorld(getSettings().getString("worlds.default", ""));
         if (mDefaultWorld == null)
             mDefaultWorld = getServer().getWorlds().get(0);
+        
+        mCreativeWorld = getServer().getWorld(getSettings().getString("worlds.creative", ""));
+        mClassicWorld = getServer().getWorld(getSettings().getString("worlds.classic", ""));
     }
     
     /**
@@ -94,7 +110,8 @@ public class WorldManager extends FeatureBase {
     }
     
     /**
-     * Updates the default world to another one. This will persist between server sessions.
+     * Updates the default world to another one. This will persist between server sessions. The
+     * <code>defaultWorld</code> argument must not be null.
      * 
      * @param defaultWorld  The world which should become Mineground's default world.
      */
@@ -103,6 +120,50 @@ public class WorldManager extends FeatureBase {
         getSettings().save();
 
         mDefaultWorld = defaultWorld;
+    }
+    
+    /**
+     * Returns the current creative world on Mineground. This is the world that players will be
+     * teleported to when using /creative.
+     * 
+     * @return  The creative world.
+     */
+    public World getCreativeWorld() {
+        return mCreativeWorld;
+    }
+    
+    /**
+     * Updates the creative world to point to <code>creativeWorld</code>.
+     * 
+     * @param creativeWorld The world which will now be known as the creative world.
+     */
+    public void setCreativeWorld(World creativeWorld) {
+        getSettings().set("worlds.creative", creativeWorld == null ? "" : creativeWorld.getName());
+        getSettings().save();
+
+        mCreativeWorld = creativeWorld;
+    }
+    
+    /**
+     * Returns the current classic world on Mineground. This will usually be the previous map in
+     * read-only mode, but that can be changed by Management members.
+     * 
+     * @return  The classic world.
+     */
+    public World getClassicWorld() {
+        return mClassicWorld;
+    }
+    
+    /**
+     * Updates the classic world to point to <code>classicWorld</code>.
+     * 
+     * @param classicWorld  The world which will now be known as the classic world.
+     */
+    public void setClassicWorld(World classicWorld) {
+        getSettings().set("worlds.classic", classicWorld == null ? "" : classicWorld.getName());
+        getSettings().save();
+
+        mClassicWorld = classicWorld;
     }
     
     /**

@@ -56,7 +56,9 @@ permissions:
         children:
             mineground.administrator: true
             # Permissions to grant to Management members:
+            world.classic: true
             world.create: true
+            world.creative: true
             world.destroy: true
             world.set.animals: true
             world.set.difficulty: true
@@ -64,6 +66,7 @@ permissions:
             world.set.pvp: true
             world.set.rule: true
             world.set.spawn: true
+            world.survival: true
 
     # ----------------------------------------------------------------------------------------------
     # Communication Manager - allows players to communicate with staff and other players.
@@ -103,8 +106,14 @@ permissions:
     command.spawn:
         description: Allows you to teleport to the current world's spawn location.
         default: op
+    world.classic:
+        description: Allows you to change which world is known as the classic world.
+        default: op
     world.create:
         description: Allows you to create new worlds on Mineground.
+        default: op
+    world.creative:
+        description: Allows you to change which world is known as the creative world.
         default: op
     world.destroy:
         description: Allows you to destroy worlds which exist on Mineground.
@@ -129,6 +138,9 @@ permissions:
         default: op
     world.set.spawn:
         description: Allows you to change the spawn position of any world.
+        default: op
+    world.survival:
+        description: Allows you to change which world is known as the survival world.
         default: op
     world.warp:
         description: Allows you to warp to all available worlds on Mineground.

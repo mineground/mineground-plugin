@@ -6,6 +6,10 @@ Gives administrators the ability to list, create, remove and manage the worlds a
 [« back to command overview](../commands.md)
 
 ----------
++ **/world classic** *[name]**
+
+  Displays or sets the classic world on Mineground. This is where the [/classic](classic.md) command will teleport to.
+
 + **/world create** *[type=amplified/biomes/flat/normal]* *[environment=end, nether, normal]* *[name]*
 
   Creates a new world on Mineground. This is a very powerful command which is only available to Management members. The available arguments are as follows:
@@ -18,6 +22,10 @@ Gives administrators the ability to list, create, remove and manage the worlds a
     The name of this world.
 
   The world will be created synchronously, thus **all** other work on the server will stop. An announcement will be distributed to all players about the expected lag.
+
++ **/world creative** *[name]**
+
+  Displays or sets the creative world on Mineground. This is where the [/creative](creative.md) command will teleport to.
 
 + **/world destroy** *[world]* **CONFIRMED**
 
@@ -62,6 +70,10 @@ Gives administrators the ability to list, create, remove and manage the worlds a
 + **/world set spawn** *here*
 
   Sets the spawn position of the current world. The player will always be looking towards the south when spawning.
+
++ **/world survival** *[name]**
+
+  Displays or sets the survival world on Mineground. This is where the [/survival](survival.md) command will teleport to.
 
 + **/world warp** *[world]*
 

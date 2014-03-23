@@ -165,7 +165,7 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
             return suggestions;
         }
         
-        if (arguments.length >= 2 && Arrays.asList("destroy", "warp").contains(arguments[0])) {
+        if (arguments.length >= 2 && Arrays.asList("classic", "creative", "destroy", "survival", "warp").contains(arguments[0])) {
             for (World world : getServer().getWorlds()) {
                 final String name = world.getName();
                 if (name.startsWith(arguments[1]))
@@ -175,15 +175,11 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
             Collections.sort(suggestions);
             return suggestions;
         }
-
-        if ("create".startsWith(arguments[0]))
-            suggestions.add("create");
-        if ("destroy".startsWith(arguments[0]))
-            suggestions.add("destroy");
-        if ("list".startsWith(arguments[0]))
-            suggestions.add("list");
-        if ("set".startsWith(arguments[0]))
-            suggestions.add("set");
+        
+        for (String option : Arrays.asList("classic", "create", "creative", "destroy", "list", "set", "survival", "warp")) {
+            if (option.startsWith(arguments[0]))
+                suggestions.add(option);
+        }
 
         return suggestions;
     }
@@ -194,7 +190,10 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
      * and settings of rules can be adjusted at their discretion.
      * 
      * /world                   Displays usage information for the /world command.
+     * /world classic           Displays or changes the classic world on Mineground.
      * /world create            Creates a new world on the server running Mineground.
+     * /world creative          Displays or changes the creative world on Mineground.
+     * /world default           Displays or changes the default world on Mineground.
      * /world destroy           Destroys one of the world currently existing on Mineground.
      * /world list              Lists the existing worlds on Mineground.
      * /world set               Lists options which can be set for the current world.
@@ -219,6 +218,41 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
 
         if (account == null || !player.hasPermission("world.list")) {
             displayCommandError(player, "You don't have permission to execute this command.");
+            return;
+        }
+        
+        // Displays or changes the world which is known on Mineground as the "classic" world.
+        // Usually this is the previous map used on the server. Players can then use the /classic
+        // command to visit this. It can be made read-only by administrators.
+        if (arguments.length >= 1 && arguments[0].equals("classic")) {
+            if (!player.hasPermission("world.classic")) {
+                displayCommandError(player, "You don't have permission to change the classic world.");
+                return;
+            }
+            
+            if (arguments.length == 1) {
+                final World classicWorld = getFeature().getClassicWorld();
+                if (classicWorld == null) {
+                    displayCommandError(player, "No classic world has been defined for Mineground.");
+                    displayCommandUsage(player, "/world classic [name]");
+                    return;
+                }
+                
+                displayCommandSuccess(player, "**" + classicWorld.getName() + "** is currently defined as the classic world.");
+                return;
+            }
+            
+            final World newClassicWorld = getServer().getWorld(arguments[1]);
+            if (newClassicWorld == null) {
+                displayCommandError(player, "The world **" + arguments[1] + "** does not exist on Mineground.");
+                return;
+            }
+            
+            // TODO: Inform administrators about this change.
+            
+            getFeature().setClassicWorld(newClassicWorld);
+
+            displayCommandSuccess(player, "The classic world has been updated to **" + newClassicWorld.getName() + "**.");
             return;
         }
         
@@ -293,6 +327,41 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
             return;
         }
         
+        // The creative world  is a world in which all players can build whatever they like, with
+        // almost no restrictions on the blocks they're able to get. It is accessible using the
+        // /creative command, and Management members can change it using the /world create command.
+        if (arguments.length >= 1 && arguments[0].equals("creative")) {
+            if (!player.hasPermission("world.creative")) {
+                displayCommandError(player, "You don't have permission to change the creative world.");
+                return;
+            }
+            
+            if (arguments.length == 1) {
+                final World creativeWorld = getFeature().getCreativeWorld();
+                if (creativeWorld == null) {
+                    displayCommandError(player, "No creative world has been defined for Mineground.");
+                    displayCommandUsage(player, "/world creative [name]");
+                    return;
+                }
+                
+                displayCommandSuccess(player, "**" + creativeWorld.getName() + "** is currently defined as the creative world.");
+                return;
+            }
+            
+            final World newCreativeWorld = getServer().getWorld(arguments[1]);
+            if (newCreativeWorld == null) {
+                displayCommandError(player, "The world **" + arguments[1] + "** does not exist on Mineground.");
+                return;
+            }
+            
+            // TODO: Inform administrators about this change.
+            
+            getFeature().setCreativeWorld(newCreativeWorld);
+
+            displayCommandSuccess(player, "The creative world has been updated to **" + newCreativeWorld.getName() + "**.");
+            return;
+        }
+        
         // Destroys a world on Mineground. Worlds destroyed using this command cannot be brought
         // back, unless the files on the server were backed up to another directory or location.
         // This is an extremely sensitive command that shouldn't be played around with.
@@ -335,9 +404,11 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
             if (!getServer().unloadWorld(world, true))
                 displayCommandError(player, "An unknown Bukkit error occurred while removing the world.");
             
-            // TODO: If this world was the /survival world, change it.
-            // TODO: If this world was the /creative world, change it.
-            // TODO: If this world was the /classic world, change it.
+            if (getFeature().getCreativeWorld() == world)
+                getFeature().setCreativeWorld(null);
+            
+            if (getFeature().getClassicWorld() == world)
+                getFeature().setClassicWorld(null);
             
             displayCommandSuccess(player, "The world **" + world.getName() + "** has been removed.");
             return;
@@ -347,6 +418,14 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
         if (arguments.length >= 1 && arguments[0].equals("list")) {
             displayCommandSuccess(player, "The following worlds are available on Mineground:");
             for (World world : getServer().getWorlds()) {
+                String annotation = "";
+                if (getFeature().getClassicWorld() == world)
+                    annotation += "§cclassic§7, ";
+                if (getFeature().getCreativeWorld() == world)
+                    annotation += "§ccreative§7, ";
+                if (getFeature().getDefaultWorld() == world)
+                    annotation += "§csurvival§7, ";
+                
                 String environment = "[unknown]";
                 if (world.getEnvironment() == Environment.THE_END)
                     environment = "The End";
@@ -355,7 +434,7 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
                 else if (world.getEnvironment() == Environment.NORMAL)
                     environment = "Normal";
                 
-                displayCommandDescription(player, "  " + world.getName() + " §7(" + environment + ")");
+                displayCommandDescription(player, "  " + world.getName() + " §7(" + annotation + environment + ")");
             }
 
             return;
@@ -591,6 +670,40 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
             return;
         }
         
+        // The survival world is the default world. It's accessible using the /survival command if
+        // the player is in another world. This command updates which world that is.
+        if (arguments.length >= 1 && arguments[0].equals("survival")) {
+            if (!player.hasPermission("world.survival")) {
+                displayCommandError(player, "You don't have permission to change the survival world.");
+                return;
+            }
+            
+            if (arguments.length == 1) {
+                final World survivalWorld = getFeature().getCreativeWorld();
+                if (survivalWorld == null) {
+                    displayCommandError(player, "No survival world has been defined for Mineground.");
+                    displayCommandUsage(player, "/world survival [name]");
+                    return;
+                }
+                
+                displayCommandSuccess(player, "**" + survivalWorld.getName() + "** is currently defined as the survival world.");
+                return;
+            }
+            
+            final World newSurvivalWorld = getServer().getWorld(arguments[1]);
+            if (newSurvivalWorld == null) {
+                displayCommandError(player, "The world **" + arguments[1] + "** does not exist on Mineground.");
+                return;
+            }
+            
+            // TODO: Inform administrators about this change.
+            
+            getFeature().setDefaultWorld(newSurvivalWorld);
+
+            displayCommandSuccess(player, "The survival world has been updated to **" + newSurvivalWorld.getName() + "**.");
+            return;
+        }
+        
         // Warps the player to the spawn position in another world. This is useful when changing the
         // worlds the /creative, /classic and /survival commands map to, since changing them
         // requires you to be in those worlds. Only administrators can warp to all worlds.
@@ -619,7 +732,7 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
         
         // If no valid command for /world has been passed, show them general usage information. This
         // also displays all the individual /world options available.
-        displayCommandUsage(player, "/world [create/destroy/list/set/warp]");
+        displayCommandUsage(player, "/world [classic/create/creative/destroy/list/set/survival/warp]");
         displayCommandDescription(player, "Creates and manages the worlds available on Mineground.");
     }
 }
