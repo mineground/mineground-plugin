@@ -21,10 +21,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.bukkit.Difficulty;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
+import org.bukkit.WorldCreator;
+import org.bukkit.WorldType;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -132,7 +136,19 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
             
             return suggestions;
         }
+        
+        if (arguments.length >= 2 && Arrays.asList("create", "destroy").contains(arguments[0])) {
+            for (World world : getServer().getWorlds())
+                suggestions.add(world.getName());
+            
+            Collections.sort(suggestions);
+            return suggestions;
+        }
 
+        if ("create".startsWith(arguments[0]))
+            suggestions.add("create");
+        if ("destroy".startsWith(arguments[0]))
+            suggestions.add("destroy");
         if ("list".startsWith(arguments[0]))
             suggestions.add("list");
         if ("set".startsWith(arguments[0]))
@@ -147,6 +163,8 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
      * and settings of rules can be adjusted at their discretion.
      * 
      * /world                   Displays usage information for the /world command.
+     * /world create            Creates a new world on the server running Mineground.
+     * /world destroy           Destroys one of the world currently existing on Mineground.
      * /world list              Lists the existing worlds on Mineground.
      * /world set               Lists options which can be set for the current world.
      * /world set animals       Changes how many animals should spawn per chunk in this world.
@@ -166,13 +184,102 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
     public void onWorldCommand(CommandSender sender, String[] arguments) {
         final Player player = (Player) sender;
         final Account account = getAccountForPlayer(player);
-        final World world = player.getWorld();
 
         if (account == null || !player.hasPermission("world.list")) {
             displayCommandError(player, "You don't have permission to execute this command.");
             return;
         }
         
+        // Creates a new world on Mineground. Because of the sensitivity of this command, it is only
+        // available to server operators (i.e. Management members). Players won't be able to get to
+        // this world, unless it's exposed as the new creative, classic or survival world.
+        if (arguments.length >= 1 && arguments[0].equals("create")) {
+            if (!player.isOp()) {
+                displayCommandError(player, "You need to be a Server Operator in order to create new worlds.");
+                return;
+            }
+            
+            // The world create command has 4 arguments: "create", [type], [environment], [name]
+            if (arguments.length < 4) {
+                displayCommandUsage(player, "/world create [amplified/biomes/flat/normal] [end/nether/normal] [name]");
+                return;
+            }
+            
+            WorldType worldType = null;
+            if (arguments[1].equalsIgnoreCase("amplified"))
+                worldType = WorldType.AMPLIFIED;
+            else if (arguments[1].equalsIgnoreCase("biomes"))
+                worldType = WorldType.LARGE_BIOMES;
+            else if (arguments[1].equalsIgnoreCase("flat"))
+                worldType = WorldType.FLAT;
+            else if (arguments[1].equalsIgnoreCase("normal"))
+                worldType = WorldType.NORMAL;
+            else {
+                displayCommandError(player, "The world type **" + arguments[1] + "** is not a valid type.");
+                return;
+            }
+            
+            Environment environment = null;
+            if (arguments[2].equalsIgnoreCase("end"))
+                environment = Environment.THE_END;
+            else if (arguments[2].equalsIgnoreCase("nether"))
+                environment = Environment.NETHER;
+            else if (arguments[2].equalsIgnoreCase("normal"))
+                environment = Environment.NORMAL;
+            else {
+                displayCommandError(player, "The value **" + arguments[2] + "** is not a valid environment.");
+                return;
+            }
+            
+            final String name = arguments[3];
+            if (getServer().getWorld(name) != null) {
+                displayCommandError(player, "There already is a world named **" + name + "**.");
+                return;
+            }
+            
+            // TODO: Inform administrators of this action taking place.
+            // TODO: Announce creation of the world to all players.
+            
+            WorldCreator creator = new WorldCreator(name);
+            creator.environment(environment);
+            creator.generateStructures(true);
+            creator.seed(UUID.randomUUID().getMostSignificantBits());
+            creator.type(worldType);
+            
+            getServer().createWorld(creator);
+            
+            // TODO: Announce that the world has been created.
+            
+            return;
+        }
+        
+        // Destroys a world on Mineground. Worlds destroyed using this command cannot be brought
+        // back, unless the files on the server were backed up to another directory or location.
+        // This is an extremely sensitive command that shouldn't be played around with.
+        if (arguments.length >= 1 && arguments[0].equals("destroy")) {
+            if (!player.isOp()) {
+                displayCommandError(player, "You need to be a Server Operator in order to destroy worlds.");
+                return;
+            }
+            
+            // The word "CONFIRMED" needs to follow the world's name, to make this command a bit
+            // awkward to use. It mustn't be too easy to accidentally remove a world.
+            if (arguments.length != 3 || !arguments[2].equals("CONFIRMED")) {
+                displayCommandUsage(player, "/world destroy [name] CONFIRMED");
+                return;
+            }
+            
+            final World world = getServer().getWorld(arguments[1]);
+            if (world == null) {
+                displayCommandError(player, "The world **" + arguments[1] + "** does not exist on Mineground.");
+                return;
+            }
+            
+            // TODO: Remove the world.
+            
+            return;
+        }
+
         // Displays a list of the worlds created on Mineground.
         if (arguments.length >= 1 && arguments[0].equals("list")) {
             displayCommandSuccess(player, "The following worlds are available on Mineground:");
@@ -186,6 +293,8 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
         // of the world the player is currently in. While more basic features such as the time and
         // weather can be control by more players, these are the more powerful settings.
         if (arguments.length >= 1 && arguments[0].equals("set")) {
+            final World world = player.getWorld();
+
             // Changes the number of animals which should be spawned per chunk in the current world.
             // When there is a larger number of players in-game, this could significantly stress the
             // server's CPU, so it should be kept within reasonable limits.
@@ -412,7 +521,7 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
         
         // If no valid command for /world has been passed, show them general usage information. This
         // also displays all the individual /world options available.
-        displayCommandUsage(player, "/world [list/set]");
+        displayCommandUsage(player, "/world [create/destroy/list/set]");
         displayCommandDescription(player, "Creates and manages the worlds available on Mineground.");
     }
 }

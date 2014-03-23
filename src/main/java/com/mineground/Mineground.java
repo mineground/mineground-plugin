@@ -110,7 +110,7 @@ public class Mineground extends JavaPlugin {
         mConfiguration = YamlConfiguration.loadConfiguration(mConfigurationFile);
         
         Message.SetConfiguration(mConfiguration);
-        
+
         // Initialize the Database API and ensure that it can connect to actual database powering
         // it. Without database access, Mineground will be significantly limited in functionality.
         mDatabase = new Database(mConfiguration, this);

@@ -6,6 +6,23 @@ Gives administrators the ability to list, create, remove and manage the worlds a
 [« back to command overview](../commands.md)
 
 ----------
++ **/world create** *[type=amplified/biomes/flat/normal]* *[environment=end, nether, normal]* *[name]*
+
+  Creates a new world on Mineground. This is a very powerful command which is only available to Management members. The available arguments are as follows:
+
+  + **type**
+    One of *amplified* (higher, more volatile), *biomes* (biomes will be 16 times bigger), *flat* (completely flat world) or *normal*.
+  + **environment**
+    One of *end* (end world), *nether* ("hell", as described by Minecraft) or *normal*.
+  + **name**
+    The name of this world.
+
+  The world will be created synchronously, thus **all** other work on the server will stop. An announcement will be distributed to all players about the expected lag.
+
++ **/world destroy** *[world]* **CONFIRMED**
+
+  Removes the World *world* from Mineground. The word *CONFIRMED* must follow the world's name to make this command awkward to use. Once removed, it will not be possible to bring back the world or its contents.
+
 + **/world list**
 
   Displays a list of which worlds are available on the Mineground server.
