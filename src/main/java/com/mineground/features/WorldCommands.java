@@ -70,6 +70,11 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
      */
     private final Message mWorldCreatedMessage;
     
+    /**
+     * Message to players who are in a world while it's being removed, and therefore are being
+     * teleported back to the main spawn position on Mineground.
+     */
+    private final Message mWorldRemovedTeleportMessage;
     
     public WorldCommands(WorldManager manager, FeatureInitParams params) {
         super(manager, params);
@@ -99,6 +104,7 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
         
         mCreatingWorldMessage = Message.Load("world_creation_start");
         mWorldCreatedMessage = Message.Load("world_creation_end");
+        mWorldRemovedTeleportMessage = Message.Load("world_destroyed_teleport");
     }
     
     /**
@@ -160,8 +166,11 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
         }
         
         if (arguments.length >= 2 && Arrays.asList("destroy", "warp").contains(arguments[0])) {
-            for (World world : getServer().getWorlds())
-                suggestions.add(world.getName());
+            for (World world : getServer().getWorlds()) {
+                final String name = world.getName();
+                if (name.startsWith(arguments[1]))
+                    suggestions.add(name);
+            }
             
             Collections.sort(suggestions);
             return suggestions;
@@ -306,8 +315,31 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
                 return;
             }
             
-            // TODO: Remove the world.
+            if (world == getFeature().getDefaultWorld()) {
+                displayCommandError(player, "You cannot remove the default world.");
+                return;
+            }
             
+            // TODO: Announce this action to other administrators.
+
+            // First teleport all players who currently are in this world out of it.
+            Location defaultSpawn = getFeature().getDefaultWorld().getSpawnLocation();
+            
+            mWorldRemovedTeleportMessage.setString("nickname", player.getName());
+            mWorldRemovedTeleportMessage.send(world.getPlayers(), Color.PLAYER_EVENT);
+            
+            for (Player p : world.getPlayers())
+                p.teleport(defaultSpawn);
+            
+            // Now that everyone is out of the world, remove it. Be sure to save the latest state.
+            if (!getServer().unloadWorld(world, true))
+                displayCommandError(player, "An unknown Bukkit error occurred while removing the world.");
+            
+            // TODO: If this world was the /survival world, change it.
+            // TODO: If this world was the /creative world, change it.
+            // TODO: If this world was the /classic world, change it.
+            
+            displayCommandSuccess(player, "The world **" + world.getName() + "** has been removed.");
             return;
         }
 

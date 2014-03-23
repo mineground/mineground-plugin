@@ -62,6 +62,11 @@ public class WorldManager extends FeatureBase {
      * Map between a world's hash value and under what conditions PVP should be allowed in there.
      */
     private final Map<Integer, PvpSetting> mWorldPvpSetting;
+    
+    /**
+     * The default world on Mineground. This is where all new players will spawn in.
+     */
+    private World mDefaultWorld;
 
     public WorldManager(FeatureInitParams params) {
         super(params);
@@ -72,6 +77,27 @@ public class WorldManager extends FeatureBase {
         // TODO: Implement enforcing the PvpSetting directive if it's PvpDefault.
         // TODO: Implement loading PvpSettings and other world settings from the database.
         mWorldPvpSetting = new HashMap<Integer, PvpSetting>();
+        
+        // TODO: Get |mDefaultWorld| from somewhere.
+    }
+    
+    /**
+     * Returns the default world in Mineground. The spawn position in this world is where all new
+     * players will be spawned.
+     * 
+     * @return  Mineground's default world.
+     */
+    public World getDefaultWorld() {
+        return mDefaultWorld;
+    }
+    
+    /**
+     * Updates the default world to another one. This will persist between server sessions.
+     * 
+     * @param defaultWorld  The world which should become Mineground's default world.
+     */
+    public void setDefaultWorld(World defaultWorld) {
+        mDefaultWorld = defaultWorld;
     }
     
     /**
