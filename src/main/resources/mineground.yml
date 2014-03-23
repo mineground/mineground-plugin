@@ -63,7 +63,7 @@ messages:
     # the weapon used by the killer had a special name, that will be included in the message.
     # Available macros: {nickname}, {killer}, {reason}
     player_killed: "» §e{nickname}§6 has been killed by §e{killer}§6{reason}."
-    
+
     # Announcement to staff members about miscellaneous events occurring.
     # Available macros: {message}
     staff_announcement: "» {message}"
@@ -86,3 +86,11 @@ messages:
         - "There are currently no Mineground staff members online."
         - "If your problem is urgent, contact us through our website:"
         - "§b    http://mineground.com/contact-us/"
+
+    # Message displayed to players when they receive a private message.
+    # Available macros: {sender}, {destination}, {message}
+    private_message_received: "Message from §e{sender}§6: {message}"
+
+    # Message displayed to players when they sent a private message.
+    # Available macros: {sender}, {destination}, {message}
+    private_message_sent: "Message to §e{destination}§6: {message}"

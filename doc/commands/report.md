@@ -12,4 +12,4 @@ Reports an indicent to online staff members. All online staff members, as well a
 
 ----------
 
-This command is implemented as part of the [Communication Manager's](../../src/main/java/com/mineground/features/CommunicationCommands.java) commands
+This command is implemented as part of the [Communication Manager's](../../src/main/java/com/mineground/features/CommunicationCommands.java) commands.

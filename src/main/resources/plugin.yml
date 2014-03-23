@@ -13,12 +13,15 @@ permissions:
         description: All permissions available for guests.
         children:
             # Permissions to grant to all the players:
+            command.report: true
             command.spawn: true
     mineground.builder:
         description: All permission available for builders.
         children:
             mineground.guest: true
             # Permissions to grant to builders:
+            command.pm: true
+            command.reply: true
             warp.create: true
             warp.teleport: true
             warp.remove: true
@@ -58,6 +61,19 @@ permissions:
             world.set.pvp: true
             world.set.rule: true
             world.set.spawn: true
+
+    # ----------------------------------------------------------------------------------------------
+    # Communication Manager - allows players to communicate with staff and other players.
+    # ----------------------------------------------------------------------------------------------
+    command.pm:
+        description: Allows you to use the /pm command.
+        default: op
+    command.reply:
+        description: Allows you to quickly reply to a previously received message.
+        default: op
+    command.report:
+        description: Allows you to report an incident to online staff members.
+        default: op
 
     # ----------------------------------------------------------------------------------------------
     # Warp Manager - allows players to create warps, warp to them and share them with other players.
@@ -130,6 +146,14 @@ commands:
     # ----------------------------------------------------------------------------------------------
     # Feature: Communication Manager
     # ----------------------------------------------------------------------------------------------
+    pm:
+        description: Sends a private message to another player.
+        usage: /pm [player] [message]
+    reply:
+        description: Replies to the player who last sent you a message.
+        usage: /reply [message]
+        aliases:
+            - r
     report:
         description: Reports another player to online staff members.
         usage: /report [message]
@@ -167,6 +191,6 @@ commands:
         usage: /mode [player] [adventure, creative, survival]
     staff:
         description: Displays a list of online staff members.
+        usage: /staff
         aliases:
             - admins
-        usage: /staff

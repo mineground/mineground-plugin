@@ -55,6 +55,12 @@ public final class Color {
     public static final String PLAYER_EVENT = GOLD;
     
     /**
+     * Used for displaying a private message to a player, regardless whether they received it, or
+     * have just sent it to another player.
+     */
+    public static final String PRIVATE_MESSAGE = GOLD;
+    
+    /**
      * Used for messages which will only be distributed to staff members (moderators, administrators
      * and Management), and thus needs to stand out a little bit.
      */
