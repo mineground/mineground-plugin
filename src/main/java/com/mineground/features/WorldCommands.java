@@ -41,7 +41,7 @@ import com.mineground.base.CommandHandler;
 import com.mineground.base.FeatureComponent;
 import com.mineground.base.FeatureInitParams;
 import com.mineground.base.Message;
-import com.mineground.features.WorldManager.PvpSetting;
+import com.mineground.features.WorldSettings.PvpSetting;
 
 /**
  * Implementations of the commands associated with the world manager. These grant certain players
@@ -482,8 +482,11 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
                 p.teleport(defaultSpawn);
             
             // Now that everyone is out of the world, remove it. Be sure to save the latest state.
-            if (!getServer().unloadWorld(world, true))
+            if (!getServer().unloadWorld(world, true)) {
                 displayCommandError(player, "An unknown Bukkit error occurred while removing the world.");
+            } else {
+                getFeature().onRemoveWorld(world);
+            }
             
             if (getFeature().getCreativeWorld() == world)
                 getFeature().setCreativeWorld(null);
@@ -653,12 +656,12 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
                     // TODO: Announce to in-game staff that the spawn position has been changed.
                     
                     displayCommandSuccess(player, "The PVP settings for this world have been updated!");
-                    getFeature().setPlayerVersusPlayer(world, value);
+                    getFeature().getWorldSettings(world).setPvp(value);
                     return;
                 }
                 
                 String value = "unknown";
-                switch (getFeature().getPlayerVersusPlayer(world)) {
+                switch (getFeature().getWorldSettings(world).getPvp()) {
                     case PVP_ALLOWED:
                         value = "allowed";
                         break;

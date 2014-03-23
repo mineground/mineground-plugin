@@ -22,7 +22,6 @@ import org.bukkit.World;
 
 import com.mineground.base.FeatureBase;
 import com.mineground.base.FeatureInitParams;
-import com.mineground.base.WorldUtils;
 
 /**
  * Minecraft supports an arbitrary amount of worlds existing simultaneously, each with their own
@@ -37,31 +36,6 @@ public class WorldManager extends FeatureBase {
      */
     @SuppressWarnings("unused")
     private final WorldCommands mCommands;
-
-    /**
-     * Possible values for setting whether player-versus-player fighting is allowed in the world.
-     */
-    public enum PvpSetting {
-        /**
-         * PVP is always allowed, regardless of the player's preference.
-         */
-        PVP_ALLOWED,
-        
-        /**
-         * PVP is never allowed, regardless of the player's preference.
-         */
-        PVP_DISALLOWED,
-        
-        /**
-         * PVP is allowed or disallowed based on the player's preference.
-         */
-        PVP_DEFAULT
-    }
-    
-    /**
-     * Map between a world's hash value and under what conditions PVP should be allowed in there.
-     */
-    private final Map<Integer, PvpSetting> mWorldPvpSetting;
     
     /**
      * The default world on Mineground. This is where all new players will spawn in. It can be
@@ -81,15 +55,16 @@ public class WorldManager extends FeatureBase {
      */
     private World mClassicWorld;
     
+    /**
+     * A map between a world instance and the settings applying to that world.
+     */
+    private Map<World, WorldSettings> mWorldSettings;
+    
     public WorldManager(FeatureInitParams params) {
         super(params);
         
         // Initialize the commands component of the World Manager.
         mCommands = new WorldCommands(this, params);
-        
-        // TODO: Implement enforcing the PvpSetting directive if it's PvpDefault.
-        // TODO: Implement loading PvpSettings and other world settings from the database.
-        mWorldPvpSetting = new HashMap<Integer, PvpSetting>();
         
         mDefaultWorld = getServer().getWorld(getSettings().getString("worlds.default", ""));
         if (mDefaultWorld == null)
@@ -97,6 +72,34 @@ public class WorldManager extends FeatureBase {
         
         mCreativeWorld = getServer().getWorld(getSettings().getString("worlds.creative", ""));
         mClassicWorld = getServer().getWorld(getSettings().getString("worlds.classic", ""));
+        
+        mWorldSettings = new HashMap<World, WorldSettings>();
+    }
+    
+    /**
+     * Returns the WorldSettings instance for <code>world</code>.
+     * 
+     * @param world The world to get the settings for.
+     * @return      The WorldSettings instance for <code>world</code>.
+     */
+    public WorldSettings getWorldSettings(World world) {
+        WorldSettings worldSettings = mWorldSettings.get(world);
+        if (worldSettings != null)
+            return worldSettings;
+        
+        worldSettings = new WorldSettings(world, getSettings());
+        mWorldSettings.put(world, worldSettings);
+        return worldSettings;
+    }
+    
+    /**
+     * Must be invoked when a world is being removed. This will make sure that we release all
+     * references to <code>world</code>, avoiding memory leaks.
+     * 
+     * @param world The world which is being removed.
+     */
+    public void onRemoveWorld(World world) {
+        mWorldSettings.remove(world);
     }
     
     /**
@@ -164,37 +167,5 @@ public class WorldManager extends FeatureBase {
         getSettings().save();
 
         mClassicWorld = classicWorld;
-    }
-    
-    /**
-     * Returns whether PVP is allowed for |world|. If the setting is not yet available in the
-     * |mWorldPvpSetting| map, it will be assumed based on the world's own settings.
-     * 
-     * @param world The world to get to know about whether PVP is allowed.
-     * @return      Whether PVP is allowed in the given world.
-     */
-    public PvpSetting getPlayerVersusPlayer(World world) {
-        PvpSetting value = mWorldPvpSetting.get(WorldUtils.getWorldHash(world));
-        if (value != null)
-            return value;
-        
-        return world.getPVP() ? PvpSetting.PVP_ALLOWED : PvpSetting.PVP_DISALLOWED;
-    }
-    
-    /**
-     * Sets whether PVP should be allowed for |world|. The value will be stored in the database and
-     * will thus persist between Mineground plugin reloads.
-     * 
-     * @param world     The world to change the PVP setting for.
-     * @param setting   Whether PVP should be allowed, disallowed or by choice.
-     */
-    public void setPlayerVersusPlayer(World world, PvpSetting setting) {
-        // TODO: Update the PVP value of this world in the database.
-        
-        mWorldPvpSetting.put(WorldUtils.getWorldHash(world), setting);
-        if (setting == PvpSetting.PVP_DISALLOWED)
-            world.setPVP(false);
-        else
-            world.setPVP(true);
     }
 }
