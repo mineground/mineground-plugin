@@ -94,3 +94,13 @@ messages:
     # Message displayed to players when they sent a private message.
     # Available macros: {sender}, {destination}, {message}
     private_message_sent: "Message to §e{destination}§6: {message}"
+
+    # List of Mineground's server rules. No macros are available for this message.
+    server_rules:
+        - " 1. Behave"
+        - " 2. Use common sense."
+        - " 3. Respect other players, as well as their creations."
+        - " 4. No grieving. It will get you banned."
+        - " 5. TNT may be used in limited quantities."
+        - " 6. Fly mod is allowed, but not for exploring."
+        - " 7. Have fun!"

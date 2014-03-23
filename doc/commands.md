@@ -9,6 +9,7 @@ The following table should list all of the supported commands on Mineground. If 
 | Level          | Command                       | Description                                                 |
 | ---------------|-------------------------------|-------------------------------------------------------------|
 | Guests         | [/report](commands/report.md) | Report an incident to online staff members.                 |
+| Guests         | [/rules](commands/rules.md)   | Displays a list of Mineground's rules to you.               |
 | Guests         | [/spawn](commands/spawn.md)   | Teleports you back to the world's spawn position.           |
 | Guests         | [/staff](commands/staff.md)   | Displays a list of online staff members.                    |
 | Builders       | [/home](commands/home.md)     | Teleports you back to your home.                            |

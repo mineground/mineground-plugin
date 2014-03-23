@@ -189,6 +189,9 @@ commands:
     mode:
         description: Enables you to change your current gamemode.
         usage: /mode [player] [adventure, creative, survival]
+    rules:
+        description: Displays a list of Mineground's rules to you.
+        usage: /rules
     staff:
         description: Displays a list of online staff members.
         usage: /staff

@@ -29,15 +29,26 @@ import org.bukkit.entity.Player;
 import com.mineground.account.AccountLevel;
 import com.mineground.account.PlayerLog;
 import com.mineground.account.PlayerLog.RecordType;
+import com.mineground.base.Color;
 import com.mineground.base.CommandHandler;
 import com.mineground.base.FeatureBase;
 import com.mineground.base.FeatureInitParams;
+import com.mineground.base.Message;
 
 /**
  * Various generic commands may be implemented in this class.
  */
 public class GeneralCommands extends FeatureBase {
-    public GeneralCommands(FeatureInitParams params) { super(params); }
+    /**
+     * Message containing the server rules, which players can view using the /rules command.
+     */
+    private final Message mRulesMessage;
+    
+    public GeneralCommands(FeatureInitParams params) {
+        super(params);
+        
+        mRulesMessage = Message.Load("server_rules");
+    }
 
     /**
      * Displays a list of in-game staff members to the player. The staff will be grouped together
@@ -200,5 +211,18 @@ public class GeneralCommands extends FeatureBase {
         // TODO: Record usage of the /mode command.
         
         player.sendMessage(messageBuilder.toString());
+    }
+    
+    /**
+     * Displays Mineground's server rules to <code>sender</code>.
+     * 
+     * @param sender    The player who likes to view the server rules.
+     * @param arguments Additional arguments given to the command. Ignored.
+     */
+    @CommandHandler("rules")
+    public void onRulesCommand(CommandSender sender, String[] arguments) {
+        sender.sendMessage(Color.GOLD + "----------------------- Rules ------------------------");
+        mRulesMessage.send(sender, Color.WHITE);
+        sender.sendMessage(Color.GOLD + "-----------------------------------------------------");
     }
 }
