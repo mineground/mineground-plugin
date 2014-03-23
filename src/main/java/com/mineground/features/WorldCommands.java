@@ -35,10 +35,12 @@ import org.bukkit.entity.Player;
 import com.mineground.account.Account;
 import com.mineground.account.PlayerLog;
 import com.mineground.account.PlayerLog.RecordType;
+import com.mineground.base.Color;
 import com.mineground.base.CommandCompletionHandler;
 import com.mineground.base.CommandHandler;
 import com.mineground.base.FeatureComponent;
 import com.mineground.base.FeatureInitParams;
+import com.mineground.base.Message;
 import com.mineground.features.WorldManager.PvpSetting;
 
 /**
@@ -46,11 +48,28 @@ import com.mineground.features.WorldManager.PvpSetting;
  * and staff members access to various options in regards to Minecraft worlds.
  */
 public class WorldCommands extends FeatureComponent<WorldManager> {
-    // The maximum number of entities which may be spawned per chunk in a world.
+    /**
+     * The maximum number of entities which may be spawned per chunk in a world.
+     */
     private final static int ENTITY_SPAWN_LIMIT = 150;
     
-    // Map containing the game rule mappings supported by Mineground.
+    /**
+     * Map containing the game rule mappings supported by Mineground.
+     */
     private final Map<String, String> mGameRulesMap;
+    
+    /**
+     * Message for informing players that a world is being created on Mineground. This will cause
+     * up to 30 seconds of lag, blocking all other kinds of playing.
+     */
+    private final Message mCreatingWorldMessage;
+    
+    /**
+     * Message for informing players that the world has been created, and that they can continue
+     * building their stuff again.
+     */
+    private final Message mWorldCreatedMessage;
+    
     
     public WorldCommands(WorldManager manager, FeatureInitParams params) {
         super(manager, params);
@@ -77,6 +96,9 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
                 mGameRulesMap.put(gameRule, gameRule);
             }
         }
+        
+        mCreatingWorldMessage = Message.Load("world_creation_start");
+        mWorldCreatedMessage = Message.Load("world_creation_end");
     }
     
     /**
@@ -238,7 +260,11 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
             }
             
             // TODO: Inform administrators of this action taking place.
-            // TODO: Announce creation of the world to all players.
+
+            // Announce to all online players that a new world is being created, as this will stop
+            // their commands and events for the duration of the creation.
+            mCreatingWorldMessage.setString("nickname", player.getName());
+            mCreatingWorldMessage.send(getServer().getOnlinePlayers(), Color.PLAYER_EVENT);
             
             WorldCreator creator = new WorldCreator(name);
             creator.environment(environment);
@@ -246,10 +272,14 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
             creator.seed(UUID.randomUUID().getMostSignificantBits());
             creator.type(worldType);
             
+            // Tell Bukkit to create the world. This takes an awkwardly long time.
             getServer().createWorld(creator);
             
-            // TODO: Announce that the world has been created.
+            // Announce that the world has been created, and that players can continue playing.
+            mWorldCreatedMessage.setString("nickname", player.getName());
+            mWorldCreatedMessage.send(getServer().getOnlinePlayers(), Color.PLAYER_EVENT);
             
+            displayCommandSuccess(player, "The world **" + name + "** has successfully been created!");
             return;
         }
         

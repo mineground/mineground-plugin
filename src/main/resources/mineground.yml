@@ -104,3 +104,11 @@ messages:
         - " 5. TNT may be used in limited quantities."
         - " 6. Fly mod is allowed, but not for exploring."
         - " 7. Have fun!"
+
+    # Announcement to players that a new world is being created.
+    # Available macros: {nickname}
+    world_creation_start: "» §e{nickname}§6 is creating a new world. Please stand by..."
+
+    # Announcement to players that a new world has been created.
+    # Available macros: {nickname}
+    world_creation_end: "» §e{nickname}§6's new world has been created. Enjoy your stay!"
