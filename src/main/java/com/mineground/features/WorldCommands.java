@@ -159,7 +159,7 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
             return suggestions;
         }
         
-        if (arguments.length >= 2 && Arrays.asList("create", "destroy").contains(arguments[0])) {
+        if (arguments.length >= 2 && Arrays.asList("destroy", "warp").contains(arguments[0])) {
             for (World world : getServer().getWorlds())
                 suggestions.add(world.getName());
             
@@ -195,6 +195,7 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
      * /world set pvp           Changes whether player-versus-player is allowed in this world.
      * /world set rule          Changes various advanced game rule values exposed by Minecraft.
      * /world set spawn         Changes the spawn position. A value is necessary to change it.
+     * /world warp              Warps to the spawn position in another world.
      * 
      * For each option in "/world set" the rule is that it will display the value of the setting,
      * unless a fourth argument has been passed with the new value.
@@ -216,7 +217,7 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
         // available to server operators (i.e. Management members). Players won't be able to get to
         // this world, unless it's exposed as the new creative, classic or survival world.
         if (arguments.length >= 1 && arguments[0].equals("create")) {
-            if (!player.isOp()) {
+            if (!player.isOp() || !player.hasPermission("world.create")) {
                 displayCommandError(player, "You need to be a Server Operator in order to create new worlds.");
                 return;
             }
@@ -287,7 +288,7 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
         // back, unless the files on the server were backed up to another directory or location.
         // This is an extremely sensitive command that shouldn't be played around with.
         if (arguments.length >= 1 && arguments[0].equals("destroy")) {
-            if (!player.isOp()) {
+            if (!player.isOp() || !player.hasPermission("world.destroy")) {
                 displayCommandError(player, "You need to be a Server Operator in order to destroy worlds.");
                 return;
             }
@@ -313,8 +314,17 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
         // Displays a list of the worlds created on Mineground.
         if (arguments.length >= 1 && arguments[0].equals("list")) {
             displayCommandSuccess(player, "The following worlds are available on Mineground:");
-            for (World w : getServer().getWorlds())
-                displayCommandDescription(player, "  " + w.getName());
+            for (World world : getServer().getWorlds()) {
+                String environment = "[unknown]";
+                if (world.getEnvironment() == Environment.THE_END)
+                    environment = "The End";
+                else if (world.getEnvironment() == Environment.NETHER)
+                    environment = "Nether";
+                else if (world.getEnvironment() == Environment.NORMAL)
+                    environment = "Normal";
+                
+                displayCommandDescription(player, "  " + world.getName() + " §7(" + environment + ")");
+            }
 
             return;
         }
@@ -549,9 +559,35 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
             return;
         }
         
+        // Warps the player to the spawn position in another world. This is useful when changing the
+        // worlds the /creative, /classic and /survival commands map to, since changing them
+        // requires you to be in those worlds. Only administrators can warp to all worlds.
+        if (arguments.length >= 1 && arguments[0].equals("warp")) {
+            if (!player.hasPermission("world.warp")) {
+                displayCommandError(player, "You do not have permission to warp to other worlds.");
+                return;
+            }
+            
+            if (arguments.length == 1) {
+                displayCommandUsage(player, "/world warp [name]");
+                return;
+            }
+            
+            final World target = getServer().getWorld(arguments[1]);
+            if (target == null) {
+                displayCommandError(player, "The world **" + arguments[1] + "** does not exist on Mineground.");
+                return;
+            }
+
+            player.teleport(target.getSpawnLocation());
+
+            displayCommandSuccess(player, "You have been teleported to world **" + arguments[1] + "**.");
+            return;
+        }
+        
         // If no valid command for /world has been passed, show them general usage information. This
         // also displays all the individual /world options available.
-        displayCommandUsage(player, "/world [create/destroy/list/set]");
+        displayCommandUsage(player, "/world [create/destroy/list/set/warp]");
         displayCommandDescription(player, "Creates and manages the worlds available on Mineground.");
     }
 }

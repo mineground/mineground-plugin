@@ -31,19 +31,19 @@ Gives administrators the ability to list, create, remove and manage the worlds a
 
   Sets the maximum amount of animals which may spawn in any chunk in the current world. The limit needs to be between 0 (disables animals altogether) and 150, with the default value being 15.
 
-* **/world set difficulty** *[difficulty=peaceful, easy, normal, hard]*
++ **/world set difficulty** *[difficulty=peaceful, easy, normal, hard]*
 
   Sets the difficulty of the current world. In a peaceful world, the server will not spawn mobs, the food bar will not deplete and health will automatically regenerate. In an easy world, hostile mobs will spawn, but will do significantly less damage. The food bar will deplete, but will keep a minimum of five hearts. In a normal world, hostile mobs spawn and incur normal damage. The food bar will deplete, but will keep a minimum of half a heart. In a hard world, hostile mobs spawn and incur increased damage. The food bar depletes and can kill the player completely. Zombies will break through wooden doors, and spiders can spawn with potion effects.
 
-* **/world set mobs** *[limit=50]*
++ **/world set mobs** *[limit=50]*
 
   Sets the maximum amount of mobs which will spawn in any chunk in the current world. The limit needs to be between 0 (disables mob spawning altogether) and 150, with the default value being 50.
 
-* **/world set pvp** *[enabled=allowed, disallowed, default]*
++ **/world set pvp** *[enabled=allowed, disallowed, default]*
 
   Sets whether PVP (player-versus-player) should be enabled for the current world. The value *allowed* means that any player can attack any player, regardless of their own preferences. *disallowed* means that no one will be able to kill no one, whereas *default* means it may be enabled depending on the player's own settings.
 
-* **/world set rule** *[rule]* *[value=true, false]*
++ **/world set rule** *[rule]* *[value=true, false]*
 
   Enables or disables advanced, name-based settings. These are Minecraft's *game rules*, and may change between releases. The following rules are available:
 
@@ -59,9 +59,13 @@ Gives administrators the ability to list, create, remove and manage the worlds a
 
   Again, please do mind that any of these commands may stop working in future releases of Minecraft.
 
-* **/world set spawn** *here*
++ **/world set spawn** *here*
 
   Sets the spawn position of the current world. The player will always be looking towards the south when spawning.
+
++ **/world warp** *[world]*
+
+  Warps you to the spawn position of *world*.
 
 ----------
 

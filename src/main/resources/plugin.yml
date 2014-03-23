@@ -50,11 +50,14 @@ permissions:
             # Permissions to grant to administrators:
             command.mode: true
             world.list: true
+            world.warp: true
     mineground.management:
         description: All permissions available for Management members.
         children:
             mineground.administrator: true
             # Permissions to grant to Management members:
+            world.create: true
+            world.destroy: true
             world.set.animals: true
             world.set.difficulty: true
             world.set.mobs: true
@@ -100,6 +103,12 @@ permissions:
     command.spawn:
         description: Allows you to teleport to the current world's spawn location.
         default: op
+    world.create:
+        description: Allows you to create new worlds on Mineground.
+        default: op
+    world.destroy:
+        description: Allows you to destroy worlds which exist on Mineground.
+        default: op
     world.list:
         description: Allows you to list existing worlds on Mineground.
         default: op
@@ -120,6 +129,9 @@ permissions:
         default: op
     world.set.spawn:
         description: Allows you to change the spawn position of any world.
+        default: op
+    world.warp:
+        description: Allows you to warp to all available worlds on Mineground.
         default: op
 
     # ----------------------------------------------------------------------------------------------
