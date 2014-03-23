@@ -84,11 +84,14 @@ public class FeatureBase implements Feature {
      * Displays |message| to |destination| to inform them that a recently executed command has been
      * executed successfully, and the action has been put through as well.
      * 
+     * Highlights may be used in the <code>message</code> by surrounding a set of words by two
+     * asterisks: foo **bar** baz ("baz" would be highlighted).
+     * 
      * @param destination   The player to inform about the executed command.
      * @param message       The message to share with them.
      */
     protected void displayCommandSuccess(CommandSender destination, String message) {
-        destination.sendMessage("§2" + message);
+        destination.sendMessage("§2" + message.replaceAll("\\*\\*(.+?)\\*\\*", "§a$1§2"));
     }
     
     /**
