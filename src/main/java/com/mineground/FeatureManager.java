@@ -56,8 +56,6 @@ public class FeatureManager {
      * FeatureInitParams class, which contains settings required by the FeatureBase class to work.
      */
     public void initializeFeatures() {
-        // TODO: Should we implement a more formal dependency model between features? That would
-        //       have quite significant impact for the initialization order of them.
         mFeatures.put("CommunicationManager", new CommunicationManager(mInitParams));
         mFeatures.put("GeneralCommands", new GeneralCommands(mInitParams));
         mFeatures.put("LocationManager", new LocationManager(mInitParams));
@@ -65,5 +63,15 @@ public class FeatureManager {
         mFeatures.put("WorldManager", new WorldManager(mInitParams));
     }
     
+    /**
+     * Returns the active instance of a certain feature. Features can communicate with each other
+     * by retrieving the instance, however, when doing so, please keep a weak reference.
+     * 
+     * @param name  Name of the feature to get the instance from.
+     * @return      Instance of the feature, or NULL.
+     */
+    public Feature getFeature(String name) {
+        return mFeatures.get(name);
+    }
     
 }

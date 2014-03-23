@@ -236,7 +236,7 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
                 return suggestions;
             }
             
-            for (String option : Arrays.asList("animals", "difficulty", "mobs", "pvp", "rule", "spawn")) {
+            for (String option : Arrays.asList("animals", "difficulty", "mobs", "pvp", "readonly", "rule", "spawn")) {
                 if (!option.startsWith(arguments[1]))
                     continue;
                 
@@ -282,6 +282,7 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
      * /world set difficulty    Changes the difficulty of this world.
      * /world set mobs          Changes how many mobs should spawn per chunk in this world.
      * /world set pvp           Changes whether player-versus-player is allowed in this world.
+     * /world set readonly      Changes whether this world should be made read-only.
      * /world set rule          Changes various advanced game rule values exposed by Minecraft.
      * /world set spawn         Changes the spawn position. A value is necessary to change it.
      * /world warp              Warps to the spawn position in another world.
@@ -675,6 +676,31 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
                 
                 displayCommandDescription(player, "The PVP setting for this world is: §2" + value);
                 displayCommandDescription(player, "Change this using §b/world set pvp [allowed, disallowed, default]§f.");
+                return;
+            }
+            
+            // We have implemented the ability to make entire worlds read-only, support for which
+            // can be toggled using this command. It affects whether people can modify the blocks.
+            if (arguments.length >= 2 && arguments[1].equals("readonly")) {
+                if (!player.hasPermission("world.set.readonly")) {
+                    displayCommandError(player, "You don't have permission to make a world read-only.");
+                    return;
+                }
+                
+                if (arguments.length >= 3) {
+                    boolean frozen = argumentAsBoolean(arguments[2]);
+                    getFeature().getWorldSettings(world).setReadOnly(frozen);
+                    
+                    // TODO: Announce this change to administrators.
+                    
+                    displayCommandSuccess(player, "The current world has successfully been **" + (frozen ? "" : "un") + "frozen**.");
+                    return;
+                }
+                
+                boolean mutable = !getFeature().getWorldSettings(world).isReadOnly();
+                
+                displayCommandDescription(player, "This world is currently defined as §2" + (mutable ? "mutable" : "read-only"));
+                displayCommandDescription(player, "Change this using §b/world set readonly [true, false]§f.");
                 return;
             }
             

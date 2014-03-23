@@ -68,6 +68,7 @@ permissions:
             world.set.mobs: true
             world.set.pvp: true
             world.set.rule: true
+            world.set.readonly: true
             world.set.spawn: true
             world.survival: true
 
@@ -144,6 +145,9 @@ permissions:
         default: op
     world.set.pvp:
         description: Allows you to change whether player-versus-player fights are allowed.
+        default: op
+    world.set.readonly:
+        description: Allows you to change whether a world is defined as read-only.
         default: op
     world.set.rule:
         description: Allows you to change more advanced game rules for a world.

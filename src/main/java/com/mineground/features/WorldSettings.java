@@ -65,6 +65,12 @@ public class WorldSettings {
      */
     private PvpSetting mPvpSetting = PvpSetting.PVP_DEFAULT;
     
+    /**
+     * Setting whether this world should be read-only. No player, including Management members and
+     * Server Operators, will be able to override this restriction.
+     */
+    private boolean mReadOnly;
+    
     public WorldSettings(World world, Settings settings) {
         mWorld = world;
         mSettings = settings;
@@ -77,6 +83,9 @@ public class WorldSettings {
             mPvpSetting = PvpSetting.PVP_ALLOWED;
         else if (pvpSetting.equals("disallowed"))
             mPvpSetting = PvpSetting.PVP_DISALLOWED;
+        
+        // Reads the |read_only| setting from the stored data.
+        mReadOnly = get("read_only", "false").equals("true");
     }
     
     /**
@@ -97,12 +106,37 @@ public class WorldSettings {
     public void setPvp(PvpSetting value) {
         mPvpSetting = value;
         
+        // Always enable it for the world, unless it's completely disallowed.
+        mWorld.setPVP(value != PvpSetting.PVP_DISALLOWED);
+        
         if (value == PvpSetting.PVP_ALLOWED)
             set("pvp", "allowed");
         else if (value == PvpSetting.PVP_DISALLOWED)
             set("pvp", "disallowed");
         else
             set("pvp", "default");
+    }
+    
+    /**
+     * Returns whether this world is defined as being read-only. When true, absolutely no player
+     * must be able to make changes to this world.
+     * 
+     * @return  Whether this world is read-only.
+     */
+    public boolean isReadOnly() {
+        return mReadOnly;
+    }
+    
+    /**
+     * Updates whether this world is read-only. No further modifications can be made to this world
+     * when the read-only mode has been activated.
+     * 
+     * @param readOnly Whether this world should be read-only.
+     */
+    public void setReadOnly(boolean readOnly) {
+        mReadOnly = readOnly;
+        
+        set("read_only", readOnly ? "true" : "false");
     }
     
     /**

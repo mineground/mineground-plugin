@@ -31,6 +31,7 @@ import com.mineground.base.FeatureInitParams;
 import com.mineground.base.Message;
 import com.mineground.base.Settings;
 import com.mineground.database.Database;
+import com.mineground.features.WorldManager;
 
 /**
  * The Mineground class is the plugin which exposes our plugin to Bukkit. It has access to APIs for
@@ -153,6 +154,10 @@ public class Mineground extends JavaPlugin {
         // Instantiate the Feature Manager itself, with the parameters as we previously compiled.
         mFeatureManager = new FeatureManager(featureInitParams);
         mFeatureManager.initializeFeatures();
+        
+        // Tell the EventListener about objects it needs to know about, since we need to by-pass the
+        // EventDispatcher in certain cases for performance reasons.
+        mEventListener.setWorldManager((WorldManager) mFeatureManager.getFeature("WorldManager"));
         
         mEventDispatcher.onMinegroundLoaded();
         

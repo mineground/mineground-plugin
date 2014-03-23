@@ -51,6 +51,10 @@ Gives administrators the ability to list, create, remove and manage the worlds a
 
   Sets whether PVP (player-versus-player) should be enabled for the current world. The value *allowed* means that any player can attack any player, regardless of their own preferences. *disallowed* means that no one will be able to kill no one, whereas *default* means it may be enabled depending on the player's own settings.
 
++ **/world set readonly** *[value=true, false]*
+
+  Changes whether the current world should be read-only. When enabled, no player, including Management members and server operators, will be able to make changes to the blocks.
+
 + **/world set rule** *[rule]* *[value=true, false]*
 
   Enables or disables advanced, name-based settings. These are Minecraft's *game rules*, and may change between releases. The following rules are available:

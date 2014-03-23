@@ -34,6 +34,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import com.mineground.account.Account;
 import com.mineground.account.AccountManager;
 import com.mineground.base.DisconnectReason;
+import com.mineground.features.WorldManager;
 
 /**
  * The Event Listener class is responsible for listening to incoming Bukkit plugins which we'd like
@@ -41,12 +42,24 @@ import com.mineground.base.DisconnectReason;
  * example changing some of Bukkit's types to our own wrapper types.
  */
 public class EventListener implements Listener {
-    private EventDispatcher mEventDispatcher;
-    private AccountManager mAccountManager;
+    private final EventDispatcher mEventDispatcher;
+    private final AccountManager mAccountManager;
+    
+    private WorldManager mWorldManager;
     
     public EventListener(EventDispatcher eventDispatcher, AccountManager accountManager) {
         mEventDispatcher = eventDispatcher;
         mAccountManager = accountManager;
+    }
+    
+    /**
+     * Updates the WorldManager used by the EventListener. Certain performance-sensitive events
+     * must be cancelled early on based on world-specific settings.
+     * 
+     * @param worldManager  The active World Manager for Mineground.
+     */
+    public void setWorldManager(WorldManager worldManager) {
+        mWorldManager = worldManager;
     }
     
     /**
@@ -123,6 +136,12 @@ public class EventListener implements Listener {
             return;
         }
         
+        // Placing blocks is not allowed in read-only worlds.
+        if (isWorldImmutable(event.getPlayer())) {
+            event.setCancelled(true);
+            return;
+        }
+        
         // TODO: Increase blocks-placed statistics on |account|.
         // TODO: Distribute this event within Mineground if we need to.
     }
@@ -137,6 +156,12 @@ public class EventListener implements Listener {
     public void onBlockBreak(BlockBreakEvent event) {
         final Account account = mAccountManager.ensureAuthenticatedAccount(event.getPlayer());
         if (account == null) {
+            event.setCancelled(true);
+            return;
+        }
+        
+        // Breaking blocks is not allowed in read-only worlds.
+        if (isWorldImmutable(event.getPlayer())) {
             event.setCancelled(true);
             return;
         }
@@ -159,6 +184,12 @@ public class EventListener implements Listener {
         
         final Account account = mAccountManager.ensureAuthenticatedAccount(player);
         if (account == null) {
+            event.setCancelled(true);
+            return;
+        }
+        
+        // Igniting blocks is not allowed in read-only worlds.
+        if (isWorldImmutable(event.getPlayer())) {
             event.setCancelled(true);
             return;
         }
@@ -213,5 +244,17 @@ public class EventListener implements Listener {
         mEventDispatcher.onPlayerDisconnect(event.getPlayer(), DisconnectReason.QUIT);
         mAccountManager.unloadAccount(event.getPlayer());
         event.setQuitMessage(null);
+    }
+    
+    /**
+     * Returns whether the world, determined from <code>player</code>, is immutable.
+     * 
+     * @param player    The player to determine the world from.
+     */
+    private boolean isWorldImmutable(Player player) {
+        if (mWorldManager == null)
+            return false;
+        
+        return mWorldManager.getWorldSettings(player.getWorld()).isReadOnly();
     }
 }
