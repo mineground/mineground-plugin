@@ -108,6 +108,36 @@ public class Account {
     }
     
     /**
+     * Returns the chat prefix of this player. Players have the ability to choose a prefix of choice
+     * based on their level, group and whether they've donated or not, which can be changed using
+     * the "/my prefix" command.
+     * 
+     * @return  The prefix this player wishes to use when chatting.
+     */
+    public String getChatPrefix() {
+        // TODO: This should be settable rather than be based on the player's level. Fix this when
+        //       we introduce the "/my prefix" command.
+        switch (mAccountLevel) {
+            case Guest:
+                return "[Guest] ";
+            case Builder:
+                return "[§1Builder§f] ";
+            case SBuilder:
+                return "[§9SBuilder§f] ";
+            case VIP:
+                return "[§2VIP§f] ";
+            case Moderator:
+                return "[§cMod§f] ";
+            case Administrator:
+                return "[§cAdmin§f] ";
+            case Management:
+                return "[§cAdmin§f] ";
+        }
+        
+        return "[Unknown] ";
+    }
+    
+    /**
      * Returns whether this player has enabled PVP for their account. This means that when they're
      * in worlds which allow PVP, other players can attack them.
      * 

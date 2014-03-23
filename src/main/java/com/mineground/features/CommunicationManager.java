@@ -105,7 +105,7 @@ public class CommunicationManager extends FeatureBase {
         // TODO: Implement support for filters?
         
         StringBuilder messageBuilder = new StringBuilder();
-        // TODO: Append the player's chat prefix (group or level).
+        messageBuilder.append(account.getChatPrefix());
         messageBuilder.append("<");
         messageBuilder.append(player.getName());
         messageBuilder.append("> ");
