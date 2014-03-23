@@ -108,6 +108,27 @@ public class Account {
     }
     
     /**
+     * Returns whether this player has enabled PVP for their account. This means that when they're
+     * in worlds which allow PVP, other players can attack them.
+     * 
+     * @return  Whether this player allows PVP.
+     */
+    public boolean getPvp() {
+        // TODO: Implement getPvp();
+        return true;
+    }
+    
+    /**
+     * Sets whether this player enabled PVP. When disabled, other players will not be able to do
+     * harm to them anymore.
+     * 
+     * @param enabled   Whether PVP should be enabled.
+     */
+    public void setPvp(boolean enabled) {
+        // TODO: Implement setPvp();
+    }
+    
+    /**
      * Returns the location Id of this account's home. Players have the ability to warp to this
      * using the /home command, or update its location using the "/home set" command.
      * 

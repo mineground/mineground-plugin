@@ -17,13 +17,17 @@ package com.mineground;
 
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
@@ -35,6 +39,7 @@ import com.mineground.account.Account;
 import com.mineground.account.AccountManager;
 import com.mineground.base.DisconnectReason;
 import com.mineground.features.WorldManager;
+import com.mineground.features.WorldSettings.PvpSetting;
 
 /**
  * The Event Listener class is responsible for listening to incoming Bukkit plugins which we'd like
@@ -198,7 +203,66 @@ public class EventListener implements Listener {
     }
     
     // TODO: Cancel onPlayerInteract for non-authenticated accounts.
-    // TODO: Cancel onEntityDamageEvent for non-authenticated accounts.
+    
+    /**
+     * The EntityDamage event will be fired when harm has been done to an entity. We handle the
+     * case where players do damage to players, also known as PVP (player versus player).
+     * 
+     * @param event The Bukkit EntityDamageEvent object.
+     */
+    @EventHandler(priority=EventPriority.HIGH)
+    public void onEntityDamage(EntityDamageEvent event) {
+        if (event.isCancelled())
+            return;
+        
+        if (!(event instanceof EntityDamageByEntityEvent) || !(event.getEntity() instanceof Player))
+            return;
+        
+        final Player player = (Player) event.getEntity();
+        final EntityDamageByEntityEvent entityEvent = (EntityDamageByEntityEvent) event;
+        
+        Player damager = null;
+        if (entityEvent.getDamager() instanceof Projectile) {
+            final Projectile projectile = (Projectile) entityEvent.getDamager();
+            if (projectile.getShooter() instanceof Player)
+                damager = (Player) projectile.getShooter();
+        } else if (entityEvent.getDamager() instanceof Player)
+            damager = (Player) entityEvent.getDamager();
+        
+        if (damager == null || mWorldManager == null)
+            return; // nothing to do when either |damager| or |mWorldManager| is null.
+        
+        final World world = player.getWorld();
+        
+        // We assume that both |player| and |damager| are in the same world. There might be some
+        // race condition with portals, but that should be rare enough to not care.
+        PvpSetting setting = mWorldManager.getWorldSettings(world).getPvp();
+        if (setting == PvpSetting.PVP_ALLOWED)
+            return; // PVP is allowed under all circumstances.
+        
+        if (setting == PvpSetting.PVP_DISALLOWED) {
+            event.setCancelled(true);
+            return; // PVP is never allowed in this world.
+        }
+        
+        final Account playerAccount = mAccountManager.getAccountForPlayer(player);
+        final Account damagerAccount = mAccountManager.ensureAuthenticatedAccount(damager);
+        
+        if (playerAccount == null || damagerAccount == null) {
+            event.setCancelled(true);
+            return; // either of the accounts has not been loaded.
+        }
+        
+        // PVP is allowed when both |player| and |damager| enabled PVP on their account. This avoids
+        // a situation in which |player| is being attacked by |damager|, but can't fight back
+        // because |damager| disabled PVP on their account.
+        if (!playerAccount.getPvp() || !damagerAccount.getPvp()) {
+            event.setCancelled(true);
+            return; // the |player| has disabled PVP on their account.
+        }
+        
+        // TODO: Distribute this event within Mineground if we have to.
+    }
     
     /**
      * Invoked when a player chats with other players. All features will be able to receive all
