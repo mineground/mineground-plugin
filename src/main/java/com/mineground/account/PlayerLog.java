@@ -15,7 +15,11 @@
 
 package com.mineground.account;
 
+import com.mineground.base.Promise;
+import com.mineground.base.PromiseError;
+import com.mineground.base.PromiseResultHandler;
 import com.mineground.database.Database;
+import com.mineground.database.DatabaseResult;
 import com.mineground.database.DatabaseStatement;
 
 /**
@@ -68,11 +72,32 @@ public class PlayerLog {
     }
     
     /**
+     * We support three primary forms of notes in the database: BAN, KICK and INFO. These indicate
+     * the severity level of the note itself, but don't have any function beyond that.
+     */
+    public enum NoteType {
+        BAN("ban"),
+        KICK("kick"),
+        INFO("info");
+        
+        private String value;
+        private NoteType(String value_) {
+            value = value_;
+        }
+    }
+    
+    /**
      * The database statement which will be used for writing a new record to the database. Each new
      * record will be written immediately, we can gain reasonably big performance improvements here
      * by grouping writes together, but the server is not yet busy enough for that.
      */
     private static DatabaseStatement sWriteRecordStatement;
+    
+    /**
+     * The statement which will be used to write a note to a player's account. While notes have no
+     * function associated with them directly, bans do depend on them.
+     */
+    private static DatabaseStatement sWriteNoteStatement;
     
     /**
      * Either initializes or finalizes the PlayerLog depending on the value of |database|. If it's
@@ -84,6 +109,7 @@ public class PlayerLog {
     public static void setDatabase(Database database) {
         if (database == null) {
             sWriteRecordStatement = null;
+            sWriteNoteStatement = null;
             return;
         }
         
@@ -93,6 +119,47 @@ public class PlayerLog {
                 "VALUES " +
                     "(?, ?, ?, ?)"
         );
+        
+        sWriteNoteStatement = database.prepare(
+                "INSERT INTO " +
+                    "users_notes (user_id, note_type, note_date, creator_id, creator_name, note_message) " +
+                "VALUES " +
+                    "(?, ?, NOW(), ?, '', ?)"
+        );
+    }
+    
+    /**
+     * Writes a note about <code>user_id</code> to the database. The <code>type</code> defines the
+     * severity of this note, which can be used as a means of sorting. A promise will be returned,
+     * which will be resolved with the Id of the note when it's available.
+     * 
+     * @param user_id       Id of the account which this note should be linked to.
+     * @param type          Type of note which should be written.
+     * @param creator_id    Id of the account which is creating this note.
+     * @param message       The message to be written in the note.
+     * @return              A promise, which will be resolved when the note has been written.
+     */
+    public static Promise<Integer> note(int user_id, NoteType type, int creator_id, String message) {
+        final Promise<Integer> promise = new Promise<Integer>();
+        if (sWriteNoteStatement == null) {
+            promise.reject("The Database has not been initialized yet.");
+            return promise;
+        }
+
+        sWriteNoteStatement.setInteger(1, user_id);
+        sWriteNoteStatement.setString(2, type.value);
+        sWriteNoteStatement.setInteger(3, creator_id);
+        sWriteNoteStatement.setString(4, message);
+        sWriteNoteStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
+            public void onFulfilled(DatabaseResult result) {
+                promise.resolve(result.insertId);
+            }
+            public void onRejected(PromiseError error) {
+                promise.reject("Unable to write the note to the database.");
+            }
+        });
+        
+        return promise;
     }
 
     /**
