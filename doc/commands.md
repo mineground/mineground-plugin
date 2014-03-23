@@ -6,20 +6,23 @@ There is a wide variety of commands available on Mineground, each of which adds 
 The following table should list all of the supported commands on Mineground. If you notice that the documentation of a command is outdated, or perhaps that a command is missing altogether, please either [file a bug](https://github.com/mineground/mineground-plugin/issues/new) or send a pull request to fix it yourself.
 
 
-| Level          | Command                       | Description                                                 |
-| ---------------|-------------------------------|-------------------------------------------------------------|
-| Guests         | [/report](commands/report.md) | Report an incident to online staff members.                 |
-| Guests         | [/rules](commands/rules.md)   | Displays a list of Mineground's rules to you.               |
-| Guests         | [/spawn](commands/spawn.md)   | Teleports you back to the world's spawn position.           |
-| Guests         | [/staff](commands/staff.md)   | Displays a list of online staff members.                    |
-| Builders       | [/home](commands/home.md)     | Teleports you back to your home.                            |
-| Builders       | [/login](commands/login.md)   | Used to enter your password for logging in to your account. |
-| Builders       | [/pm](commands/pm.md)         | Sends a private message to another player.                  |
-| Builders       | [/reply](commands/reply.md)   | Replies to the last received private message.               |
-| Builders       | [/warp](commands/warp.md)     | Creates and teleports you to saved locations in the world.  |
-| SBuilders      | [/fly](commands/fly.md)       | Toggles the ability to fly around in the world.             |
-| Administrators | [/mode](commands/mode.md)     | Changes the gamemode for yourself or another player.        |
-| Administrators | [/world](commands/world.md)   | Manages the available worlds and their settings.            |
+| Level          | Command                           | Description                                                 |
+| ---------------|-----------------------------------|-------------------------------------------------------------|
+| Guests         | [/report](commands/report.md)     | Report an incident to online staff members.                 |
+| Guests         | [/rules](commands/rules.md)       | Displays a list of Mineground's rules to you.               |
+| Guests         | [/spawn](commands/spawn.md)       | Teleports you back to the world's spawn position.           |
+| Guests         | [/staff](commands/staff.md)       | Displays a list of online staff members.                    |
+| Builders       | [/classic](commands/classic.md)   | Teleports you to the classic world.                         |
+| Builders       | [/creative](commands/creative.md) | Teleports you to the creative world.                        |
+| Builders       | [/home](commands/home.md)         | Teleports you back to your home.                            |
+| Builders       | [/login](commands/login.md)       | Used to enter your password for logging in to your account. |
+| Builders       | [/pm](commands/pm.md)             | Sends a private message to another player.                  |
+| Builders       | [/reply](commands/reply.md)       | Replies to the last received private message.               |
+| Builders       | [/survival](commands/survival.md) | Teleports you to the survival world.                        |
+| Builders       | [/warp](commands/warp.md)         | Creates and teleports you to saved locations in the world.  |
+| SBuilders      | [/fly](commands/fly.md)           | Toggles the ability to fly around in the world.             |
+| Administrators | [/mode](commands/mode.md)         | Changes the gamemode for yourself or another player.        |
+| Administrators | [/world](commands/world.md)       | Manages the available worlds and their settings.            |
 
 Furthermore, Mineground supports the following command aliases: [/admins](commands/staff.md), [/r](commands/reply.md).
 

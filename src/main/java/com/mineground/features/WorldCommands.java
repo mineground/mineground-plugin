@@ -108,6 +108,87 @@ public class WorldCommands extends FeatureComponent<WorldManager> {
     }
     
     /**
+     * Command which allows player to teleport to the classic world. If the player already is in
+     * the classic world, this command will teleport them to the spawn position.
+     * 
+     * @param sender    The player to teleport to the classic world.
+     * @param arguments Additional arguments. Ignored.
+     */
+    @CommandHandler("classic")
+    public void onClassicCommand(CommandSender sender, String[] arguments) {
+        final Player player = (Player) sender;
+        if (!player.hasPermission("command.classic")) {
+            displayCommandError(player, "You don't have permission to use the /classic command.");
+            return;
+        }
+        
+        final World world = getFeature().getClassicWorld();
+        if (world == null) {
+            displayCommandError(player, "The classic world is unavailable right now, sorry!");
+            return;
+        }
+        
+        player.teleport(world.getSpawnLocation());
+        
+        displayCommandSuccess(player, "You have been teleported to the classic world.");
+        return;
+    }
+    
+    /**
+     * Command which allows player to teleport to the creative world. If the player already is in
+     * the creative world, this command will teleport them to the spawn position.
+     * 
+     * @param sender    The player to teleport to the creative world.
+     * @param arguments Additional arguments. Ignored.
+     */
+    @CommandHandler("creative")
+    public void onCreativeCommand(CommandSender sender, String[] arguments) {
+        final Player player = (Player) sender;
+        if (!player.hasPermission("command.creative")) {
+            displayCommandError(player, "You don't have permission to use the /creative command.");
+            return;
+        }
+        
+        final World world = getFeature().getCreativeWorld();
+        if (world == null) {
+            displayCommandError(player, "The creative world is unavailable right now, sorry!");
+            return;
+        }
+        
+        player.teleport(world.getSpawnLocation());
+        
+        displayCommandSuccess(player, "You have been teleported to the creative world.");
+        return;
+    }
+    
+    /**
+     * Command which allows player to teleport to the survival world. If the player already is in
+     * the survival world, this command will teleport them to the spawn position.
+     * 
+     * @param sender    The player to teleport to the survival world.
+     * @param arguments Additional arguments. Ignored.
+     */
+    @CommandHandler("survival")
+    public void onSurvivalCommand(CommandSender sender, String[] arguments) {
+        final Player player = (Player) sender;
+        if (!player.hasPermission("command.survival")) {
+            displayCommandError(player, "You don't have permission to use the /survival command.");
+            return;
+        }
+        
+        final World world = getFeature().getDefaultWorld();
+        if (world == null) {
+            displayCommandError(player, "The survival world is unavailable right now, sorry!");
+            return;
+        }
+        
+        player.teleport(world.getSpawnLocation());
+        
+        displayCommandSuccess(player, "You have been teleported to the survival world.");
+        return;
+    }
+    
+    /**
      * Immediately teleports the player back to the spawn location of their current world. This
      * location may be updated by staff members using the "/world set spawn" command.
      * 

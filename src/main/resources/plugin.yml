@@ -20,8 +20,11 @@ permissions:
         children:
             mineground.guest: true
             # Permissions to grant to builders:
+            command.classic: true
+            command.creative: true
             command.pm: true
             command.reply: true
+            command.survival: true
             warp.create: true
             warp.teleport: true
             warp.remove: true
@@ -103,8 +106,17 @@ permissions:
     # ----------------------------------------------------------------------------------------------
     # World Manager - allows staff to manipulate the available worlds on Mineground.
     # ----------------------------------------------------------------------------------------------
+    command.classic:
+        description: Allows you to teleport to the classic world using /classic.
+        default: op
+    command.creative:
+        description: Allows you to teleport to the creative world using /creative.
+        default: op
     command.spawn:
         description: Allows you to teleport to the current world's spawn location.
+        default: op
+    command.survival:
+        description: Allows you to teleport to the survival world using /survival.
         default: op
     world.classic:
         description: Allows you to change which world is known as the classic world.
@@ -197,9 +209,18 @@ commands:
     # ----------------------------------------------------------------------------------------------
     # Feature: World Manager
     # ----------------------------------------------------------------------------------------------
+    classic:
+        description: Teleports you to the classic world.
+        usage: /classic
+    creative:
+        description: Teleports you to the creative world.
+        usage: /creative
     spawn:
         description: Teleports you back to this world's spawn.
         usage: /warp
+    survival:
+        description: Teleports you to the survival world.
+        usage: /survival
     world:
         description: Manage the worlds available on Mineground.
         usage: /world
