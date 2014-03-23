@@ -29,6 +29,7 @@ import com.mineground.account.PlayerLog;
 import com.mineground.base.DisconnectReason;
 import com.mineground.base.FeatureInitParams;
 import com.mineground.base.Message;
+import com.mineground.base.Settings;
 import com.mineground.database.Database;
 
 /**
@@ -90,6 +91,12 @@ public class Mineground extends JavaPlugin {
     private File mConfigurationFile;
     
     /**
+     * Whereas the plugin's default configuration shouldn't be written to (since it would dispose of
+     * all comments in the file), settings are where features can store their information.
+     */
+    private Settings mSettings;
+    
+    /**
      * Mineground stores pretty much all information (beyond the world data) in a database, ensuring
      * that it persists between sessions and can be accessed from outside this plugin as well. The
      * Database implementation is the main API for that.
@@ -110,6 +117,8 @@ public class Mineground extends JavaPlugin {
         mConfiguration = YamlConfiguration.loadConfiguration(mConfigurationFile);
         
         Message.SetConfiguration(mConfiguration);
+        
+        mSettings = new Settings(new File(dataFolder, "settings.yml"));
 
         // Initialize the Database API and ensure that it can connect to actual database powering
         // it. Without database access, Mineground will be significantly limited in functionality.
@@ -139,6 +148,7 @@ public class Mineground extends JavaPlugin {
         featureInitParams.database = mDatabase;
         featureInitParams.accountManager = mAccountManager;
         featureInitParams.server = getServer();
+        featureInitParams.settings = mSettings;
         
         // Instantiate the Feature Manager itself, with the parameters as we previously compiled.
         mFeatureManager = new FeatureManager(featureInitParams);
@@ -191,6 +201,8 @@ public class Mineground extends JavaPlugin {
         mEventDispatcher = null;
         
         mAccountManager = null;
+        
+        mSettings = null;
         
         Message.SetConfiguration(null);
         

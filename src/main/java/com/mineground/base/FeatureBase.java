@@ -163,6 +163,16 @@ public class FeatureBase implements Feature {
     }
     
     /**
+     * Returns the global instance of Settings, to which features can store data which should
+     * persist between server restarts.
+     * 
+     * @return Shared Settings instance.
+     */
+    protected Settings getSettings() {
+        return mInitParams.settings;
+    }
+    
+    /**
      * Returns the active database connection shared among Mineground. All queries set to be
      * executed on this connection will be added to a queue, and will be executed in order (FIFO).
      * 

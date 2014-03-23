@@ -36,4 +36,5 @@ public class FeatureInitParams {
     public Database database;
     public AccountManager accountManager;
     public Server server;
+    public Settings settings;
 }
