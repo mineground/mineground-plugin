@@ -92,15 +92,18 @@ public class FeatureBase implements Feature {
     }
     
     /**
-     * Displays |message| to |destination| to inform them of something which went wrong when they
-     * just executed a command. This should not be used when the command was used wrongly, but
-     * rather when the requested option is not available.
+     * Displays <code>message</code> to <code>destination</code> to inform them of something which
+     * went wrong when they just executed a command. This should not be used when the command was
+     * used wrongly, but rather when the requested option is not available.
+     * 
+     * Highlights may be used in the <code>message</code> by surrounding a set of words by two
+     * asterisks: foo **bar** baz ("baz" would be highlighted).
      * 
      * @param destination   The player to inform about the error.
      * @param message       The error which occurred while running this command.
      */
     protected void displayCommandError(CommandSender destination, String message) {
-        destination.sendMessage("§c" + message);
+        destination.sendMessage("§c" + message.replaceAll("\\*\\*(.+?)\\*\\*", "§4$1§c"));
     }
     
     /* ****************************************************************************************** *
