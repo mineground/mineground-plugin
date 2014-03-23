@@ -15,11 +15,15 @@
 
 package com.mineground.account;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.mineground.base.Promise;
 import com.mineground.base.PromiseError;
 import com.mineground.base.PromiseResultHandler;
 import com.mineground.database.Database;
 import com.mineground.database.DatabaseResult;
+import com.mineground.database.DatabaseResultRow;
 import com.mineground.database.DatabaseStatement;
 
 /**
@@ -28,6 +32,11 @@ import com.mineground.database.DatabaseStatement;
  * ability to find who did it, and when. Features are encouraged to log any modification.
  */
 public class PlayerLog {
+    /**
+     * The number of notes which should be returned at most when using the findNotes() method.
+     */
+    private static final int FIND_NOTES_LIMIT = 10;
+
     /**
      * The following types of records may be used throughout Mineground. When adding a new record
      * type, add a new row in the "record_types" database table. The inserted Id is the number to
@@ -87,6 +96,17 @@ public class PlayerLog {
     }
     
     /**
+     * Information about a note as it will be displayed to the requester. We merge the username and
+     * creator_name fields internally, as only one is necessary.
+     */
+    public static class Note {
+        public String type;
+        public String date;
+        public String username;
+        public String message;
+    }
+    
+    /**
      * The database statement which will be used for writing a new record to the database. Each new
      * record will be written immediately, we can gain reasonably big performance improvements here
      * by grouping writes together, but the server is not yet busy enough for that.
@@ -100,6 +120,12 @@ public class PlayerLog {
     private static DatabaseStatement sWriteNoteStatement;
     
     /**
+     * The statement which will be used to read a player's most recent notes from the database. The
+     * selection will be made based on the player's nickname.
+     */
+    private static DatabaseStatement sLatestNotesStatement;
+    
+    /**
      * Either initializes or finalizes the PlayerLog depending on the value of |database|. If it's
      * null, then nullify the write record statement we staticly keep. Otherwise create a new write
      * record statement, as there seems to be a new database connection.
@@ -110,6 +136,7 @@ public class PlayerLog {
         if (database == null) {
             sWriteRecordStatement = null;
             sWriteNoteStatement = null;
+            sLatestNotesStatement = null;
             return;
         }
         
@@ -125,6 +152,27 @@ public class PlayerLog {
                     "users_notes (user_id, note_type, note_date, creator_id, creator_name, note_message) " +
                 "VALUES " +
                     "(?, ?, NOW(), ?, '', ?)"
+        );
+        
+        sLatestNotesStatement = database.prepare(
+                "SELECT " +
+                    "users_notes.note_type, " +
+                    "users_notes.note_date, " +
+                    "creator.username, " +
+                    "users_notes.creator_name, " +
+                    "users_notes.note_message " +
+                "FROM " +
+                    "users " +
+                "LEFT JOIN " +
+                    "users_notes ON users_notes.user_id = users.user_id " +
+                "LEFT JOIN " +
+                    "users AS creator ON creator.user_id = users_notes.creator_id " +
+                "WHERE " +
+                    "users.username = ? " +
+                "ORDER BY " +
+                    "users_notes.note_date " +
+                "LIMIT " +
+                    "?"
         );
     }
     
@@ -142,7 +190,7 @@ public class PlayerLog {
     public static Promise<Integer> note(int user_id, NoteType type, int creator_id, String message) {
         final Promise<Integer> promise = new Promise<Integer>();
         if (sWriteNoteStatement == null) {
-            promise.reject("The Database has not been initialized yet.");
+            promise.reject("The database has not been initialized yet.");
             return promise;
         }
 
@@ -156,6 +204,46 @@ public class PlayerLog {
             }
             public void onRejected(PromiseError error) {
                 promise.reject("Unable to write the note to the database.");
+            }
+        });
+        
+        return promise;
+    }
+    
+    /**
+     * Finds the latest notes which were written to the account of <code>username</code>.
+     * 
+     * @param username Name of the user to find related notes for.
+     * @return         A promise, which will be resolved when the notes are available.
+     */
+    public static Promise<List<Note>> findNotes(String username) {
+        final Promise<List<Note>> promise = new Promise<List<Note>>();
+        if (sLatestNotesStatement == null) {
+            promise.reject("The database has not been initialized yet.");
+            return promise;
+        }
+
+        sLatestNotesStatement.setString(1, username);
+        sLatestNotesStatement.setInteger(2, FIND_NOTES_LIMIT);
+        sLatestNotesStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
+            public void onFulfilled(DatabaseResult result) {
+                final List<Note> notes = new ArrayList<Note>(result.rows.size());
+                for (DatabaseResultRow noteRow : result.rows) {
+                    Note note = new Note();
+                    note.type = noteRow.getString("note_type");
+                    note.date = noteRow.getString("note_date");
+                    note.message = noteRow.getString("message");
+                    note.username = noteRow.getString("username");
+                    if (note.username.length() == 0)
+                        note.username = noteRow.getString("creator_name");
+                    
+                    notes.add(note);
+                }
+                
+                promise.resolve(notes);
+            }
+            public void onRejected(PromiseError error) {
+                promise.reject("Unable to read notes from the database.");
             }
         });
         
