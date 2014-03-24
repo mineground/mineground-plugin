@@ -19,10 +19,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.bukkit.GameMode;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -40,14 +43,32 @@ import com.mineground.base.Message;
  */
 public class GeneralCommands extends FeatureBase {
     /**
+     * The number of server ticks forced weather using the /weather command should last for. One
+     * second will equal roughly 20 server ticks.
+     */
+    private final static int FORCED_WEATHER_DURATION_TICKS = 12000; // 10 minutes (600 seconds).
+    
+    /**
+     * The number of server ticks forced thunder should last for.
+     */
+    private final static int FORCED_THUNDER_DURATION_TICKS = 3600; // 3 minutes (180 seconds).
+    
+    /**
      * Message containing the server rules, which players can view using the /rules command.
      */
     private final Message mRulesMessage;
+    
+    /**
+     * Message which will be sent to users when somebody changes the weather in the world they're
+     * currently playing in.
+     */
+    private final Message mWeatherChangeMessage;
     
     public GeneralCommands(FeatureInitParams params) {
         super(params);
         
         mRulesMessage = Message.Load("server_rules");
+        mWeatherChangeMessage = Message.Load("weather_change");
     }
 
     /**
@@ -224,5 +245,84 @@ public class GeneralCommands extends FeatureBase {
         sender.sendMessage(Color.GOLD + "----------------------- Rules ------------------------");
         mRulesMessage.send(sender, Color.WHITE);
         sender.sendMessage(Color.GOLD + "-----------------------------------------------------");
+    }
+    
+    /**
+     * Changes the weather in the sender's current world. When the sender has no world, weather in
+     * the main and creative worlds will be changed instead.
+     * 
+     * @param sender    The player, console or user wanting to change the weather.
+     * @param arguments Arguments passed. One is expected, the weather type.
+     */
+    @CommandHandler(value = "weather", console = true)
+    public void onWeatherCommand(CommandSender sender, String[] arguments) {
+        if (!sender.hasPermission("command.weather")) {
+            displayCommandError(sender, "You don't have permission to use the /weather command yet.");
+            return;
+        }
+        
+        if (arguments.length == 0) {
+            displayCommandUsage(sender, "/weather [sun/rain/storm]");
+            return;
+        }
+        
+        // Find a list of worlds which the weather change should apply to, and a set of players who
+        // are currently residing in those worlds. Only these players will receive a message.
+        final List<World> worlds = new ArrayList<World>();
+        final Set<Player> players = new HashSet<Player>();
+
+        if (sender instanceof Player) {
+            worlds.add(((Player) sender).getWorld());
+        } else {
+            final WorldManager worldManager = (WorldManager) getFeatureManager().getFeature("WorldManager");
+            if (worldManager != null) {
+                worlds.add(worldManager.getDefaultWorld());
+                worlds.add(worldManager.getCreativeWorld());
+            }
+        }
+        
+        for (World world : worlds)
+            players.addAll(world.getPlayers());
+
+        // Updates the weather to be sunny. This is the type of weather most players prefer.
+        if (arguments[0].equals("sun")) {
+            for (World world : worlds) {
+                world.setStorm(false);
+                world.setWeatherDuration(FORCED_WEATHER_DURATION_TICKS);
+            }
+        
+        // Rain speaks for itself. When the temperature in a given region is below a threshold, or
+        // the region is far up in the sky, it will start snowing instead.
+        } else if (arguments[0].equals("rain")) {
+            for (World world : worlds) {
+                world.setStorm(true);
+                world.setThundering(false);
+                world.setWeatherDuration(FORCED_WEATHER_DURATION_TICKS);
+            }
+        
+        // Storm is the most exciting weather as it includes thunder, but this could potentially
+        // damage property and cause fires. The weather type therefore requires another permission.
+        } else if (arguments[0].equals("storm")) {
+            if (!sender.hasPermission("command.weather.storm")) {
+                displayCommandError(sender, "You don't have permission to change the weather to a storm.");
+                return;
+            }
+            
+            for (World world : worlds) {
+                world.setStorm(true);
+                world.setThundering(true);
+                world.setThunderDuration(FORCED_THUNDER_DURATION_TICKS);
+                world.setWeatherDuration(FORCED_WEATHER_DURATION_TICKS);
+            }
+        } else {
+            displayCommandUsage(sender, "/weather [sun/rain/storm]");
+            return;
+        }
+        
+        // Send a message to all players in those worlds about the change having happened. This will
+        // avoid them being all confused about the sudden influx of thunder.
+        mWeatherChangeMessage.setString("nickname", sender.getName());
+        mWeatherChangeMessage.setString("weather", arguments[0]);
+        mWeatherChangeMessage.send(players, Color.PLAYER_EVENT);
     }
 }

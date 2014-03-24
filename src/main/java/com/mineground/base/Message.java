@@ -23,7 +23,6 @@ import java.util.logging.Logger;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.Configuration;
-import org.bukkit.entity.Player;
 
 /**
  * Represents a message, to be send to a player, as it has been defined in the configuration. Macros
@@ -143,15 +142,15 @@ public class Message {
     }
     
     /**
-     * Sends the message to a list of Players.
+     * Sends the message to a list of command senders.
      * 
      * @param destinationList   List of players to send this message to.
      * @param color             Base color of the message to send.
      */
-    public void send(List<Player> destinationList, String color) {
+    public void send(Iterable<? extends CommandSender> destinationList, String color) {
         final List<String> messageLines = compileMessage(color);
         for (String messageLine : messageLines) {
-            for (Player destination : destinationList)
+            for (CommandSender destination : destinationList)
                 destination.sendMessage(messageLine);
         }
     }

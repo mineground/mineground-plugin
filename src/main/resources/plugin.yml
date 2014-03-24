@@ -39,6 +39,7 @@ permissions:
         children:
             mineground.sbuilder: true
             # Permissions to grant to VIPs:
+            command.weather: true
     mineground.moderator:
         description: All permissions available for moderators.
         children:
@@ -47,6 +48,7 @@ permissions:
             command.kick: true
             command.note: true
             command.notes: true
+            command.weather.storm: true
             wrap.teleport_no_password: true
             warp.remove_all: true
     mineground.administrator:
@@ -187,6 +189,12 @@ permissions:
     command.mode:
         description: Allows you to change your game mode regardless of where you are.
         default: op
+    command.weather:
+        description: Allows you to change the weather using the /weather command.
+        default: op
+    command.weather.storm:
+        description: Allows you to change the weather to storming using the /weather command.
+        default: op
 
 
 # The commands which are supported by the Mineground plugin.
@@ -280,3 +288,6 @@ commands:
         usage: /staff
         aliases:
             - admins
+    weather:
+        description: Changes the weather in the current world.
+        usage: /weather [sun/rain/storm]

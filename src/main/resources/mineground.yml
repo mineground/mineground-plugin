@@ -112,3 +112,12 @@ messages:
     # Announcement to players that a new world has been created.
     # Available macros: {nickname}
     world_creation_end: "» §e{nickname}§6's new world has been created. Enjoy your stay!"
+
+    # Announcement to players that the world they're in is being removed, and they're therefore
+    # being teleported back to the spawn position of the default world.
+    # Available macros: {nickname}
+    world_destroyed_teleport: "» You have been teleported back to the spawn, as §e{nickname}§6 removed the world you were in."
+
+    # Announcement to players that somebody has changed the weather in their world.
+    # Available macros: {nickname}, {weather}
+    weather_change: "» §e{nickname}§6 has changed the weather to §e{weather}§6."
