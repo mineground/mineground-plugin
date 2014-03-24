@@ -39,6 +39,7 @@ permissions:
         children:
             mineground.sbuilder: true
             # Permissions to grant to VIPs:
+            command.time: true
             command.weather: true
     mineground.moderator:
         description: All permissions available for moderators.
@@ -189,6 +190,9 @@ permissions:
     command.mode:
         description: Allows you to change your game mode regardless of where you are.
         default: op
+    command.time:
+        description: Allows you to change the time in your current world using the /time command.
+        default: op
     command.weather:
         description: Allows you to change the weather using the /weather command.
         default: op
@@ -288,6 +292,9 @@ commands:
         usage: /staff
         aliases:
             - admins
+    time:
+        description: Changes the time in your current world.
+        usage: /time [morning/day/evening/night]
     weather:
-        description: Changes the weather in the current world.
+        description: Changes the weather in your current world.
         usage: /weather [sun/rain/storm]

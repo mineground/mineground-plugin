@@ -59,16 +59,23 @@ public class GeneralCommands extends FeatureBase {
     private final Message mRulesMessage;
     
     /**
-     * Message which will be sent to users when somebody changes the weather in the world they're
+     * Message which will be send to users when somebody changes the weather in the world they're
      * currently playing in.
      */
     private final Message mWeatherChangeMessage;
+    
+    /**
+     * Message which will be send to users when somebody changes the time in the world they're
+     * currently playing in.
+     */
+    private final Message mTimeChangeMessage;
     
     public GeneralCommands(FeatureInitParams params) {
         super(params);
         
         mRulesMessage = Message.Load("server_rules");
         mWeatherChangeMessage = Message.Load("weather_change");
+        mTimeChangeMessage = Message.Load("time_change");
     }
 
     /**
@@ -324,5 +331,71 @@ public class GeneralCommands extends FeatureBase {
         mWeatherChangeMessage.setString("nickname", sender.getName());
         mWeatherChangeMessage.setString("weather", arguments[0]);
         mWeatherChangeMessage.send(players, Color.PLAYER_EVENT);
+    }
+    
+    /**
+     * Command which allows certain players to change the time in the world they're currently in.
+     * When this command gets invoked from the console or from IRC, the time will be changed in the
+     * default and creative worlds instead.
+     * 
+     * @param sender    The player, console or user wanting to change the weather.
+     * @param arguments Arguments passed. One is expected, the new time.
+     */
+    @CommandHandler(value = "time", console = true)
+    public void onTimeCommand(CommandSender sender, String[] arguments) {
+        if (!sender.hasPermission("command.time")) {
+            displayCommandError(sender, "You don't have permission to use the /time command yet.");
+            return;
+        }
+        
+        if (arguments.length == 0) {
+            displayCommandUsage(sender, "/time [morning/day/evening/night]");
+            return;
+        }
+        
+        // Find a list of worlds which the time change should apply to, and a set of players who are
+        // currently residing in those worlds. Only these players will receive a message.
+        final List<World> worlds = new ArrayList<World>();
+        final Set<Player> players = new HashSet<Player>();
+
+        if (sender instanceof Player) {
+            worlds.add(((Player) sender).getWorld());
+        } else {
+            final WorldManager worldManager = (WorldManager) getFeatureManager().getFeature("WorldManager");
+            if (worldManager != null) {
+                worlds.add(worldManager.getDefaultWorld());
+                worlds.add(worldManager.getCreativeWorld());
+            }
+        }
+        
+        for (World world : worlds)
+            players.addAll(world.getPlayers());
+        
+        // Find the time which it should be in each of the worlds. These numbers feel awkwardly
+        // arbitrary to me, but this is how Minecraft's day-and-night cycles work..
+        Integer time = null;
+        if (arguments[0].equals("morning"))
+            time = 22500;
+        else if (arguments[0].equals("day"))
+            time = 1000;
+        else if (arguments[0].equals("evening"))
+            time = 12000;
+        else if (arguments[0].equals("night"))
+            time = 18000;
+        else {
+            displayCommandUsage(sender, "/time [morning/day/evening/night]");
+            return;
+        }
+
+        // Update the time in each of the worlds we're updating.
+        for (World world : worlds)
+            world.setTime(time);
+        
+        // Distribute the time changed message to all players in those worlds. This will inform them
+        // of the change, who made it, and allow them to object to those players who insist on it
+        // being day throughout their playing sessions (while night is cool!).
+        mTimeChangeMessage.setString("nickname", sender.getName());
+        mTimeChangeMessage.setString("time", arguments[0]);
+        mTimeChangeMessage.send(players, Color.PLAYER_EVENT);
     }
 }

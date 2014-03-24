@@ -121,3 +121,7 @@ messages:
     # Announcement to players that somebody has changed the weather in their world.
     # Available macros: {nickname}, {weather}
     weather_change: "» §e{nickname}§6 has changed the weather to §e{weather}§6."
+
+    # Announcement to players that somebody has changed the time in their world.
+    # Available macros: {nickname}, {time}
+    time_change: "» §e{nickname}§6 has changed the time to §e{time}§6."

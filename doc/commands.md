@@ -21,6 +21,7 @@ The following table should list all of the supported commands on Mineground. If 
 | Builders       | [/survival](commands/survival.md) | Teleports you to the survival world.                        |
 | Builders       | [/warp](commands/warp.md)         | Creates and teleports you to saved locations in the world.  |
 | SBuilders      | [/fly](commands/fly.md)           | Toggles the ability to fly around in the world.             |
+| VIPs           | [/time](commands/time.md)         | Changes the time of the world you're currently in.          |
 | VIPs           | [/weather](commands/weather.md)   | Changes the weather of the world you're currently in.       |
 | Moderators     | [/kick](commands/kick.md)         | Forcefully disconnects another player from the server.      |
 | Moderators     | [/note](commands/note.md)         | Writes a message as a note to a player's profile.           |
