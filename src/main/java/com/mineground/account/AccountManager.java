@@ -28,6 +28,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.mineground.EventDispatcher;
+import com.mineground.account.PlayerLog.NoteType;
 import com.mineground.account.PlayerLog.RecordType;
 import com.mineground.base.Color;
 import com.mineground.base.CommandHandler;
@@ -240,9 +241,8 @@ public class AccountManager {
         }
         
         if (++authenticationRequest.attempts >= MAXIMUM_AUTHENTICATION_ATTEMPTS) {
-            // TODO: Log this with the PlayerLog class.
-            // TODO: Show a message to the user about what to do when they forgot their password.
-            player.kickPlayer("Too many invalid passwords.");
+            PlayerLog.note(authenticationRequest.accountData.user_id, NoteType.KICK, 0, "Mineground", "Too many invalid login attempts.");
+            player.kickPlayer("You have been disconnected from Mineground (too many invalid passwords).");
             return;
         }
         
