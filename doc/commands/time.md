@@ -8,7 +8,7 @@ Allows VIP members to change the time of the world they're currently in. When th
 ----------
 + **/time morning**
 
-  Changes the world's time to sunrise, being at 9am.
+  Changes the world's time to sunrise, being at 5:30am.
 
 + **/time day**
 
@@ -16,7 +16,7 @@ Allows VIP members to change the time of the world they're currently in. When th
 
 + **/time evening**
 
-  Changes the world's time to sunset, being at 9pm.
+  Changes the world's time to sunset, being at 6pm.
 
 + **/time night**
 
