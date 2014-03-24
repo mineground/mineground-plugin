@@ -35,6 +35,7 @@
         <bukkit.version>1.7.2-R0.3</bukkit.version>
         <junit.version>4.10</junit.version>
         <mysqlConnector.version>5.1.29</mysqlConnector.version>
+        <pircbotx.version>2.0.1</pircbotx.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -43,10 +44,6 @@
         <repository>
             <id>bukkit</id>
             <url>http://repo.bukkit.org/content/repositories/releases/</url>
-        </repository>
-        <repository>
-            <id>public</id>
-            <url>http://nexus.grapendaal.sh/content/groups/public/</url>
         </repository>
     </repositories>
 
@@ -102,9 +99,9 @@
             <version>${mysqlConnector.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.pircbot</groupId>
-            <artifactId>pircbot</artifactId>
-            <version>1.5.5-ppf-ssl</version>
+            <groupId>org.pircbotx</groupId>
+            <artifactId>pircbotx</artifactId>
+            <version>${pircbotx.version}</version>
         </dependency>
     </dependencies>
 
