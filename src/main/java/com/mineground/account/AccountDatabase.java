@@ -54,6 +54,7 @@ public class AccountDatabase {
     private final DatabaseStatement mCreateUserSettingsStatement;
     private final DatabaseStatement mUpdateUserStatement;
     private final DatabaseStatement mUpdateUserSettingsStatement;
+    private final DatabaseStatement mFindUserIdStatement;
     
     public AccountDatabase(Database database) {
         mDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -130,6 +131,16 @@ public class AccountDatabase {
                     "last_seen = ? " +
                 "WHERE " +
                     "user_id = ?"
+        );
+        
+        // Statement for finding a user Id belonging to a user, given a nickname.
+        mFindUserIdStatement = database.prepare(
+                "SELECT " +
+                    "user_id " +
+                "FROM " +
+                    "users " +
+                "WHERE " +
+                    "username = ?"
         );
     }
     
@@ -267,5 +278,32 @@ public class AccountDatabase {
                 mLogger.severe(error.reason());
             }
         });
+    }
+    
+    /**
+     * Finds the user Id for a given <code>username</code>.
+     * 
+     * @param username  The username to find the user Id for.
+     * @return          A promise, which will be resolved with the user Id.
+     */
+    public Promise<Integer> findUserId(final String username) {
+        final Promise<Integer> promise = new Promise<Integer>();
+        
+        mFindUserIdStatement.setString(1, username);
+        mFindUserIdStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
+            public void onFulfilled(DatabaseResult result) {
+                if (result.rows.size() != 1) {
+                    promise.reject("No user named **" + username + "** is registered on Mineground.");
+                    return;
+                }
+                
+                promise.resolve(result.rows.get(0).getInteger("user_id").intValue());
+            }
+            public void onRejected(PromiseError error) {
+                promise.reject("Could not read user information from the database (" + error.reason() + ")");
+            }
+        });
+        
+        return promise;
     }
 }

@@ -32,6 +32,7 @@ import com.mineground.account.PlayerLog.RecordType;
 import com.mineground.base.Color;
 import com.mineground.base.CommandHandler;
 import com.mineground.base.Message;
+import com.mineground.base.Promise;
 import com.mineground.base.PromiseError;
 import com.mineground.base.PromiseResultHandler;
 import com.mineground.base.SecurePasswordHash;
@@ -343,6 +344,31 @@ public class AccountManager {
 
         mPlayerAccountMap.remove(player);
         account.terminate(player);
+    }
+    
+    /**
+     * Finds the user Id for a given <code>username</code>. If the user is currently online on
+     * Mineground, the promise will be resolved immediately without consulting the database.
+     * 
+     * @param username  The username to find the user Id for.
+     * @return          A promise, which will be resolved with the user Id.
+     */
+    public Promise<Integer> findUserId(String username) {
+        for (Player player : mPlayerAccountMap.keySet()) {
+            if (!player.getName().equals(username))
+                continue;
+            
+            int userId = mPlayerAccountMap.get(player).getUserId();
+            
+            // If |userId| was not 0, then the player is online and we can bail out by returning
+            // the user Id of the account they're logged in to. This will be the common case.
+            if (userId != 0)
+                return Promise.cast(userId);
+        }
+        
+        // Otherwise we have to consult the database to find the User Id. This operation will be
+        // done asynchronously, but a workable promise will be returned nonetheless.
+        return mAccountDatabase.findUserId(username);
     }
     
     /**

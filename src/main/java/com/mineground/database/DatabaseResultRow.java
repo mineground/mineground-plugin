@@ -15,6 +15,7 @@
 
 package com.mineground.database;
 
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +56,8 @@ public class DatabaseResultRow {
         Object value = mFieldList.get(columnIndex);
         if (value instanceof Timestamp)
             return ((Timestamp) value).toString().substring(0, 19);
+        if (value instanceof Date)
+            return ((Date) value).toString();
         
         return (String) mFieldList.get(columnIndex);
     }

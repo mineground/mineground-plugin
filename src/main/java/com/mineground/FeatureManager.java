@@ -20,6 +20,7 @@ import java.util.Map;
 
 import com.mineground.base.Feature;
 import com.mineground.base.FeatureInitParams;
+import com.mineground.features.AdministratorCommands;
 import com.mineground.features.CommunicationManager;
 import com.mineground.features.GeneralCommands;
 import com.mineground.features.LocationManager;
@@ -56,6 +57,7 @@ public class FeatureManager {
      * FeatureInitParams class, which contains settings required by the FeatureBase class to work.
      */
     public void initializeFeatures() {
+        mFeatures.put("AdministratorCommands", new AdministratorCommands(mInitParams));
         mFeatures.put("CommunicationManager", new CommunicationManager(mInitParams));
         mFeatures.put("GeneralCommands", new GeneralCommands(mInitParams));
         mFeatures.put("LocationManager", new LocationManager(mInitParams));

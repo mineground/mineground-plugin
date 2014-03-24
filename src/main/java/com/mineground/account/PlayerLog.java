@@ -151,13 +151,32 @@ public class PlayerLog {
                 "INSERT INTO " +
                     "users_notes (user_id, note_type, note_date, creator_id, creator_name, note_message) " +
                 "VALUES " +
-                    "(?, ?, NOW(), ?, '', ?)"
+                    "(?, ?, NOW(), ?, ?, ?)"
         );
+        
+        System.out.println("SELECT " +
+                "users_notes.note_type, " +
+                "users_notes.note_date, " +
+                "creator.username, " +
+                "users_notes.creator_name, " +
+                "users_notes.note_message " +
+            "FROM " +
+                "users " +
+            "LEFT JOIN " +
+                "users_notes ON users_notes.user_id = users.user_id " +
+            "LEFT JOIN " +
+                "users AS creator ON creator.user_id = users_notes.creator_id " +
+            "WHERE " +
+                "users.username = ? " +
+            "ORDER BY " +
+                "users_notes.note_date DESC " +
+            "LIMIT " +
+                "?");
         
         sLatestNotesStatement = database.prepare(
                 "SELECT " +
                     "users_notes.note_type, " +
-                    "users_notes.note_date, " +
+                    "DATE(users_notes.note_date) AS note_date, " +
                     "creator.username, " +
                     "users_notes.creator_name, " +
                     "users_notes.note_message " +
@@ -170,9 +189,9 @@ public class PlayerLog {
                 "WHERE " +
                     "users.username = ? " +
                 "ORDER BY " +
-                    "users_notes.note_date " +
+                    "users_notes.note_date DESC " +
                 "LIMIT " +
-                    "?"
+                    FIND_NOTES_LIMIT
         );
     }
     
@@ -184,26 +203,31 @@ public class PlayerLog {
      * @param user_id       Id of the account which this note should be linked to.
      * @param type          Type of note which should be written.
      * @param creator_id    Id of the account which is creating this note.
+     * @param creator_name  Name of the person who is creating this note.
      * @param message       The message to be written in the note.
      * @return              A promise, which will be resolved when the note has been written.
      */
-    public static Promise<Integer> note(int user_id, NoteType type, int creator_id, String message) {
+    public static Promise<Integer> note(int user_id, NoteType type, int creator_id, String creator_name, String message) {
         final Promise<Integer> promise = new Promise<Integer>();
         if (sWriteNoteStatement == null) {
             promise.reject("The database has not been initialized yet.");
             return promise;
         }
+        
+        if (creator_name == null)
+            creator_name = "";
 
         sWriteNoteStatement.setInteger(1, user_id);
         sWriteNoteStatement.setString(2, type.value);
         sWriteNoteStatement.setInteger(3, creator_id);
-        sWriteNoteStatement.setString(4, message);
+        sWriteNoteStatement.setString(4, creator_name);
+        sWriteNoteStatement.setString(5, message);
         sWriteNoteStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
             public void onFulfilled(DatabaseResult result) {
                 promise.resolve(result.insertId);
             }
             public void onRejected(PromiseError error) {
-                promise.reject("Unable to write the note to the database.");
+                promise.reject("Unable to write the note to the database (" + error.reason() + ")");
             }
         });
         
@@ -224,7 +248,6 @@ public class PlayerLog {
         }
 
         sLatestNotesStatement.setString(1, username);
-        sLatestNotesStatement.setInteger(2, FIND_NOTES_LIMIT);
         sLatestNotesStatement.execute().then(new PromiseResultHandler<DatabaseResult>() {
             public void onFulfilled(DatabaseResult result) {
                 final List<Note> notes = new ArrayList<Note>(result.rows.size());
@@ -232,9 +255,9 @@ public class PlayerLog {
                     Note note = new Note();
                     note.type = noteRow.getString("note_type");
                     note.date = noteRow.getString("note_date");
-                    note.message = noteRow.getString("message");
+                    note.message = noteRow.getString("note_message");
                     note.username = noteRow.getString("username");
-                    if (note.username.length() == 0)
+                    if (note.username == null)
                         note.username = noteRow.getString("creator_name");
                     
                     notes.add(note);
@@ -243,7 +266,7 @@ public class PlayerLog {
                 promise.resolve(notes);
             }
             public void onRejected(PromiseError error) {
-                promise.reject("Unable to read notes from the database.");
+                promise.reject("Unable to read notes from the database (" + error.reason() + ")");
             }
         });
         
