@@ -24,7 +24,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 
-import com.mineground.Mineground;
 import com.mineground.account.Account;
 import com.mineground.account.AccountLevel;
 import com.mineground.base.Color;
