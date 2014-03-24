@@ -26,6 +26,11 @@ public enum DisconnectReason {
     QUIT,
     
     /**
+     * The player has been forcefully disconnected from Mineground by member of our staff.
+     */
+    KICKED,
+    
+    /**
      * The player has left Mineground because the plugin is being shut down.
      */
     SHUTDOWN

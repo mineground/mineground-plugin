@@ -18,6 +18,7 @@ package com.mineground.features;
 import java.util.List;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import com.mineground.account.PlayerLog;
 import com.mineground.account.PlayerLog.Note;
@@ -61,6 +62,8 @@ public class AdministratorCommands extends FeatureBase {
         final String message = StringUtils.join(arguments, " ", 1);
         getAccountManager().findUserId(username).then(new PromiseResultHandler<Integer>() {
             public void onFulfilled(Integer user_id) {
+                // TODO: Inform other administrators about this action.
+                
                 displayCommandSuccess(sender, "The note has been added to **" + username + "**'s profile.");
                 PlayerLog.note(user_id, NoteType.INFO, 0, sender.getName(), message).then(new PromiseResultHandler<Integer>() {
                     public void onFulfilled(Integer result) { /** Everything went fine! **/ }
@@ -108,6 +111,50 @@ public class AdministratorCommands extends FeatureBase {
             }
             public void onRejected(PromiseError error) {
                 displayCommandError(sender, "Unable to fetch the user's notes: " + error.reason());
+            }
+        });
+    }
+    
+    /**
+     * Forcefully disconnects an online player from Mineground. A note will be written to the
+     * player's profile containing the reason of the kick.
+     * 
+     * @param sender    The player, console or user wanting to kick an online player.
+     * @param arguments Arguments passed. Two+ are expected: the player's name, and a reason.
+     */
+    @CommandHandler(value = "kick", console = true)
+    public void onKickCommand(CommandSender sender, String[] arguments) {
+        if (!sender.hasPermission("command.kick")) {
+            displayCommandError(sender, "You don't have permission to kick a player from Mineground.");
+            return;
+        }
+        
+        if (arguments.length < 2) {
+            displayCommandUsage(sender, "/kick [player] [reason]");
+            return;
+        }
+        
+        final Player player = getServer().getPlayer(arguments[0]);
+        if (player == null) {
+            displayCommandError(sender, "The player **" + arguments[0] + "** is not online on Mineground.");
+            return;
+        }
+        
+        final String username = player.getName();
+        final String reason = StringUtils.join(arguments, " ", 1);
+        final Integer userId = getUserId(player);
+
+        // TODO: Inform other administrators about this action.
+        
+        player.kickPlayer("You have been kicked by " + sender.getName() + " (" + reason + ").");
+        
+        if (userId == 0)
+            return; // we can't write a log message if they weren't logged in to their account.
+        
+        PlayerLog.note(userId, NoteType.KICK, 0, sender.getName(), reason).then(new PromiseResultHandler<Integer>() {
+            public void onFulfilled(Integer result) { /** Everything went fine! **/ }
+            public void onRejected(PromiseError error) {
+                getLogger().severe("Unable to add a kick note to " + username + "'s account: " + error.reason());
             }
         });
     }

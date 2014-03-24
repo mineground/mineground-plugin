@@ -32,6 +32,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -295,6 +296,19 @@ public class EventListener implements Listener {
         // TODO: There would be too many parameters (4 or 5) to pass along if we weren't passing the
         //       Bukkit event directly. Should we just do this everywhere? Only if it makes sense?
         mEventDispatcher.onPlayerDeath(event);
+    }
+    
+    /**
+     * Invoked when a player has been forcefully disconnected from Mineground. Since Mineground
+     * internally consolidates all disconnection events, we forward this to onPlayerDisconnect.
+     * 
+     * @param event The Bukkit PlayerKickEvent object.
+     */
+    @EventHandler(priority=EventPriority.HIGH)
+    public void onPlayerKick(PlayerKickEvent event) {
+        mEventDispatcher.onPlayerDisconnect(event.getPlayer(), DisconnectReason.KICKED);
+        mAccountManager.unloadAccount(event.getPlayer());
+        event.setLeaveMessage(null);
     }
     
     /**

@@ -44,6 +44,7 @@ permissions:
         children:
             mineground.vip: true
             # Permissions to grant to moderators:
+            command.kick: true
             command.note: true
             command.notes: true
             wrap.teleport_no_password: true
@@ -77,6 +78,9 @@ permissions:
     # ----------------------------------------------------------------------------------------------
     # Administrator Manager - commands intended for administrating the server.
     # ----------------------------------------------------------------------------------------------
+    command.kick:
+        description: Allows you to forcefully disconnect a player using the /kick command.
+        default: op
     command.note:
         description: Allows you to use /note to create a new note for a player's profile.
         default: op
@@ -198,6 +202,9 @@ commands:
     # ----------------------------------------------------------------------------------------------
     # Feature: Administrator Commands
     # ----------------------------------------------------------------------------------------------
+    kick:
+        description: Forcefully disconnects a player from Mineground.
+        usage: /kick [player] [reason]
     note:
         description: Creates a note to be written to a player's profile.
         usage: /note [player] [message]

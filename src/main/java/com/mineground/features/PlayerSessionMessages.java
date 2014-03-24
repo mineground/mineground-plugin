@@ -182,7 +182,7 @@ public class PlayerSessionMessages extends FeatureBase {
      * @param reason The reason why the player disconnected from Mineground.
      */
     public void onPlayerDisconnect(Player player, DisconnectReason reason) {
-        if (Mineground.Lifetime == Mineground.PluginLifetime.Stopping)
+        if (reason == DisconnectReason.SHUTDOWN)
             return;
 
         mPlayerQuitAnnouncement.setString("nickname", player.getName());

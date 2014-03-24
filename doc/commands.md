@@ -21,6 +21,7 @@ The following table should list all of the supported commands on Mineground. If 
 | Builders       | [/survival](commands/survival.md) | Teleports you to the survival world.                        |
 | Builders       | [/warp](commands/warp.md)         | Creates and teleports you to saved locations in the world.  |
 | SBuilders      | [/fly](commands/fly.md)           | Toggles the ability to fly around in the world.             |
+| Moderators     | [/kick](commands/kick.md)         | Forcefully disconnects another player from the server.      |
 | Moderators     | [/note](commands/note.md)         | Writes a message as a note to a player's profile.           |
 | Moderators     | [/notes](commands/notes.md)       | Displays a list of the most recent notes for a player.      |
 | Administrators | [/mode](commands/mode.md)         | Changes the gamemode for yourself or another player.        |

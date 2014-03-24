@@ -153,26 +153,7 @@ public class PlayerLog {
                 "VALUES " +
                     "(?, ?, NOW(), ?, ?, ?)"
         );
-        
-        System.out.println("SELECT " +
-                "users_notes.note_type, " +
-                "users_notes.note_date, " +
-                "creator.username, " +
-                "users_notes.creator_name, " +
-                "users_notes.note_message " +
-            "FROM " +
-                "users " +
-            "LEFT JOIN " +
-                "users_notes ON users_notes.user_id = users.user_id " +
-            "LEFT JOIN " +
-                "users AS creator ON creator.user_id = users_notes.creator_id " +
-            "WHERE " +
-                "users.username = ? " +
-            "ORDER BY " +
-                "users_notes.note_date DESC " +
-            "LIMIT " +
-                "?");
-        
+
         sLatestNotesStatement = database.prepare(
                 "SELECT " +
                     "users_notes.note_type, " +
