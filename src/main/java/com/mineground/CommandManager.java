@@ -20,6 +20,7 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -79,6 +80,12 @@ public class CommandManager implements TabCompleter {
     private final Map<String, String> mCommandAliasMap;
     
     /**
+     * List of command observers. Each observer will have a method invoked whenever a certain event
+     * happens in the command manager, most likely adding or removing a command.
+     */
+    private final List<CommandObserver> mCommandObservers;
+    
+    /**
      * The plugin which owns the command manager. This is used to get existing command handlers, in
      * case we have to bolt functionality on top (e.g. tab completion handlers).
      */
@@ -92,6 +99,7 @@ public class CommandManager implements TabCompleter {
     public CommandManager(JavaPlugin plugin) {
         mCommandMap = new HashMap<String, CommandHandlerRef>();
         mCommandAliasMap = new HashMap<String, String>();
+        mCommandObservers = new LinkedList<CommandObserver>();
 
         mLogger = Logger.getLogger(CommandManager.class.getCanonicalName());
         mPlugin = plugin;
@@ -126,6 +134,9 @@ public class CommandManager implements TabCompleter {
                     mCommandAliasMap.put(alias, command.value());
                 
                 mCommandMap.put(command.value(), new CommandHandlerRef(instance, method, command.console()));
+                for (CommandObserver observer : mCommandObservers)
+                    observer.onCommandRegistered(command.value(), command.console(), false);
+                
                 continue;
             }
             
@@ -159,36 +170,39 @@ public class CommandManager implements TabCompleter {
     }
     
     /**
-     * Returns the registered command observer for |command|. This method will automatically remove
+     * Returns the registered command handler for |command|. This method will automatically remove
      * commands from the Command Manager if the handling instance no longer is alive.
      * 
-     * @param command   The command for which to find the observer.
-     * @return          The command observer if available, otherwise NULL.
+     * @param command   The command for which to find the handler.
+     * @return          The command handler if available, otherwise NULL.
      */
-    private CommandHandlerRef getCommandObserver(String command) {
+    private CommandHandlerRef getCommandHandler(String command) {
         if (mCommandAliasMap.containsKey(command))
             command = mCommandAliasMap.get(command);
         
-        final CommandHandlerRef observer = mCommandMap.get(command);
-        if (observer == null)
+        final CommandHandlerRef handler = mCommandMap.get(command);
+        if (handler == null)
             return null;
         
-        final Object instance = observer.instance.get();
+        final Object instance = handler.instance.get();
         
         // Check whether the instance on which this command was defined is still alive. If it has
         // been garbage collected, then we should unregister this command from Bukkit.
         if (instance == null) {
-            if (observer.autocomplete != null) {
+            if (handler.autocomplete != null) {
                 final PluginCommand pluginCommand = mPlugin.getCommand(command);
                 if (pluginCommand != null)
                     pluginCommand.setTabCompleter(null);
             }
             
+            for (CommandObserver commandObserver : mCommandObservers)
+                commandObserver.onCommandRemoved(command);
+            
             mCommandMap.remove(command);
             return null;
         }
         
-        return observer;
+        return handler;
     }
 
     /**
@@ -201,12 +215,12 @@ public class CommandManager implements TabCompleter {
      * @return          Whether the command was routed successfully.
      */
     public boolean onCommand(CommandSender sender, Command command, String[] arguments) {
-        final CommandHandlerRef observer = getCommandObserver(command.getName());
-        if (observer == null || observer.method == null)
+        final CommandHandlerRef handler = getCommandHandler(command.getName());
+        if (handler == null || handler.method == null)
             return false;
         
         // Check whether the command may be executed on the console, if it executed by a non-Player.
-        if (!(sender instanceof Player) && observer.console == false) {
+        if (!(sender instanceof Player) && handler.console == false) {
             sender.sendMessage("The command /" + command.getName() + " is not available from the console.");
             return true;
         }
@@ -214,7 +228,7 @@ public class CommandManager implements TabCompleter {
         // Execute the command by invoking the method, and returning the return value (which should
         // be a boolean) to the caller of onCommand.
         try {
-            observer.method.invoke(observer.instance.get(), sender, arguments);
+            handler.method.invoke(handler.instance.get(), sender, arguments);
             return true;
 
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
@@ -239,17 +253,17 @@ public class CommandManager implements TabCompleter {
     @Override
     @SuppressWarnings("unchecked")
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] arguments) {
-        final CommandHandlerRef observer = getCommandObserver(command.getName());
-        if (observer == null || observer.autocomplete == null)
+        final CommandHandlerRef handler = getCommandHandler(command.getName());
+        if (handler == null || handler.autocomplete == null)
             return null;
         
-        if (!(sender instanceof Player) && observer.console == false)
+        if (!(sender instanceof Player) && handler.console == false)
             return null;
         
         // Execute the tab completion handler. It should return a list of strings (or NULL) which
         // the player can then iterate over to choose which they mean to complete.
         try {
-            Object value = observer.autocomplete.invoke(observer.instance.get(), sender, arguments);
+            Object value = handler.autocomplete.invoke(handler.instance.get(), sender, arguments);
             if (!(value instanceof List<?>)) {
                 mLogger.severe("The tab completion handler for /" + command.getName() + " must return a list of strings.");
                 return null;
@@ -263,5 +277,24 @@ public class CommandManager implements TabCompleter {
         }
         
         return null;
+    }
+    
+    /**
+     * Registers <code>observer</code> as a new command observer with the Command Manager.
+     * 
+     * @param observer  The command observer to be registered.
+     */
+    public void registerCommandObserver(CommandObserver observer) {
+        mCommandObservers.add(observer);
+    }
+    
+    /**
+     * Removes <code>observer</code> from the list of observers in the Command Manager. If the
+     * observer has not been registered, it will be silently ignored.
+     * 
+     * @param observer  The command observer to remove.
+     */
+    public void removeCommandObserver(CommandObserver observer) {
+        mCommandObservers.remove(mCommandObservers);
     }
 }
