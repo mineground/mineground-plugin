@@ -46,7 +46,7 @@ public class AdministratorCommands extends FeatureBase {
      * @param sender    The player, console or user wanting to add a note.
      * @param arguments Arguments passed. Two+ are expected: a username and the note's message.
      */
-    @CommandHandler(value = "note", aliases = { "addnote" }, console = true)
+    @CommandHandler(value = "note", aliases = { "addnote" }, console = true, remote = true)
     public void onNoteCommand(final CommandSender sender, String[] arguments) {
         if (!sender.hasPermission("command.note")) {
             displayCommandError(sender, "You don't have permission to create a note.");
@@ -85,7 +85,7 @@ public class AdministratorCommands extends FeatureBase {
      * @param sender    The player, console or user requesting a user's notes.
      * @param arguments Arguments passed. One is expected: a username.
      */
-    @CommandHandler(value = "notes", aliases = { "why" }, console = true)
+    @CommandHandler(value = "notes", aliases = { "why" }, console = true, remote = true)
     public void onNotesCommand(final CommandSender sender, String[] arguments) {
         if (!sender.hasPermission("command.notes")) {
             displayCommandError(sender, "You don't have permission to request a player's notes.");
@@ -122,7 +122,7 @@ public class AdministratorCommands extends FeatureBase {
      * @param sender    The player, console or user wanting to kick an online player.
      * @param arguments Arguments passed. Two+ are expected: the player's name, and a reason.
      */
-    @CommandHandler(value = "kick", console = true)
+    @CommandHandler(value = "kick", console = true, remote = true)
     public void onKickCommand(CommandSender sender, String[] arguments) {
         if (!sender.hasPermission("command.kick")) {
             displayCommandError(sender, "You don't have permission to kick a player from Mineground.");

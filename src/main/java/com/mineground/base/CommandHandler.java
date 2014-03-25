@@ -52,4 +52,11 @@ public @interface CommandHandler {
      * @return Whether this command may be executed from the console.
      */
     boolean console() default false;
+    
+    /**
+     * Whether this command may be executed from remote sources, which will expose it in a source-
+     * specific syntax. In case of IRC, a command named "foo" will be made available on IRC as
+     * "!foo", whereas the IrcManager will be responsible for curating appropriate permissions.
+     */
+    boolean remote() default false;
 }

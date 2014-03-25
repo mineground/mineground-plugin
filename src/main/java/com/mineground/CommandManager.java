@@ -34,6 +34,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.mineground.base.CommandCompletionHandler;
 import com.mineground.base.CommandHandler;
+import com.mineground.remote.RemoteCommandSender;
 
 /**
  * Commands are a critical part of creating an interactive server, as it allows more advanced
@@ -52,12 +53,14 @@ public class CommandManager implements TabCompleter {
         private Method autocomplete;
         private Method method;
         private boolean console;
+        private boolean remote;
         
-        private CommandHandlerRef(Object instance_, Method method_, boolean console_) {
+        private CommandHandlerRef(Object instance_, Method method_, boolean console_, boolean remote_) {
             instance = new WeakReference<Object>(instance_);
             autocomplete = null;
             method = method_;
             console = console_;
+            remote = remote_;
         }
         
         private CommandHandlerRef(Object instance_, Method autocomplete_) {
@@ -65,6 +68,7 @@ public class CommandManager implements TabCompleter {
             autocomplete = autocomplete_;
             method = null;
             console = false;
+            remote = false;
         }
     }
     
@@ -127,13 +131,14 @@ public class CommandManager implements TabCompleter {
                     
                     handler.method = method;
                     handler.console = command.console();
+                    handler.remote = command.remote();
                     continue;
                 }
                 
                 for (String alias : command.aliases())
                     mCommandAliasMap.put(alias, command.value());
                 
-                mCommandMap.put(command.value(), new CommandHandlerRef(instance, method, command.console()));
+                mCommandMap.put(command.value(), new CommandHandlerRef(instance, method, command.console(), command.remote()));
                 for (CommandObserver observer : mCommandObservers)
                     observer.onCommandRegistered(command.value(), command.console(), false);
                 
@@ -219,10 +224,19 @@ public class CommandManager implements TabCompleter {
         if (handler == null || handler.method == null)
             return false;
         
-        // Check whether the command may be executed on the console, if it executed by a non-Player.
-        if (!(sender instanceof Player) && handler.console == false) {
-            sender.sendMessage("The command /" + command.getName() + " is not available from the console.");
-            return true;
+        // Check what party executed the command. Mineground supports command senders from three
+        // primary sources, namely players (in-game), the console and remote sources.
+        if (!(sender instanceof Player)) {
+            // We consider RemoteCommandSender as being remote, and all other non-Player senders
+            // as the console. Most commands have been implemented following that assumption.
+            if (sender instanceof RemoteCommandSender) {
+                if (handler.remote == false)
+                    return false;
+
+            } else if (handler.console == false) {
+                sender.sendMessage("The command /" + command.getName() + " is not available from the console.");
+                return true;
+            }
         }
         
         // Execute the command by invoking the method, and returning the return value (which should
