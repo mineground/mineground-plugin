@@ -186,7 +186,9 @@ public class Mineground extends JavaPlugin {
         // close open connections, so that we can leave with a clear conscience.
         mFeatureManager = null;
         
+        mIrcManager.disconnect();
         mIrcManager = null;
+
         mCommandManager = null;
 
         mEventListener = null;

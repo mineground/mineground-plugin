@@ -24,13 +24,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.mineground.CommandManager;
 import com.mineground.CommandObserver;
+import com.mineground.remote.IrcConnection.ConnectionParams;
 
 /**
  * The IRC Manager is responsible for maintaining a connection with the IRC server when enabled
  * through Mineground's configuration. It also curates a list of users in the primary IRC channel,
  * as well as their status and assumed Mineground permission level.
  */
-public class IrcManager implements CommandObserver {
+public class IrcManager implements CommandObserver, IrcEventListener {
     /**
      * A set containing all the commands which can be handled from IRC. The Command Manager will
      * inform us when a command gets registered or goes away.
@@ -44,6 +45,11 @@ public class IrcManager implements CommandObserver {
     private final CommandManager mCommandManager;
     
     /**
+     * The actual connection with the IRC server.
+     */
+    private final IrcConnection mConnection;
+    
+    /**
      * The main Mineground plugin instance as a generalized JavaPlugin. Command senders need to be
      * aware of the Server they're associated with, and permission attachments must be owned by
      * a Plugin instance so that they can be appropriately discarded of.
@@ -55,8 +61,27 @@ public class IrcManager implements CommandObserver {
         mCommandManager = commandManager;
         mPlugin = plugin;
         
+        ConnectionParams connectionParams = new ConnectionParams();
+        connectionParams.hostname = configuration.getString("irc.host", "127.0.0.1");
+        connectionParams.port = configuration.getInt("irc.port", 6667);
+        connectionParams.ssl = configuration.getBoolean("irc.ssl", false);
+        connectionParams.password = configuration.getString("irc.password", "");
+        connectionParams.nickname = configuration.getString("irc.nickname", "");
+        connectionParams.autojoin = configuration.getStringList("irc.autojoin");
+        
+        mConnection = new IrcConnection(connectionParams);
+        mConnection.connect();
+        
         // Register ourselves as a command observer, so that we get informed about created commands.
         mCommandManager.registerCommandObserver(this);
+    }
+    
+    /**
+     * Disconnects the connection with IRC if it has been established. It's important that we shut
+     * down the connection in a clean way when the module is being unloaded.
+     */
+    public void disconnect() {
+        mConnection.disconnect();
     }
     
     /**

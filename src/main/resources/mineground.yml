@@ -20,6 +20,15 @@ database:
     password: changeme
     database: mineground
 
+# Details required to connect with the IRC server.
+irc:
+    host: 127.0.0.1
+    port: 6697
+    ssl: true
+    nickname: MinecraftDev
+    autojoin:
+        - "#LVP.Minecraft.Dev"
+
 # Messages through which Mineground will communicate with players. Text between brackets are macros,
 # which will be replaced with actual values. Each entry can be a string, or a list of strings.
 messages:
