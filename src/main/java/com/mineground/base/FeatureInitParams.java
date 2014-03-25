@@ -23,6 +23,7 @@ import com.mineground.EventDispatcher;
 import com.mineground.FeatureManager;
 import com.mineground.account.AccountManager;
 import com.mineground.database.Database;
+import com.mineground.remote.IrcManager;
 
 /**
  * Initialization parameters which features receive and must pass on to their FeatureBase parent
@@ -37,4 +38,5 @@ public class FeatureInitParams {
     public AccountManager accountManager;
     public Server server;
     public Settings settings;
+    public IrcManager ircManager;
 }

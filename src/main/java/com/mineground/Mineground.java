@@ -32,6 +32,7 @@ import com.mineground.base.Message;
 import com.mineground.base.Settings;
 import com.mineground.database.Database;
 import com.mineground.features.WorldManager;
+import com.mineground.remote.IrcManager;
 
 /**
  * The Mineground class is the plugin which exposes our plugin to Bukkit. It has access to APIs for
@@ -54,6 +55,12 @@ public class Mineground extends JavaPlugin {
      * Class used for routing commands executed by the player to the feature which implements them.
      */
     private CommandManager mCommandManager;
+    
+    /**
+     * Instance of the IRC manager, which will be responsible for connecting this Mineground server
+     * to IRC, relaying information to the channel and executing commands on the server itself.
+     */
+    private IrcManager mIrcManager;
     
     /**
      * Class used for managing all features implemented in the Mineground plugin.
@@ -115,6 +122,8 @@ public class Mineground extends JavaPlugin {
         mEventListener = new EventListener(mEventDispatcher, mAccountManager);
         
         mCommandManager = new CommandManager(this);
+        mIrcManager = new IrcManager(mConfiguration, mCommandManager, this);
+        
         mCommandManager.registerCommands(mAccountManager);
 
         // Register |mEventListener| with Bukkit's Plugin Manager, so it will receive events.
@@ -131,6 +140,7 @@ public class Mineground extends JavaPlugin {
         featureInitParams.accountManager = mAccountManager;
         featureInitParams.server = getServer();
         featureInitParams.settings = mSettings;
+        featureInitParams.ircManager = mIrcManager;
         
         // Instantiate the Feature Manager itself, with the parameters as we previously compiled.
         mFeatureManager = new FeatureManager(featureInitParams);
@@ -175,6 +185,8 @@ public class Mineground extends JavaPlugin {
         // And NULL all the main instances in Mineground, which should clean up all remaining state,
         // close open connections, so that we can leave with a clear conscience.
         mFeatureManager = null;
+        
+        mIrcManager = null;
         mCommandManager = null;
 
         mEventListener = null;

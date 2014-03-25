@@ -28,6 +28,7 @@ import com.mineground.FeatureManager;
 import com.mineground.account.Account;
 import com.mineground.account.AccountManager;
 import com.mineground.database.Database;
+import com.mineground.remote.IrcManager;
 
 /**
  * Parent class for all features implemented in the Mineground plugin. It allows features to access
@@ -140,6 +141,16 @@ public class FeatureBase implements Feature {
      */
     protected CommandManager getCommandManager() {
         return mInitParams.commandManager;
+    }
+    
+    /**
+     * Returns the IRC Manager. This class is responsible for establishing a connection with IRC,
+     * being able to send messages to it, as well as the capability of receiving commands from it.
+     * 
+     * @return  Shared IrcManager instance.
+     */
+    protected IrcManager getIrcManager() {
+        return mInitParams.ircManager;
     }
     
     /**
