@@ -101,6 +101,21 @@ public class IrcManager implements CommandObserver, IrcEventListener {
         
         return mCommandManager.onCommand(user, pluginCommand, arguments);
     }
+    
+    /**
+     * Invoked on the server thread when a message has been received from IRC. Always output the
+     * message as a means of logging, but then discard it unless <code>nickname</code> is trying to
+     * execute a recognized command.
+     * 
+     * @param nickname  Nickname of the person who sent a message.
+     * @param channel   Channel they sent it to, or their nickname for a private message.
+     * @param message   Message which they sent.
+     */
+    @Override
+    public void onMessageReceived(String nickname, String channel, String message) {
+        // TODO: Handle incoming messages. We discard everything (except for the purpose of logging)
+        //       except for recognized commands.
+    }
 
     /**
      * Invoked by the Command Manager when a new command gets registered. When <code>remote</code>
