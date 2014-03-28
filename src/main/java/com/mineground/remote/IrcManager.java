@@ -21,6 +21,7 @@ import java.util.Set;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import com.mineground.CommandManager;
 import com.mineground.CommandObserver;
@@ -56,6 +57,12 @@ public class IrcManager implements CommandObserver, IrcEventListener {
      */
     private final JavaPlugin mPlugin;
     
+    /**
+     * Task Id of the running repeating task within Bukkit's task scheduler. This is used to poll
+     * for incoming messages from the IRC thread on the main server thread.
+     */
+    private int mSchedulerTaskId;
+    
     public IrcManager(Configuration configuration, CommandManager commandManager, JavaPlugin plugin) {
         mCommands = new HashSet<String>();
         mCommandManager = commandManager;
@@ -70,10 +77,20 @@ public class IrcManager implements CommandObserver, IrcEventListener {
         connectionParams.autojoin = configuration.getStringList("irc.autojoin");
         
         mConnection = new IrcConnection(connectionParams);
+        mConnection.addListener(this);
         mConnection.connect();
         
         // Register ourselves as a command observer, so that we get informed about created commands.
         mCommandManager.registerCommandObserver(this);
+        
+        // Poll for incoming messages from the IRC thread every three ticks, which will be roughly
+        // equal to once per ((1000 / 20) * 3 =) 150 milliseconds, depending on server load.
+        mSchedulerTaskId = getScheduler().scheduleSyncRepeatingTask(mPlugin, new Runnable() {
+            public void run() {
+                if (mConnection != null)
+                    mConnection.doPollForMessages();
+            }
+        }, 2, 3);
     }
     
     /**
@@ -81,6 +98,9 @@ public class IrcManager implements CommandObserver, IrcEventListener {
      * down the connection in a clean way when the module is being unloaded.
      */
     public void disconnect() {
+        getScheduler().cancelTask(mSchedulerTaskId);
+        mSchedulerTaskId = -1;
+        
         mConnection.disconnect();
     }
     
@@ -144,4 +164,12 @@ public class IrcManager implements CommandObserver, IrcEventListener {
     public void onCommandRemoved(String name) {
         mCommands.remove(name);
     }
+    
+    /**
+     * Returns the Bukkit scheduler from |mPlugin|. Convenience method to make the code needing this
+     * more readable, since it's a long call-chain.
+     *
+     * @return Instance of Bukkit's task scheduler.
+     */
+    private BukkitScheduler getScheduler() { return mPlugin.getServer().getScheduler(); }
 }

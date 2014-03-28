@@ -15,8 +15,9 @@
 
 package com.mineground.remote;
 
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Class responsible for interacting with the IRC system itself, and keeping the connection alive.
@@ -24,6 +25,12 @@ import java.util.List;
  * separate thread, given that we don't want to run it on the main thread.
  */
 public class IrcConnection {
+    /**
+     * The maximum number of seconds which the main thread will wait for the IRC connection thread
+     * to gracefully shut down the connection, before forcefully joining threads.
+     */
+    private final static int MAXIMUM_IRC_DISCONNECTION_TIME = 10;
+    
     /**
      * Parameters which will be used to establish and maintain a connection with the IRC server.
      */
@@ -69,19 +76,70 @@ public class IrcConnection {
     }
     
     /**
-     * List of listeners which want to be notified of incoming events from IRC.
+     * Set of listeners which want to be notified of incoming events from IRC.
      */
-    private final List<IrcEventListener> mListeners;
+    private final Set<IrcEventListener> mListeners;
+    
+    /**
+     * Parameters using which the connection to IRC will be established and maintained.
+     */
+    private final ConnectionParams mConnectionParams;
     
     public IrcConnection(ConnectionParams connectionParams) {
-        mListeners = new LinkedList<IrcEventListener>();
-        
-        // TODO: Start the connection thread.
+        mListeners = new HashSet<IrcEventListener>();
+        mConnectionParams = connectionParams;
     }
     
+    /**
+     * Connects to IRC by starting the connection thread. Attached IRC Event Listeners will be told
+     * about whether the connection was established successfully through event delivery.
+     */
     public void connect() {
+        
     }
     
+    /**
+     * Sends <code>command</code> over the active IRC connection. <code>command</code> should be a
+     * valid command per RFC2812, the updated IRC protocol.
+     * 
+     * @param command The command to send to the server.
+     */
+    public void send(String command) {
+        
+    }
+    
+    /**
+     * Polls for pending incoming messages from the IRC thread. This method must be called from the
+     * main server thread, as that's where events should be invoked.
+     */
+    public void doPollForMessages() {
+        
+    }
+    
+    /**
+     * Synchronously disconnects from IRC if a connection has been established. A maximum number of
+     * seconds, as identified by the <code>MAXIMUM_IRC_DISCONNECTION_TIME</code> constant.
+     */
     public void disconnect() {
+        
+    }
+    
+    /**
+     * Adds <code>listener</code> as an object which should be informed of IRC events when they
+     * occur. Each listener can only be registered once.
+     * 
+     * @param listener The listener which should receive IRC events.
+     */
+    public void addListener(IrcEventListener listener) {
+        mListeners.add(listener);
+    }
+    
+    /**
+     * Removes <code>listener</code> from the set of objects to inform of events.
+     * 
+     * @param listener The object which will no longer receive events.
+     */
+    public void removeListener(IrcEventListener listener) {
+        mListeners.remove(listener);
     }
 }
