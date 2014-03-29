@@ -124,6 +124,7 @@ public class IrcManager implements CommandObserver, IrcEventListener {
             
         } catch (Exception exception) {
             exception.printStackTrace();
+            return false;
         }
     }
     
@@ -140,6 +141,8 @@ public class IrcManager implements CommandObserver, IrcEventListener {
     public void onMessageReceived(IrcUser user, String destination, String message) {
         // TODO: Handle incoming messages. We discard everything (except for the purpose of logging)
         //       except for recognized commands.
+        
+        System.out.println("[" + destination + "]: " + message);
     }
 
     /**

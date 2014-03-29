@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 /**
@@ -75,6 +76,22 @@ public class IrcConnection {
     private final Logger mLogger;
     
     /**
+     * Information about a received message from the IRC thread, which has to be announced on the
+     * server thread's attached event listeners.
+     */
+    private class ReceivedMessage {
+        public IrcUser user;
+        public String destination;
+        public String message;
+        
+        public ReceivedMessage(IrcUser user_, String destination_, String message_) {
+            user = user_;
+            destination = destination_;
+            message = message_;
+        }
+    }
+    
+    /**
      * The Connection Thread contains the code required for actually establishing and maintaining
      * a connection to IRC, as well as the queues for communicating with the server thread.
      */
@@ -84,6 +101,12 @@ public class IrcConnection {
          * is required every time we try to establish a connection with IRC.
          */
         private final ConnectionParams mConnectionParams;
+        
+        /**
+         * A blocking queue which contains messages which have been received, but haven't yet been
+         * forwarded to event listeners on the server thread.
+         */
+        private final LinkedBlockingQueue<ReceivedMessage> mReceivedMessageQueue;
         
         /**
          * Indicates whether a shutdown has been requested by the IRC Manager. This means that the
@@ -108,6 +131,7 @@ public class IrcConnection {
             super("IrcConnectionThread");
 
             mConnectionParams = connectionParams;
+            mReceivedMessageQueue = new LinkedBlockingQueue<ReceivedMessage>();
             mShutdownRequested = false;
         }
         
@@ -203,6 +227,9 @@ public class IrcConnection {
                 // Most incoming messages from users on IRC will be PRIVMSGs, definitely the ones
                 // which the Mineground mod will recognize.
                 case PRIVMSG:
+                    mReceivedMessageQueue.add(new ReceivedMessage(getUserForMessage(message),
+                                                                  message.getDestination(),
+                                                                  message.getText()));
                     
                     break;
                     
@@ -236,6 +263,17 @@ public class IrcConnection {
         }
         
         /**
+         * Returns the <code>IrcUser</code> instance for the source of <code>message</code>.
+         * 
+         * @param message The message to get the IrcUser object for.
+         * @return        The IrcUser object for the source of this message.
+         */
+        private IrcUser getUserForMessage(IrcMessage message) {
+            // TODO: Implement this method.
+            return null;
+        }
+        
+        /**
          * Sends <code>command</code> to the server if the connection has been established. If it
          * hasn't, the message will be silently ignored.
          * 
@@ -246,6 +284,17 @@ public class IrcConnection {
                 return;
 
             mSocket.send(command);
+        }
+        
+        /**
+         * Immediately retrieves a ReceivedMessage instance if any has been queued, or returns NULL
+         * in case there hasn't. The server thread will call this method to receive any pending
+         * incoming messages, so that we can handle them on the server thread.
+         *
+         * @return A received message, or NULL.
+         */
+        public ReceivedMessage immediatelyRetrieveReceivedMessage() {
+            return mReceivedMessageQueue.poll();
         }
         
         /**
@@ -295,7 +344,13 @@ public class IrcConnection {
      * main server thread, as that's where events should be invoked.
      */
     public void doPollForMessages() {
-        
+        ReceivedMessage message = mConnectionThread.immediatelyRetrieveReceivedMessage();
+        while (message != null) {
+            for (IrcEventListener listener : mListeners)
+                listener.onMessageReceived(message.user, message.destination, message.message);
+            
+            message = mConnectionThread.immediatelyRetrieveReceivedMessage();
+        }
     }
     
     /**
