@@ -150,10 +150,30 @@ public class IrcConnection {
          *
          * @param message   The raw message which has been received from IRC.
          */
-        private void onIncomingMessage(String rawMessage) {
-            // TODO: Parse the message and then decide what to do with it.
-
-            mLogger.info("[IRC] " + rawMessage);
+        private void onIncomingMessage(String incomingMessage) {
+            final IrcMessage message = IrcMessage.Parse(incomingMessage);
+            if (message == null)
+                return;
+            
+            mLogger.info("[IRC-IN] " + incomingMessage);
+            
+            switch(message.getType()) {
+                // When the server sends a PING, it wants the client to indicate that it's still
+                // alive by replying with a PONG message containing the same text.
+                case PING:
+                    send("PONG :" + message.getText());
+                    break;
+                
+                // Indication from the server that a fatal error has occurred, and the connection
+                // needs to be closed. Forcefully disconnect the socket on our end.
+                case ERROR:
+                    mSocket.disconnect();
+                    break;
+                    
+                default:
+                    mLogger.info("[IRC] Previous message couldn't be recognized!");
+                    break;
+            }
         }
         
         /**
@@ -161,6 +181,20 @@ public class IrcConnection {
          */
         private void onConnectionLost() {
             mLogger.severe("[IRC] The connection with IRC has been closed.");
+        }
+        
+        /**
+         * Sends <code>command</code> to the server if the connection has been established. If it
+         * hasn't, the message will be silently ignored.
+         * 
+         * @param command Command to send to over established connection.
+         */
+        public void send(String command) {
+            if (mSocket == null)
+                return;
+
+            mLogger.info("[IRC-OUT] " + command);
+            mSocket.send(command);
         }
         
         /**
