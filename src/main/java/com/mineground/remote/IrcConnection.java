@@ -18,6 +18,7 @@ package com.mineground.remote;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * Class responsible for interacting with the IRC system itself, and keeping the connection alive.
@@ -26,10 +27,10 @@ import java.util.Set;
  */
 public class IrcConnection {
     /**
-     * The maximum number of seconds which the main thread will wait for the IRC connection thread
-     * to gracefully shut down the connection, before forcefully joining threads.
+     * The maximum number of milliseconds which the main thread will wait for the IRC connection
+     * thread to gracefully shut down the connection, before forcefully joining threads.
      */
-    private final static int MAXIMUM_IRC_DISCONNECTION_TIME = 10;
+    private final static int MAXIMUM_IRC_DISCONNECTION_TIME_MS = 10000; // 10 seconds
     
     /**
      * Parameters which will be used to establish and maintain a connection with the IRC server.
@@ -81,13 +82,62 @@ public class IrcConnection {
     private final Set<IrcEventListener> mListeners;
     
     /**
-     * Parameters using which the connection to IRC will be established and maintained.
+     * The logger which will be used to output error messages and warnings from the IRC Connection.
      */
-    private final ConnectionParams mConnectionParams;
+    private final Logger mLogger;
+    
+    /**
+     * The Connection Thread contains the code required for actually establishing and maintaining
+     * a connection to IRC, as well as the queues for communicating with the server thread.
+     */
+    private class ConnectionThread extends Thread {
+        /**
+         * Configuration through which the connection with IRC will be established. This information
+         * is required every time we try to establish a connection with IRC.
+         */
+        private final ConnectionParams mConnectionParams;
+        
+        /**
+         * Indicates whether a shutdown has been requested by the IRC Manager. This means that the
+         * thread needs to send a QUIT message, and disconnect the socket.
+         */
+        private Boolean mShutdownRequested;
+
+        private ConnectionThread(ConnectionParams connectionParams) {
+            super("IrcConnectionThread");
+
+            mConnectionParams = connectionParams;
+            mShutdownRequested = false;
+        }
+        
+        /**
+         * The <code>run()</code> method is the main run-time of the IRC Connection Thread, which
+         * will be executed on a thread different from the server's main thread.
+         */
+        @Override
+        public void run() {
+            
+        }
+        
+        /**
+         * Requests the IRC Connection thread to be shut down. This method should only be called
+         * on the main server thread.
+         */
+        public void requestShutdown() {
+            mShutdownRequested = true;
+        }
+    }
+    
+    /**
+     * The thread which will be used to asynchronously maintain a connection with the database for
+     * this IrcConnection instance.
+     */
+    private final ConnectionThread mConnectionThread;
     
     public IrcConnection(ConnectionParams connectionParams) {
         mListeners = new HashSet<IrcEventListener>();
-        mConnectionParams = connectionParams;
+        mLogger = Logger.getLogger(getClass().getCanonicalName());
+        mConnectionThread = new ConnectionThread(connectionParams);
     }
     
     /**
@@ -95,7 +145,7 @@ public class IrcConnection {
      * about whether the connection was established successfully through event delivery.
      */
     public void connect() {
-        
+        mConnectionThread.start();
     }
     
     /**
@@ -121,7 +171,12 @@ public class IrcConnection {
      * seconds, as identified by the <code>MAXIMUM_IRC_DISCONNECTION_TIME</code> constant.
      */
     public void disconnect() {
-        
+        mConnectionThread.requestShutdown();
+        try {
+            mConnectionThread.join(MAXIMUM_IRC_DISCONNECTION_TIME_MS);
+        } catch (InterruptedException exception) {
+            mLogger.severe("The IRC Connection thread could not be shut down: " + exception.getMessage());
+        }
     }
     
     /**

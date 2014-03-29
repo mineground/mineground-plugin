@@ -35,7 +35,6 @@
         <bukkit.version>1.7.2-R0.3</bukkit.version>
         <junit.version>4.10</junit.version>
         <mysqlConnector.version>5.1.29</mysqlConnector.version>
-        <pircbotx.version>2.0.1</pircbotx.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -97,11 +96,6 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>${mysqlConnector.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.pircbotx</groupId>
-            <artifactId>pircbotx</artifactId>
-            <version>${pircbotx.version}</version>
         </dependency>
     </dependencies>
 
