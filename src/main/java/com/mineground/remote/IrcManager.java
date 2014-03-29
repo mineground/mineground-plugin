@@ -69,12 +69,10 @@ public class IrcManager implements CommandObserver, IrcEventListener {
         mPlugin = plugin;
         
         ConnectionParams connectionParams = new ConnectionParams();
-        connectionParams.hostname = configuration.getString("irc.host", "127.0.0.1");
-        connectionParams.port = configuration.getInt("irc.port", 6667);
-        connectionParams.ssl = configuration.getBoolean("irc.ssl", false);
+        connectionParams.nickname = configuration.getString("irc.nickname", "MinegroundDev");
         connectionParams.password = configuration.getString("irc.password", "");
-        connectionParams.nickname = configuration.getString("irc.nickname", "");
-        connectionParams.autojoin = configuration.getStringList("irc.autojoin");
+        connectionParams.servers = configuration.getStringList("irc.servers");
+        connectionParams.channels = configuration.getStringList("irc.channels");
         
         mConnection = new IrcConnection(connectionParams);
         mConnection.addListener(this);

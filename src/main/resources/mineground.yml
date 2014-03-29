@@ -22,11 +22,10 @@ database:
 
 # Details required to connect with the IRC server.
 irc:
-    host: 127.0.0.1
-    port: 6697
-    ssl: true
     nickname: MinecraftDev
-    autojoin:
+    servers:
+        - "irc.gtanet.com:+6697"
+    channels:
         - "#LVP.Minecraft.Dev"
 
 # Messages through which Mineground will communicate with players. Text between brackets are macros,

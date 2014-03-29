@@ -37,25 +37,18 @@ public class IrcConnection {
      */
     public static class ConnectionParams {
         /**
-         * The host or IP address though which the IRC server can be reached.
+         * List of servers which we can try connecting to. Each entry in the list needs to be in
+         * the format of "[hostname/ip]:[port]". The port may be prefixed with a plus ("+") to
+         * indicate that a secured connection must be used.
          */
-        public String hostname;
+        public List<String> servers;
         
         /**
-         * The port number through which the IRC server can be reached. For most non-secured IRC
-         * connections this will be 6667, although 6697 is common for secured connections.
+         * List of channels which the bot should automatically join when it has connected to the
+         * IRC server, and is authenticated with NickServ. When a channel is protected with a
+         * password, the password may follow the channel's name, separated by a space.
          */
-        public int port;
-        
-        /**
-         * Whether SSL should be used when establishing the connection.
-         */
-        public boolean ssl;
-        
-        /**
-         * Password required in order to connect to the IRC server.
-         */
-        public String password;
+        public List<String> channels;
         
         /**
          * The nickname with which the bot should connect to IRC. Underscores will automatically be
@@ -64,16 +57,10 @@ public class IrcConnection {
         public String nickname;
         
         /**
-         * The password with which the user needs to authenticate with NickServ. This should not be
-         * confused with the password required to connect to the server.
+         * Password required for the nickname to authenticate itself against NickServ, if (a) the
+         * network is running Anope, and (b) the nickname has been registered.
          */
-        public String nickserv_password;
-        
-        /**
-         * List of channels which the bot should automatically join when it has connected to the
-         * IRC server, and is authenticated with NickServ.
-         */
-        public List<String> autojoin;
+        public String password;
     }
     
     /**
@@ -116,7 +103,17 @@ public class IrcConnection {
          */
         @Override
         public void run() {
-            
+            IrcSocket socket = new IrcSocket(mConnectionParams.servers);
+            while (!mShutdownRequested) {
+                if (!socket.connect())
+                    return; // TODO: Try to re-connect after some holdoff.
+                
+                // TODO: Assuming the connection has been established, this is where incoming
+                //       messages should be read, and pending messages should be send. Use an inner
+                //       while-loop so that the outer one can focus on keeping the connection alive.
+
+                return;
+            }
         }
         
         /**
