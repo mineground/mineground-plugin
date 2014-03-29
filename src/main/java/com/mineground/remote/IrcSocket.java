@@ -153,8 +153,35 @@ public class IrcSocket {
             mSocketOutputStream = mSocket.getOutputStream();
             return true;
 
-        } catch (IOException e) {
-            mLogger.severe("Unable to establish a connection to IRC: " + e.getMessage());
+        } catch (IOException exception) {
+            mLogger.severe("Unable to establish a connection to IRC: " + exception.getMessage());
+        }
+
+        return false;
+    }
+    
+    /**
+     * Sends <code>command</code> directly to the IRC server. A boolean will be returned which
+     * indicates whether the command could be sent successfully.
+     * 
+     * @param command   The command to send to the IRC server.
+     * @return          Whether the command was sent successfully.
+     */
+    public boolean send(String command) {
+        if (mSocketOutputStream == null)
+            return false;
+        
+        try {
+            mSocketOutputStream.write((command.trim() + "\n").getBytes());
+            return true;
+
+        } catch (IOException exception) {
+            mLogger.severe("The connection with the IRC server has been lost: " + exception.getMessage());
+
+            // Since the connection has been lost, make sure that |mSocketOutputStream| is not used
+            // anymore, and then disconnect from the server entirely.
+            mSocketOutputStream = null;
+            disconnect();
         }
 
         return false;
@@ -168,6 +195,8 @@ public class IrcSocket {
         try {
             if (mSocketOutputStream != null) {
                 mSocketOutputStream.write(DEFAULT_QUIT_COMMAND.getBytes());
+                mSocketOutputStream.flush();
+
                 mSocketOutputStream.close();
                 mSocketOutputStream = null;
             }

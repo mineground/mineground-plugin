@@ -108,6 +108,10 @@ public class IrcConnection {
                 if (!socket.connect())
                     return; // TODO: Try to re-connect after some hold-off.
                 
+                socket.send("USER MinegroundDev MinegroundDev :MinegroundDev");
+                socket.send("NICK MinegroundDev");
+                socket.send("JOIN #Mineground");
+                
                 mLogger.severe("A connection to the IRC server has been established!");
                 
                 // TODO: Assuming the connection has been established, this is where incoming
