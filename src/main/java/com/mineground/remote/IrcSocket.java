@@ -15,6 +15,8 @@
 
 package com.mineground.remote;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -36,16 +38,23 @@ public class IrcSocket {
      * Class representing the information stored about each server with this socket can connect to.
      */
     private class ServerInfo {
-        public String address;
+        public InetAddress address;
         public int port;
         public boolean ssl;
         public String password;
         
         public ServerInfo() {
-            address = "";
+            address = null;
             port = 6667;
             ssl = false;
             password = "";
+        }
+        
+        public ServerInfo(ServerInfo clone) {
+            address = clone.address;
+            port = clone.port;
+            ssl = clone.ssl;
+            password = clone.password;
         }
     }
     
@@ -93,6 +102,7 @@ public class IrcSocket {
      */
     private List<ServerInfo> resolveServerEntry(String serverEntry) {
         String[] serverDefinition = serverEntry.split("[:\\s]", 3);
+        String serverAddress = "";
         
         final List<ServerInfo> servers = new ArrayList<ServerInfo>();
         
@@ -111,12 +121,24 @@ public class IrcSocket {
                 }
                 server.port = Integer.parseInt(serverDefinition[1]);
             case 1: // only the hostname has been specified.
-                server.address = serverDefinition[0];
+                serverAddress = serverDefinition[0];
         }
         
-        // TODO: Determine whether the server is a hostname or an IP address. When it's the former,
-        //       resolve the hostname into a list of IP addresses.
-        servers.add(server);
+        try {
+            // Attempt to resolve all IP addresses which the defined address resolves for. Then
+            // create a new entry in |servers| for each of the resolved IP addresses.
+            InetAddress[] addresses = InetAddress.getAllByName(serverAddress);
+            for (InetAddress resolvedAddress : addresses) {
+                ServerInfo resolvedServer = new ServerInfo(server);
+                resolvedServer.address = resolvedAddress;
+                
+                servers.add(resolvedServer);
+            }
+            
+        } catch (UnknownHostException e) {
+            mLogger.severe("Unable to resolve the IP address for IRC server: \"" + serverEntry + "\".");
+            return servers;
+        }
         
         return servers;
     }
