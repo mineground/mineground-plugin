@@ -21,6 +21,11 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -29,7 +34,10 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.net.SocketFactory;
-import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * The IRC Socket class owns the lowest level functionality related to the IRC connection needed
@@ -145,15 +153,16 @@ public class IrcSocket {
             return false;
         }
         
-        final SocketFactory socketFactory = server.ssl ?
-                SSLSocketFactory.getDefault() : SocketFactory.getDefault();
         try {
+            final SocketFactory socketFactory = server.ssl ?
+                    getSecureSocketFactory() : SocketFactory.getDefault();
+            
             mSocket = socketFactory.createSocket(server.address, server.port);
             mSocketInputStream = mSocket.getInputStream();
             mSocketOutputStream = mSocket.getOutputStream();
             return true;
 
-        } catch (IOException exception) {
+        } catch (IOException | KeyManagementException | NoSuchAlgorithmException exception) {
             mLogger.severe("Unable to establish a connection to IRC: " + exception.getMessage());
         }
 
@@ -274,6 +283,32 @@ public class IrcSocket {
     }
     
     /**
+     * Returns a SocketFactory which can be used to establish secured connections with any of the
+     * IRC servers. Since most IRC networks use self-signed certificates for their servers, we'll
+     * create an X509 trust manager which trusts these certificates.
+     * 
+     * @return                           A secure socket factory accepting self-signed certificates.
+     * @throws NoSuchAlgorithmException  When the default Trust Manager algorithm does not exist.
+     * @throws KeyManagementException    When the SSL Context could not be initialized.
+     */
+    private SocketFactory getSecureSocketFactory() throws NoSuchAlgorithmException, KeyManagementException {
+        // Use our own trust manager, which accepts any kind of SSL certificate as valid. Many IRC
+        // networks use self-signed, sometimes even expired certificates using which clients create
+        // "secured" connections. The connection will still benefit from encryption, although
+        // technically a MITM attack won't be avoided this way.
+        TrustManager[] trustManagerArray = new TrustManager[] {
+                new MinegroundX509TrustManager()
+        };
+
+        // Initialize the SSL context with with secure base-randomness.
+        SSLContext context = SSLContext.getInstance("SSL");
+        context.init(new KeyManager[0], trustManagerArray, new SecureRandom());
+        
+        // Return the socket factory which can be created based on that context.
+        return context.getSocketFactory();
+    }
+    
+    /**
      * Selects a server from the <code>mServers</code> set which the upcoming connection should be
      * attempted to. In the current implementation this returns a random server.
      * 
@@ -287,5 +322,29 @@ public class IrcSocket {
         // evolve to be a more advanced algorithm and take variables such as failure rate and
         // latency into account when selecting an appropriate server.
         return (ServerInfo) mServers.toArray()[(new Random()).nextInt(mServers.size())];
+    }
+    
+    /**
+     * X509 certificate trust manager which accepts certificates which have been published by a
+     * non-trusted root, for example self signed certificates. Not implementing the methods means
+     * that no CertificateException exception will be thrown, therefore passing validation.
+     */
+    private class MinegroundX509TrustManager implements X509TrustManager {
+        @Override
+        public void checkClientTrusted(X509Certificate[] arg0, String arg1)
+                throws CertificateException {
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] arg0, String arg1)
+                throws CertificateException {
+            // TODO: Should we at least validate the date here? Is even that too much? Need to get
+            //       some data based on what IRC servers these days do.
+        }
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
     }
 }
