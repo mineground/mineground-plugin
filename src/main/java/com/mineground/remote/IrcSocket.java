@@ -15,13 +15,21 @@
 
 package com.mineground.remote;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
+
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
 
 /**
  * The IRC Socket class owns the lowest level functionality related to the IRC connection needed
@@ -29,6 +37,12 @@ import java.util.logging.Logger;
  * to, and sanitizes input from and output to sockets with those servers.
  */
 public class IrcSocket {
+    /**
+     * The default quit message which will be send to IRC right before actually closing the output
+     * stream to the socket. No guarantees will be made that this actually arrives.
+     */
+    private final static String DEFAULT_QUIT_COMMAND = "QUIT :Mineground has been unloaded.";
+
     /**
      * The Logger which will be used to output diagnostic information about the socket.
      */
@@ -56,12 +70,57 @@ public class IrcSocket {
             ssl = clone.ssl;
             password = clone.password;
         }
+        
+        /**
+         * Naive hashCode() algorithm which should roughly divide ServerInfo entries in separate
+         * buckets when storing instances in a Set.
+         */
+        public int hashCode() {
+            return (address == null ? 0 : address.hashCode()) +
+                   (ssl ? 1 : 0) + password.hashCode() + port;
+        }
+        
+        /**
+         * Strict equality method for checking whether two ServerInfo instances describe the same
+         * server. The double-equals operator in Java ("==") doesn't do that for us.
+         */
+        public boolean equals(Object otherObj) {
+            if (otherObj == null || !(otherObj instanceof ServerInfo))
+                return false;
+            
+            final ServerInfo other = (ServerInfo) otherObj;
+            return this.address.equals(other.address) &&
+                   this.password.equals(other.password) &&
+                   this.port == other.port &&
+                   this.ssl == other.ssl;
+        }
     }
     
     /**
-     * List of the servers which this socket can try connecting to.
+     * Set of the servers which this socket can try connecting to. Because hostnames in server
+     * entries will be resolved to the IP addresses they map to, it would be possible to get
+     * duplicates, and using a set allows us to avoid that.
      */
     private final Set<ServerInfo> mServers;
+    
+    /**
+     * The actual underlying Socket which will power this implementation. The <code>connect()</code>
+     * method will ensure that this is the right kind of socket, as we need an SSLSocket instance
+     * when dealing with a server that requires a secured connection.
+     */
+    private Socket mSocket;
+    
+    /**
+     * The input stream from which data can be read when <code>mSocket</code> describes an
+     * established connection with an IRC server.
+     */
+    private InputStream mSocketInputStream;
+    
+    /**
+     * The output stream to which data should be send when <code>mSocket</code> describes an
+     * established connection with an IRC server.
+     */
+    private OutputStream mSocketOutputStream;
     
     public IrcSocket(List<String> servers) {
         mLogger = Logger.getLogger(getClass().getCanonicalName());
@@ -80,11 +139,53 @@ public class IrcSocket {
      * @return Whether an socket connection has been established with one of the IRC servers.
      */
     public boolean connect() {
-        for (ServerInfo server : mServers) {
-            mLogger.info("IRC Server [" + server.address + ":" + server.port + "] SSL=" + (server.ssl ? "true" : "false"));
+        final ServerInfo server = selectServer();
+        if (server == null) {
+            mLogger.severe("Unable to establish a connection to IRC: no servers have been defined.");
+            return false;
         }
         
+        final SocketFactory socketFactory = server.ssl ?
+                SSLSocketFactory.getDefault() : SocketFactory.getDefault();
+        try {
+            mSocket = socketFactory.createSocket(server.address, server.port);
+            mSocketInputStream = mSocket.getInputStream();
+            mSocketOutputStream = mSocket.getOutputStream();
+            return true;
+
+        } catch (IOException e) {
+            mLogger.severe("Unable to establish a connection to IRC: " + e.getMessage());
+        }
+
         return false;
+    }
+    
+    /**
+     * Disconnects from the IRC server and resets all members which are related to the established
+     * connection to NULL. <code>connect()</code> must be called before communication can resume.
+     */
+    public void disconnect() {
+        try {
+            if (mSocketOutputStream != null) {
+                mSocketOutputStream.write(DEFAULT_QUIT_COMMAND.getBytes());
+                mSocketOutputStream.close();
+                mSocketOutputStream = null;
+            }
+        } catch (IOException exception) { /** ignored **/ }
+
+        try {
+            if (mSocketInputStream != null) {
+                mSocketInputStream.close();
+                mSocketInputStream = null;
+            }
+        } catch (IOException exception) { /** ignored **/ }
+        
+        try {
+            if (mSocket != null) {
+                mSocket.close();
+                mSocket = null;
+            }
+        } catch (IOException exception) { /** ignored **/ }
     }
     
     /**
@@ -141,5 +242,21 @@ public class IrcSocket {
         }
         
         return servers;
+    }
+    
+    /**
+     * Selects a server from the <code>mServers</code> set which the upcoming connection should be
+     * attempted to. In the current implementation this returns a random server.
+     * 
+     * @return An appropriate server from the <code>mServers</code> set.
+     */
+    private ServerInfo selectServer() {
+        if (mServers.size() == 0)
+            return null;
+
+        // Pick a random server from the list of resolved servers in |mServers|. This can later
+        // evolve to be a more advanced algorithm and take variables such as failure rate and
+        // latency into account when selecting an appropriate server.
+        return (ServerInfo) mServers.toArray()[(new Random()).nextInt(mServers.size())];
     }
 }

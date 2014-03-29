@@ -106,14 +106,18 @@ public class IrcConnection {
             IrcSocket socket = new IrcSocket(mConnectionParams.servers);
             while (!mShutdownRequested) {
                 if (!socket.connect())
-                    return; // TODO: Try to re-connect after some holdoff.
+                    return; // TODO: Try to re-connect after some hold-off.
+                
+                mLogger.severe("A connection to the IRC server has been established!");
                 
                 // TODO: Assuming the connection has been established, this is where incoming
                 //       messages should be read, and pending messages should be send. Use an inner
                 //       while-loop so that the outer one can focus on keeping the connection alive.
 
-                return;
+                break;
             }
+            
+            socket.disconnect();
         }
         
         /**
