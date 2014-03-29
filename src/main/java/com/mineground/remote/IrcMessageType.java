@@ -35,6 +35,16 @@ public enum IrcMessageType {
     NICKNAME_IN_USE,
     
     /**
+     * PRIVMSG - Messages send to either a user or a channel.
+     */
+    PRIVMSG,
+    
+    /**
+     * NOTICE - Notices send to either a user or a channel.
+     */
+    NOTICE,
+    
+    /**
      * PING - Request from the server to send a keep-alive message.
      */
     PING,

@@ -160,12 +160,21 @@ public class IrcConnection {
          * @param message   The raw message which has been received from IRC.
          */
         private void onIncomingMessage(String incomingMessage) {
-            final IrcMessage message = IrcMessage.Parse(incomingMessage);
-            if (message == null)
+            IrcMessage message;
+            try {
+                // Since we're dealing with user input, it is possible that the message type is
+                // malformed. When that happens, discard the individual message rather than crashing
+                // the entire IRC connection thread.
+                message = IrcMessage.Parse(incomingMessage);
+                if (message == null)
+                    return;
+                
+            } catch (Exception e) { 
+                mLogger.severe("[IRC] Unable to parse an IRC message: " + incomingMessage);
+                e.printStackTrace();
                 return;
-            
-            mLogger.info("[IRC-IN] " + incomingMessage);
-            
+            }
+
             switch(message.getType()) {
                 // The WELCOME message will be send by the IRC server when client registration has
                 // succeeded. Identify with NickServ 
@@ -191,6 +200,12 @@ public class IrcConnection {
 
                     break;
 
+                // Most incoming messages from users on IRC will be PRIVMSGs, definitely the ones
+                // which the Mineground mod will recognize.
+                case PRIVMSG:
+                    
+                    break;
+                    
                 // When the server sends a PING, it wants the client to indicate that it's still
                 // alive by replying with a PONG message containing the same text.
                 case PING:
@@ -202,7 +217,11 @@ public class IrcConnection {
                 case ERROR:
                     mSocket.disconnect();
                     break;
-                    
+
+                // The following message types are understood, but ignored by default.
+                case NOTICE:
+                    break;
+
                 default:
                     mLogger.info("[IRC] Previous message couldn't be recognized!");
                     break;
@@ -226,7 +245,6 @@ public class IrcConnection {
             if (mSocket == null)
                 return;
 
-            mLogger.info("[IRC-OUT] " + command);
             mSocket.send(command);
         }
         

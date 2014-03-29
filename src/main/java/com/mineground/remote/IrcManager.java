@@ -117,7 +117,14 @@ public class IrcManager implements CommandObserver, IrcEventListener {
         if (pluginCommand.getPlugin() != mPlugin)
             return false; // only execute commands owned by Mineground.
         
-        return mCommandManager.onCommand(user, pluginCommand, arguments);
+        try {
+            // Exceptions occuring in commands should never crash the server thread, or even break
+            // the code flow by throwing an exception there.
+            return mCommandManager.onCommand(user, pluginCommand, arguments);
+            
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
     }
     
     /**
@@ -125,12 +132,12 @@ public class IrcManager implements CommandObserver, IrcEventListener {
      * message as a means of logging, but then discard it unless <code>nickname</code> is trying to
      * execute a recognized command.
      * 
-     * @param nickname  Nickname of the person who sent a message.
-     * @param channel   Channel they sent it to, or their nickname for a private message.
-     * @param message   Message which they sent.
+     * @param user          The user who has sent this message.
+     * @param destination   Channel they sent it to, or their nickname for a private message.
+     * @param message       Message which they sent.
      */
     @Override
-    public void onMessageReceived(String nickname, String channel, String message) {
+    public void onMessageReceived(IrcUser user, String destination, String message) {
         // TODO: Handle incoming messages. We discard everything (except for the purpose of logging)
         //       except for recognized commands.
     }

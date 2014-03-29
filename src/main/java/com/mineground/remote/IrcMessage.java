@@ -37,6 +37,11 @@ public class IrcMessage {
     private String mOrigin;
     
     /**
+     * The destination of the message, which could be a user or a channel.
+     */
+    private String mDestination;
+    
+    /**
      * Text contained in the message itself.
      */
     private String mText;
@@ -48,10 +53,13 @@ public class IrcMessage {
     private enum ParserFormat {
         /**
          * Default message format: [origin] [type] [destination] :[text]
-         * Messages of type "[type] :[text]" are handled by this parser format as well, but their
-         * origin will be set to NULL.
          */
         DEFAULT_PARSER_FORMAT,
+        
+        /**
+         * Simple message format: [type] :[text]
+         */
+        SIMPLE_PARSER_FORMAT
     }
     
     /**
@@ -71,9 +79,11 @@ public class IrcMessage {
         switch (firstWord.toUpperCase()) {
             case "PING":
                 message.setType(IrcMessageType.PING);
+                format = ParserFormat.SIMPLE_PARSER_FORMAT;
                 break;
             case "ERROR":
                 message.setType(IrcMessageType.ERROR);
+                format = ParserFormat.SIMPLE_PARSER_FORMAT;
                 break;
             default:
                 message.setOrigin(textTrim(firstWord));
@@ -92,7 +102,13 @@ public class IrcMessage {
                     case "433":
                         message.setType(IrcMessageType.NICKNAME_IN_USE);
                         break;
-
+                    case "NOTICE":
+                        message.setType(IrcMessageType.NOTICE);
+                        break;
+                    case "PRIVMSG":
+                        message.setType(IrcMessageType.PRIVMSG);
+                        break;
+                        
                 } // switch(type)
                 
                 break;
@@ -101,6 +117,20 @@ public class IrcMessage {
         
         switch(format) {
             case DEFAULT_PARSER_FORMAT:
+                int destinationOffset = messageOffset + 1;
+                
+                messageOffset = incomingMessage.indexOf(' ', destinationOffset);
+                if (messageOffset == -1) {
+                    message.setDestination(incomingMessage.substring(destinationOffset));
+                    message.setText("");
+                } else {
+                    message.setDestination(textTrim(incomingMessage.substring(destinationOffset, messageOffset)));
+                    message.setText(textTrim(incomingMessage.substring(messageOffset)));
+                }
+
+                return message;
+
+            case SIMPLE_PARSER_FORMAT:
                 message.setText(textTrim(incomingMessage.substring(messageOffset)));
                 return message;
 
@@ -159,6 +189,24 @@ public class IrcMessage {
      */
     private void setOrigin(String origin) {
         mOrigin = origin;
+    }
+    
+    /**
+     * Returns the destination of this message. This could be either a user or a channel name.
+     * 
+     * @return The destination of this message.
+     */
+    public String getDestination() {
+        return mDestination;
+    }
+    
+    /**
+     * Sets the destination of this this message.
+     * 
+     * @param destination The destination of this message.
+     */
+    private void setDestination(String destination) {
+        mDestination = destination;
     }
     
     /**

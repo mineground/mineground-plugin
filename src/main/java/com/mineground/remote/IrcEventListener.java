@@ -22,12 +22,12 @@ package com.mineground.remote;
 public interface IrcEventListener {
     /**
      * Event which will be invoked when a message has been received from another user on IRC. The
-     * <code>channel</code> parameter can be identical to <code>nickname</code> in case this is a
-     * private message directly to the connected bot. This event will be invoked on the main thread.
+     * <code>destination</code> parameter can be identical to <code>nickname</code> in case this is
+     * a private message directly to the bot. This event will be invoked on the main thread.
      * 
-     * @param nickname  Nickname of the person who sent a message.
-     * @param channel   Channel they sent it to, or their nickname for a private message.
-     * @param message   Message which they sent.
+     * @param user          The user who has sent this message.
+     * @param destination   Channel they sent it to, or their nickname for a private message.
+     * @param message       Message which they sent.
      */
-    public void onMessageReceived(String nickname, String channel, String message);
+    public void onMessageReceived(IrcUser user, String destination, String message);
 }
