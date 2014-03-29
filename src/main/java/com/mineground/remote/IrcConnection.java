@@ -89,6 +89,13 @@ public class IrcConnection {
          * thread needs to send a QUIT message, and disconnect the socket.
          */
         private Boolean mShutdownRequested;
+        
+        /**
+         * The socket through which the connection to IRC has been established. While the <code>
+         * read()</code> operation blocks on the receiving side, we can call <code>send()</code> on
+         * the server thread to flush data through.
+         */
+        private IrcSocket mSocket;
 
         private ConnectionThread(ConnectionParams connectionParams) {
             super("IrcConnectionThread");
@@ -103,25 +110,57 @@ public class IrcConnection {
          */
         @Override
         public void run() {
-            IrcSocket socket = new IrcSocket(mConnectionParams.servers);
+            mSocket = new IrcSocket(mConnectionParams.servers);
             while (!mShutdownRequested) {
-                if (!socket.connect())
-                    return; // TODO: Try to re-connect after some hold-off.
-                
-                socket.send("USER MinegroundDev MinegroundDev :MinegroundDev");
-                socket.send("NICK MinegroundDev");
-                socket.send("JOIN #Mineground");
-                
-                mLogger.severe("A connection to the IRC server has been established!");
-                
-                // TODO: Assuming the connection has been established, this is where incoming
-                //       messages should be read, and pending messages should be send. Use an inner
-                //       while-loop so that the outer one can focus on keeping the connection alive.
+                if (!mSocket.connect())
+                    return; // TODO: Try to re-connect after some hold-off period.
 
+                onConnectionEstablished();
+                while (!mShutdownRequested && mSocket.isConnected()) {
+                    final String message = mSocket.read();
+                    if (message != null && message.length() > 0)
+                        onIncomingMessage(message);
+                }
+                
+                onConnectionLost();
+
+                // TODO: Implement better logic for safely handling reconnections. Right now we'd
+                //       just hammer the server, and it's better if we don't :-). 
                 break;
             }
             
-            socket.disconnect();
+            mSocket.disconnect();
+        }
+        
+        /**
+         * Invoked by the connection runtime when a connection has been established. We need to send
+         * the initial IRC identification commands here, to prevent being kicked from the server.
+         */
+        private void onConnectionEstablished() {
+            mLogger.severe("[IRC] The connection with IRC has been established.");
+            
+            final String nickname = mConnectionParams.nickname;
+            mSocket.send("USER " + nickname + " " + nickname + " - :" + nickname);
+            mSocket.send("NICK " + nickname);
+        }
+        
+        /**
+         * Invoked when a message has been received from the IRC connection. Parse the message and
+         * decide what needs to be done here, potentially handling it internally.
+         *
+         * @param message   The raw message which has been received from IRC.
+         */
+        private void onIncomingMessage(String rawMessage) {
+            // TODO: Parse the message and then decide what to do with it.
+
+            mLogger.info("[IRC] " + rawMessage);
+        }
+        
+        /**
+         * Invoked by the connection runtime when a previously established connection has been lost.
+         */
+        private void onConnectionLost() {
+            mLogger.severe("[IRC] The connection with IRC has been closed.");
         }
         
         /**
@@ -129,6 +168,9 @@ public class IrcConnection {
          * on the main server thread.
          */
         public void requestShutdown() {
+            if (mSocket != null)
+                mSocket.send("QUIT :Mineground has been unloaded.");
+
             mShutdownRequested = true;
         }
     }

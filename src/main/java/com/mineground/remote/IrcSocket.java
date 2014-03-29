@@ -15,11 +15,13 @@
 
 package com.mineground.remote;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -50,6 +52,12 @@ public class IrcSocket {
      * stream to the socket. No guarantees will be made that this actually arrives.
      */
     private final static String DEFAULT_QUIT_COMMAND = "QUIT :Mineground has been unloaded.";
+    
+    /**
+     * Maximum number of milliseconds which reading from a socket may block for. After this period
+     * of time a SocketTimeoutException will be thrown, causing IrcSocket.read() to return.
+     */
+    private final static int SOCKET_TIMEOUT_MS = 1000;
 
     /**
      * The Logger which will be used to output diagnostic information about the socket.
@@ -112,6 +120,11 @@ public class IrcSocket {
     private final Set<ServerInfo> mServers;
     
     /**
+     * Information about the server to which the socket is currently connected.
+     */
+    private ServerInfo mServer;
+    
+    /**
      * The actual underlying Socket which will power this implementation. The <code>connect()</code>
      * method will ensure that this is the right kind of socket, as we need an SSLSocket instance
      * when dealing with a server that requires a secured connection.
@@ -122,13 +135,13 @@ public class IrcSocket {
      * The input stream from which data can be read when <code>mSocket</code> describes an
      * established connection with an IRC server.
      */
-    private InputStream mSocketInputStream;
+    private BufferedReader mSocketInputReader;
     
     /**
      * The output stream to which data should be send when <code>mSocket</code> describes an
      * established connection with an IRC server.
      */
-    private OutputStream mSocketOutputStream;
+    private OutputStreamWriter mSocketOutputWriter;
     
     public IrcSocket(List<String> servers) {
         mLogger = Logger.getLogger(getClass().getCanonicalName());
@@ -147,19 +160,21 @@ public class IrcSocket {
      * @return Whether an socket connection has been established with one of the IRC servers.
      */
     public boolean connect() {
-        final ServerInfo server = selectServer();
-        if (server == null) {
+        mServer = selectServer();
+        if (mServer == null) {
             mLogger.severe("Unable to establish a connection to IRC: no servers have been defined.");
             return false;
         }
         
         try {
-            final SocketFactory socketFactory = server.ssl ?
+            final SocketFactory socketFactory = mServer.ssl ?
                     getSecureSocketFactory() : SocketFactory.getDefault();
             
-            mSocket = socketFactory.createSocket(server.address, server.port);
-            mSocketInputStream = mSocket.getInputStream();
-            mSocketOutputStream = mSocket.getOutputStream();
+            mSocket = socketFactory.createSocket(mServer.address, mServer.port);
+            mSocket.setSoTimeout(SOCKET_TIMEOUT_MS);
+            
+            mSocketInputReader = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
+            mSocketOutputWriter = new OutputStreamWriter(mSocket.getOutputStream(), "UTF-8");
             return true;
 
         } catch (IOException | KeyManagementException | NoSuchAlgorithmException exception) {
@@ -170,6 +185,43 @@ public class IrcSocket {
     }
     
     /**
+     * Returns whether the socket curated by this IrcSocket is still alive and connected.
+     * 
+     * @return Whether the socket is still alive and connected.
+     */
+    public boolean isConnected() {
+        return mSocket != null && !mSocket.isClosed();
+    }
+    
+    /**
+     * Returns a list with new incoming messages which we can read from the input stream. 
+     * 
+     * @return A list with newly read messages.
+     */
+    public String read() {
+        if (mSocketInputReader == null)
+            return null;
+
+        try {
+            final String inputLine = mSocketInputReader.readLine();
+            if (inputLine != null)
+                return inputLine;
+            
+            // Since |inputLine| is NULL, an end-of-file has been detected on the socket, which
+            // means that it has disconnected.
+            disconnect();
+
+        } catch (SocketTimeoutException exception) {
+            // A SocketTimeoutException occurs when the read timeout for this socket has passed,
+            // which means that no new data is available right now. This is safe to ignore.
+            return null;
+
+        } catch (IOException e) { /** Only SocketTimeoutException should be thrown.  **/ } 
+
+        return null;
+    }
+    
+    /**
      * Sends <code>command</code> directly to the IRC server. A boolean will be returned which
      * indicates whether the command could be sent successfully.
      * 
@@ -177,19 +229,26 @@ public class IrcSocket {
      * @return          Whether the command was sent successfully.
      */
     public boolean send(String command) {
-        if (mSocketOutputStream == null)
+        if (mSocketOutputWriter == null)
             return false;
         
         try {
-            mSocketOutputStream.write((command.trim() + "\n").getBytes());
+            synchronized (mSocketOutputWriter) {
+                mSocketOutputWriter.write(command.trim() + "\n");
+                mSocketOutputWriter.flush();
+            }
+
             return true;
 
         } catch (IOException exception) {
             mLogger.severe("The connection with the IRC server has been lost: " + exception.getMessage());
 
-            // Since the connection has been lost, make sure that |mSocketOutputStream| is not used
+            // Since the connection has been lost, make sure that |mSocketOutputWriter| is not used
             // anymore, and then disconnect from the server entirely.
-            mSocketOutputStream = null;
+            synchronized (mSocketOutputWriter) {
+                mSocketOutputWriter = null;
+            }
+
             disconnect();
         }
 
@@ -201,29 +260,35 @@ public class IrcSocket {
      * connection to NULL. <code>connect()</code> must be called before communication can resume.
      */
     public void disconnect() {
+        send(DEFAULT_QUIT_COMMAND);
         try {
-            if (mSocketOutputStream != null) {
-                mSocketOutputStream.write(DEFAULT_QUIT_COMMAND.getBytes());
-                mSocketOutputStream.flush();
-
-                mSocketOutputStream.close();
-                mSocketOutputStream = null;
-            }
-        } catch (IOException exception) { /** ignored **/ }
-
-        try {
-            if (mSocketInputStream != null) {
-                mSocketInputStream.close();
-                mSocketInputStream = null;
-            }
-        } catch (IOException exception) { /** ignored **/ }
+            if (mSocketOutputWriter != null)
+                mSocketOutputWriter.close();
         
-        try {
-            if (mSocket != null) {
+            if (mSocketInputReader != null)
+                mSocketInputReader.close();
+            
+            if (mSocket != null)
                 mSocket.close();
-                mSocket = null;
-            }
-        } catch (IOException exception) { /** ignored **/ }
+            
+        } catch (IOException exception) {
+            // Exceptions are deliberately ignored at this point.
+            
+        } finally {
+            mSocketOutputWriter = null;
+            mSocketInputReader = null;
+            mSocket = null;
+            mServer = null;
+        }
+    }
+    
+    /**
+     * Returns the server to which the socket is currently connected.
+     * 
+     * @return The server to which the socket is currently connected.
+     */
+    public ServerInfo getServer() {
+        return mServer;
     }
     
     /**
