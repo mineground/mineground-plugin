@@ -30,6 +30,11 @@ public enum IrcMessageType {
     MOTD_END,
     
     /**
+     * 433 - Nickname is already in use.
+     */
+    NICKNAME_IN_USE,
+    
+    /**
      * PING - Request from the server to send a keep-alive message.
      */
     PING,

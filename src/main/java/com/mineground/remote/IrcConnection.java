@@ -17,6 +17,7 @@ package com.mineground.remote;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -51,8 +52,8 @@ public class IrcConnection {
         public List<String> channels;
         
         /**
-         * The nickname with which the bot should connect to IRC. Underscores will automatically be
-         * appended to the nickname in case it's already taken.
+         * The nickname with which the bot should connect to IRC. A random number will automatically
+         * be appended to the nickname in case it's already taken.
          */
         public String nickname;
         
@@ -96,6 +97,12 @@ public class IrcConnection {
          * the server thread to flush data through.
          */
         private IrcSocket mSocket;
+        
+        /**
+         * Nickname using which the connection has been established. The nickname can be changed
+         * either by the server (forced nickname change), or by us (NICK command).
+         */
+        private String mNickname;
 
         private ConnectionThread(ConnectionParams connectionParams) {
             super("IrcConnectionThread");
@@ -142,6 +149,8 @@ public class IrcConnection {
             final String nickname = mConnectionParams.nickname;
             mSocket.send("USER " + nickname + " " + nickname + " - :" + nickname);
             mSocket.send("NICK " + nickname);
+            
+            mNickname = nickname;
         }
         
         /**
@@ -173,7 +182,15 @@ public class IrcConnection {
                         send("JOIN " + channel);
 
                     break;
-                    
+                
+                // Message indicating that the nickname chosen by this bot is already in use on the
+                // IRC server. Append a random number 
+                case NICKNAME_IN_USE:
+                    mNickname = mConnectionParams.nickname + ((new Random()).nextInt(899) + 100);
+                    send("NICK " + mNickname);
+
+                    break;
+
                 // When the server sends a PING, it wants the client to indicate that it's still
                 // alive by replying with a PONG message containing the same text.
                 case PING:

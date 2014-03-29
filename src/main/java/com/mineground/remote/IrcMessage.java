@@ -89,6 +89,9 @@ public class IrcMessage {
                     case "376":
                         message.setType(IrcMessageType.MOTD_END);
                         break;
+                    case "433":
+                        message.setType(IrcMessageType.NICKNAME_IN_USE);
+                        break;
 
                 } // switch(type)
                 
@@ -159,16 +162,19 @@ public class IrcMessage {
     }
     
     /**
+     * Returns the textual contents of this message, with the origin and message type stripped out.
      * 
-     * @return
+     * @return The text contained in this message.
      */
     public String getText() {
         return mText;
     }
     
     /**
+     * Sets the text contained in this message. It should already have been trimmed, and any leading
+     * colon (":") should have been removed.
      * 
-     * @param text
+     * @param text The text contained in this message.
      */
     private void setText(String text) {
         mText = text;
