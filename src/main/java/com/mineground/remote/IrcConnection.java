@@ -158,6 +158,22 @@ public class IrcConnection {
             mLogger.info("[IRC-IN] " + incomingMessage);
             
             switch(message.getType()) {
+                // The WELCOME message will be send by the IRC server when client registration has
+                // succeeded. Identify with NickServ 
+                case WELCOME:
+                    if (mConnectionParams.password != null && mConnectionParams.password.length() > 0)
+                        send("PRIVMSG NickServ :IDENTIFY " + mConnectionParams.password);
+
+                    break;
+
+                // When the Message Of The Day (MOTD) has completed, auto-join the list of channels
+                // which the bot has been configured to join.
+                case MOTD_END:
+                    for (String channel : mConnectionParams.channels)
+                        send("JOIN " + channel);
+
+                    break;
+                    
                 // When the server sends a PING, it wants the client to indicate that it's still
                 // alive by replying with a PONG message containing the same text.
                 case PING:

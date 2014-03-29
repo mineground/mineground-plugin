@@ -15,8 +15,6 @@
 
 package com.mineground.remote;
 
-import com.mineground.base.StringUtils;
-
 /**
  * Represents a parsed message from IRC, with convenient getters to get the individual parts of the
  * message by name rather than by assumed offset. This class may not be instantiated directly, and
@@ -34,6 +32,11 @@ public class IrcMessage {
     private IrcMessageType mType;
     
     /**
+     * The origin of this message, e.g. the user or server which sent it.
+     */
+    private String mOrigin;
+    
+    /**
      * Text contained in the message itself.
      */
     private String mText;
@@ -45,13 +48,10 @@ public class IrcMessage {
     private enum ParserFormat {
         /**
          * Default message format: [origin] [type] [destination] :[text]
+         * Messages of type "[type] :[text]" are handled by this parser format as well, but their
+         * origin will be set to NULL.
          */
         DEFAULT_PARSER_FORMAT,
-        
-        /**
-         * Basic message format: [type] :[text]
-         */
-        BASIC_PARSER_FORMAT
     }
     
     /**
@@ -71,20 +71,33 @@ public class IrcMessage {
         switch (firstWord.toUpperCase()) {
             case "PING":
                 message.setType(IrcMessageType.PING);
-                format = ParserFormat.BASIC_PARSER_FORMAT;
                 break;
             case "ERROR":
                 message.setType(IrcMessageType.ERROR);
-                format = ParserFormat.BASIC_PARSER_FORMAT;
                 break;
             default:
-                // TODO: Recognize the other kinds of messages.
+                message.setOrigin(textTrim(firstWord));
+                
+                int typeOffset = messageOffset + 1;
+                messageOffset = incomingMessage.indexOf(' ', typeOffset);
+                
+                final String type = incomingMessage.substring(typeOffset, messageOffset);
+                switch (type.toUpperCase()) {
+                    case "001":
+                        message.setType(IrcMessageType.WELCOME);
+                        break;
+                    case "376":
+                        message.setType(IrcMessageType.MOTD_END);
+                        break;
+
+                } // switch(type)
+                
                 break;
 
         } // switch(firstWord)
         
         switch(format) {
-            case BASIC_PARSER_FORMAT:
+            case DEFAULT_PARSER_FORMAT:
                 message.setText(textTrim(incomingMessage.substring(messageOffset)));
                 return message;
 
@@ -108,7 +121,7 @@ public class IrcMessage {
     }
     
     /**
-     * Sets the type of message which this IrcMessage contains. This dictates which member fields
+     * Gets the type of message which this IrcMessage contains. This dictates which member fields
      * of the message object should be used.
      * 
      * @return  The type of message associated with this object.
@@ -118,11 +131,31 @@ public class IrcMessage {
     }
     
     /**
+     * Sets the type of message contained in this IrcMessage.
      * 
-     * @param type
+     * @param type  The type of message this object should be associated with.
      */
     private void setType(IrcMessageType type) {
         mType = type;
+    }
+    
+    /**
+     * Returns the origin or the message, which is either the user or the server which send it to
+     * this bot. The prepending colon (":") will have been removed.
+     *
+     * @return The origin of this message.
+     */
+    public String getOrigin() {
+        return mOrigin;
+    }
+    
+    /**
+     * Sets the origin of this message. The prepending colon must have been removed at this point.
+     * 
+     * @param origin The origin of this message.
+     */
+    private void setOrigin(String origin) {
+        mOrigin = origin;
     }
     
     /**

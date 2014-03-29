@@ -20,6 +20,16 @@ package com.mineground.remote;
  */
 public enum IrcMessageType {
     /**
+     * 001 - First message following client registration.
+     */
+    WELCOME,
+    
+    /**
+     * 376 - Message Of The Day (end).
+     */
+    MOTD_END,
+    
+    /**
      * PING - Request from the server to send a keep-alive message.
      */
     PING,
