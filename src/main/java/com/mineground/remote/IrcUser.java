@@ -24,11 +24,13 @@ import com.mineground.remote.IrcMessage.Origin;
  * 
  */
 public class IrcUser extends RemoteCommandSender {
+    private IrcConnection mConnection;
     private Origin mOrigin;
     
-    public IrcUser(Server server, Origin origin) {
+    public IrcUser(Server server, IrcConnection connection, Origin origin) {
         super(server);
         
+        mConnection = connection;
         mOrigin = origin;
     }
     
@@ -44,5 +46,6 @@ public class IrcUser extends RemoteCommandSender {
 
     @Override
     public void sendMessage(String message) {
+        mConnection.send("PRIVMSG #Mineground :" + mOrigin.getNickname() + ": " + message);
     }
 }

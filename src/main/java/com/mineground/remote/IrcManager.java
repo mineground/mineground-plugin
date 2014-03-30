@@ -143,6 +143,8 @@ public class IrcManager implements CommandObserver, IrcEventListener {
         //       except for recognized commands.
         
         System.out.println("[" + destination + "] <" + user.getName() + "> " + message);
+        
+        user.sendMessage("omghai!");
     }
 
     /**

@@ -296,7 +296,7 @@ public class IrcConnection {
                 // TODO: We need to have access to the Bukkit Server here. When generalizing the IRC
                 //       sub-system of Mineground, we should probably introduce a IrcUserFactory or
                 //       something similar, allowing the embedder to create the objects.
-                mUsers.put(nickname, new IrcUser(mServer, message.getOrigin()));
+                mUsers.put(nickname, new IrcUser(mServer, IrcConnection.this, message.getOrigin()));
             }
             
             final IrcUser user = mUsers.get(nickname);
@@ -369,7 +369,13 @@ public class IrcConnection {
      * @param command The command to send to the server.
      */
     public void send(String command) {
-        
+        // ConnectionThread::send() has been factored in a way to make it as independent as possible
+        // from the rest of the thread, so this should be relatively safe to use.
+        //
+        // No, honestly, it's stupid. But I'll need much more time to properly refactor the IRC
+        // system (which I don't have right now), and I don't understand Java's silly socket I/O
+        // blocking model enough yet to design a nice, completely async interface.
+        mConnectionThread.send(command);
     }
     
     /**
