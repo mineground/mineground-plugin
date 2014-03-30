@@ -85,7 +85,7 @@ public class GeneralCommands extends FeatureBase {
      * @param sender    The player who would like to know about online staff.
      * @param arguments Additional arguments passed on to this method. Ignored.
      */
-    @CommandHandler(value = "staff", aliases = { "admins" }, console = true)
+    @CommandHandler(value = "staff", aliases = { "admins" }, console = true, remote = true)
     public void onStaffCommand(CommandSender sender, String[] arguments) {
         Map<AccountLevel, List<String>> groups = new EnumMap<AccountLevel, List<String>>(AccountLevel.class);
         for (Player player : getAccountManager().getOnlineStaff()) {
@@ -261,7 +261,7 @@ public class GeneralCommands extends FeatureBase {
      * @param sender    The player, console or user wanting to change the weather.
      * @param arguments Arguments passed. One is expected, the weather type.
      */
-    @CommandHandler(value = "weather", console = true)
+    @CommandHandler(value = "weather", console = true, remote = true)
     public void onWeatherCommand(CommandSender sender, String[] arguments) {
         if (!sender.hasPermission("command.weather")) {
             displayCommandError(sender, "You don't have permission to use the /weather command yet.");
@@ -341,7 +341,7 @@ public class GeneralCommands extends FeatureBase {
      * @param sender    The player, console or user wanting to change the weather.
      * @param arguments Arguments passed. One is expected, the new time.
      */
-    @CommandHandler(value = "time", console = true)
+    @CommandHandler(value = "time", console = true, remote = true)
     public void onTimeCommand(CommandSender sender, String[] arguments) {
         if (!sender.hasPermission("command.time")) {
             displayCommandError(sender, "You don't have permission to use the /time command yet.");
