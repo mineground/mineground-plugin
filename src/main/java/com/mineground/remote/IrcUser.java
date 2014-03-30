@@ -26,8 +26,10 @@ import com.mineground.remote.IrcMessage.Origin;
 public class IrcUser extends RemoteCommandSender {
     private Origin mOrigin;
     
-    public IrcUser(Server server) {
+    public IrcUser(Server server, Origin origin) {
         super(server);
+        
+        mOrigin = origin;
     }
     
     public void updateOriginIfNeeded(Origin origin) {

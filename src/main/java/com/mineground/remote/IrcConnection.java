@@ -24,6 +24,8 @@ import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
+import org.bukkit.Server;
+
 import com.mineground.remote.IrcMessage.Origin;
 
 /**
@@ -107,6 +109,14 @@ public class IrcConnection {
         private final ConnectionParams mConnectionParams;
         
         /**
+         * Because IrcUsers are also CommandSenders internally, the connection thread needs the
+         * instance of the server to support user creation. No methods will be called on mServer.
+         * 
+         * TODO: Remove the dependency on <code>mServer</code> as soon as that's feasible.
+         */
+        private final Server mServer;
+        
+        /**
          * A blocking queue which contains messages which have been received, but haven't yet been
          * forwarded to event listeners on the server thread.
          */
@@ -136,10 +146,12 @@ public class IrcConnection {
          */
         private String mNickname;
 
-        private ConnectionThread(ConnectionParams connectionParams) {
+        private ConnectionThread(ConnectionParams connectionParams, Server server) {
             super("IrcConnectionThread");
 
             mConnectionParams = connectionParams;
+            mServer = server;
+
             mReceivedMessageQueue = new LinkedBlockingQueue<ReceivedMessage>();
             mShutdownRequested = false;
             mUsers = new HashMap<String, IrcUser>();
@@ -284,7 +296,7 @@ public class IrcConnection {
                 // TODO: We need to have access to the Bukkit Server here. When generalizing the IRC
                 //       sub-system of Mineground, we should probably introduce a IrcUserFactory or
                 //       something similar, allowing the embedder to create the objects.
-                mUsers.put(nickname, new IrcUser(null));
+                mUsers.put(nickname, new IrcUser(mServer, message.getOrigin()));
             }
             
             final IrcUser user = mUsers.get(nickname);
@@ -335,10 +347,11 @@ public class IrcConnection {
      */
     private final ConnectionThread mConnectionThread;
     
-    public IrcConnection(ConnectionParams connectionParams) {
+    // TODO: The IrcConnection class shouldn't know about Server.
+    public IrcConnection(ConnectionParams connectionParams, Server server) {
         mListeners = new HashSet<IrcEventListener>();
         mLogger = Logger.getLogger(getClass().getCanonicalName());
-        mConnectionThread = new ConnectionThread(connectionParams);
+        mConnectionThread = new ConnectionThread(connectionParams, server);
     }
     
     /**

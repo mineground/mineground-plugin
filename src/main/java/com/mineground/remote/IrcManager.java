@@ -74,7 +74,7 @@ public class IrcManager implements CommandObserver, IrcEventListener {
         connectionParams.servers = configuration.getStringList("irc.servers");
         connectionParams.channels = configuration.getStringList("irc.channels");
         
-        mConnection = new IrcConnection(connectionParams);
+        mConnection = new IrcConnection(connectionParams, mPlugin.getServer());
         mConnection.addListener(this);
         mConnection.connect();
         
