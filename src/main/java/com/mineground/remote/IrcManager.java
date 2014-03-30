@@ -142,7 +142,7 @@ public class IrcManager implements CommandObserver, IrcEventListener {
         // TODO: Handle incoming messages. We discard everything (except for the purpose of logging)
         //       except for recognized commands.
         
-        System.out.println("[" + destination + "]: " + message);
+        System.out.println("[" + destination + "] <" + user.getName() + "> " + message);
     }
 
     /**

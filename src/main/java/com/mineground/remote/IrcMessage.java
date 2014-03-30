@@ -34,7 +34,7 @@ public class IrcMessage {
     /**
      * The origin of this message, e.g. the user or server which sent it.
      */
-    private String mOrigin;
+    private Origin mOrigin;
     
     /**
      * The destination of the message, which could be a user or a channel.
@@ -45,6 +45,25 @@ public class IrcMessage {
      * Text contained in the message itself.
      */
     private String mText;
+    
+    /**
+     * Represents the information we know about a user's origin. These come in two primary formats,
+     * namely nick!ident@host for users, or fully qualified names for servers.
+     */
+    public static class Origin {
+        private String mNickname;
+        
+        public Origin(String origin) {
+            if (origin.indexOf('!') != -1)
+                mNickname = origin.substring(0, origin.indexOf('!'));
+            else
+                mNickname = origin;
+        }
+        
+        public String getNickname() {
+            return mNickname;
+        }
+    }
     
     /**
      * The parser format which will be used to parse the individual components of the message. Only
@@ -178,7 +197,7 @@ public class IrcMessage {
      *
      * @return The origin of this message.
      */
-    public String getOrigin() {
+    public Origin getOrigin() {
         return mOrigin;
     }
     
@@ -188,7 +207,7 @@ public class IrcMessage {
      * @param origin The origin of this message.
      */
     private void setOrigin(String origin) {
-        mOrigin = origin;
+        mOrigin = new Origin(origin);
     }
     
     /**

@@ -17,18 +17,27 @@ package com.mineground.remote;
 
 import org.bukkit.Server;
 
+import com.mineground.remote.IrcMessage.Origin;
+
 /**
  * 
  * 
  */
 public class IrcUser extends RemoteCommandSender {
+    private Origin mOrigin;
+    
     public IrcUser(Server server) {
         super(server);
+    }
+    
+    public void updateOriginIfNeeded(Origin origin) {
+        // We should probably take a more granular approach than just overwriting existing values..
+        mOrigin = origin;
     }
 
     @Override
     public String getName() {
-        return null;
+        return mOrigin.getNickname();
     }
 
     @Override

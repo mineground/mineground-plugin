@@ -15,12 +15,16 @@
 
 package com.mineground.remote;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
+
+import com.mineground.remote.IrcMessage.Origin;
 
 /**
  * Class responsible for interacting with the IRC system itself, and keeping the connection alive.
@@ -122,6 +126,11 @@ public class IrcConnection {
         private IrcSocket mSocket;
         
         /**
+         * Map of users currently online on IRC, and the information we know about them.
+         */
+        private final Map<String, IrcUser> mUsers;
+        
+        /**
          * Nickname using which the connection has been established. The nickname can be changed
          * either by the server (forced nickname change), or by us (NICK command).
          */
@@ -133,6 +142,7 @@ public class IrcConnection {
             mConnectionParams = connectionParams;
             mReceivedMessageQueue = new LinkedBlockingQueue<ReceivedMessage>();
             mShutdownRequested = false;
+            mUsers = new HashMap<String, IrcUser>();
         }
         
         /**
@@ -269,8 +279,18 @@ public class IrcConnection {
          * @return        The IrcUser object for the source of this message.
          */
         private IrcUser getUserForMessage(IrcMessage message) {
-            // TODO: Implement this method.
-            return null;
+            final String nickname = message.getOrigin().getNickname();
+            if (!mUsers.containsKey(nickname)) {
+                // TODO: We need to have access to the Bukkit Server here. When generalizing the IRC
+                //       sub-system of Mineground, we should probably introduce a IrcUserFactory or
+                //       something similar, allowing the embedder to create the objects.
+                mUsers.put(nickname, new IrcUser(null));
+            }
+            
+            final IrcUser user = mUsers.get(nickname);
+            user.updateOriginIfNeeded(message.getOrigin());
+            
+            return user;
         }
         
         /**
