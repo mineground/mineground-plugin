@@ -385,6 +385,7 @@ public class IrcConnection {
     public void doPollForMessages() {
         ReceivedMessage message = mConnectionThread.immediatelyRetrieveReceivedMessage();
         while (message != null) {
+            message.user.updateDestination(message.destination);
             for (IrcEventListener listener : mListeners)
                 listener.onMessageReceived(message.user, message.destination, message.message);
             

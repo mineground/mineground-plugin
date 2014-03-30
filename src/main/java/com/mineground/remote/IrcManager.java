@@ -34,6 +34,12 @@ import com.mineground.remote.IrcConnection.ConnectionParams;
  */
 public class IrcManager implements CommandObserver, IrcEventListener {
     /**
+     * Prefix to use when triggering Mineground commands from IRC. This will be used instead of the
+     * slash characters ("/") in-game, as well as the prefixless console.
+     */
+    private final static String IRC_COMMAND_PREFIX = ".";
+    
+    /**
      * A set containing all the commands which can be handled from IRC. The Command Manager will
      * inform us when a command gets registered or goes away.
      */
@@ -115,10 +121,10 @@ public class IrcManager implements CommandObserver, IrcEventListener {
     private boolean executeCommand(IrcUser user, String command, String[] arguments) {
         PluginCommand pluginCommand = mPlugin.getServer().getPluginCommand(command);
         if (pluginCommand.getPlugin() != mPlugin)
-            return false; // only execute commands owned by Mineground.
+            return false;  // only execute commands owned by Mineground.
         
         try {
-            // Exceptions occuring in commands should never crash the server thread, or even break
+            // Exceptions occurring in commands should never crash the server thread, or even break
             // the code flow by throwing an exception there.
             return mCommandManager.onCommand(user, pluginCommand, arguments);
             
@@ -139,12 +145,21 @@ public class IrcManager implements CommandObserver, IrcEventListener {
      */
     @Override
     public void onMessageReceived(IrcUser user, String destination, String message) {
-        // TODO: Handle incoming messages. We discard everything (except for the purpose of logging)
-        //       except for recognized commands.
+        if (!message.startsWith(IRC_COMMAND_PREFIX))
+            return;  // this message isn't executing a command.
+
+        final String[] parts = message.split(" ", 2);
+        final String command = parts[0].substring(IRC_COMMAND_PREFIX.length());
+
+        if (!mCommands.contains(command))
+            return;  // the command this message wants to execute doesn't exist.
         
-        System.out.println("[" + destination + "] <" + user.getName() + "> " + message);
+        // Create an array with the arguments. If |message| contains a space, |arguments| will be
+        // an array with each separate word in that range. Otherwise a new empty array will be used.
+        final String[] arguments = parts.length == 2 ? parts[1].split("\\s+") : new String[0];
         
-        user.sendMessage("omghai!");
+        // Route the command using the Command Manager to a method, and execute it.
+        executeCommand(user, command, arguments);
     }
 
     /**

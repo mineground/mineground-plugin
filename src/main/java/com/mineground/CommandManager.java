@@ -140,7 +140,7 @@ public class CommandManager implements TabCompleter {
                 
                 mCommandMap.put(command.value(), new CommandHandlerRef(instance, method, command.console(), command.remote()));
                 for (CommandObserver observer : mCommandObservers)
-                    observer.onCommandRegistered(command.value(), command.console(), false);
+                    observer.onCommandRegistered(command.value(), command.console(), command.remote());
                 
                 continue;
             }

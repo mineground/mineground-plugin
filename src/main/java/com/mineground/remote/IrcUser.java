@@ -26,6 +26,7 @@ import com.mineground.remote.IrcMessage.Origin;
 public class IrcUser extends RemoteCommandSender {
     private IrcConnection mConnection;
     private Origin mOrigin;
+    private String mDestination;
     
     public IrcUser(Server server, IrcConnection connection, Origin origin) {
         super(server);
@@ -38,6 +39,10 @@ public class IrcUser extends RemoteCommandSender {
         // We should probably take a more granular approach than just overwriting existing values..
         mOrigin = origin;
     }
+    
+    public void updateDestination(String destination) {
+        mDestination = destination;
+    }
 
     @Override
     public String getName() {
@@ -46,6 +51,6 @@ public class IrcUser extends RemoteCommandSender {
 
     @Override
     public void sendMessage(String message) {
-        mConnection.send("PRIVMSG #Mineground :" + mOrigin.getNickname() + ": " + message);
+        mConnection.send("PRIVMSG " + mDestination + " :" + mOrigin.getNickname() + ": " + message);
     }
 }
