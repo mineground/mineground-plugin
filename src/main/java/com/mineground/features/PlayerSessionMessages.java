@@ -178,6 +178,9 @@ public class PlayerSessionMessages extends FeatureBase {
                 mPlayerKilledAnnouncement.setString("killer", killer.getName());
                 mPlayerKilledAnnouncement.setString("reason", reason);
                 mPlayerKilledAnnouncement.send(getServer().getOnlinePlayers(), Color.PLAYER_EVENT);
+
+                // TODO: Format IRC messages using a Message instance.
+                getIrcManager().echoMessage("04*** " + player.getName() + " has been killed by " + killer.getName());
                 return;
             }
         }
@@ -188,6 +191,10 @@ public class PlayerSessionMessages extends FeatureBase {
         mPlayerDeathAnnouncement.setString("nickname", player.getName());
         mPlayerDeathAnnouncement.setString("reason", reason);
         mPlayerDeathAnnouncement.send(getServer().getOnlinePlayers(), Color.PLAYER_EVENT);
+        
+        // TODO: Format IRC messages using a Message instance.
+        // TODO: The IRC message should display the reason as well.
+        getIrcManager().echoMessage("04*** " + player.getName() + " has died.");
     }
     
     /**

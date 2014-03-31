@@ -94,7 +94,7 @@ public class CommunicationManager extends FeatureBase {
                 mStaffOfflineMessage.send(player, Color.ACTION_REQUIRED);
             }
             
-         // TODO: Format IRC messages using a Message instance.
+            // TODO: Format IRC messages using a Message instance.
             getIrcManager().echoMessage("05*** 07Admin " + player.getName() + "05: " + message.substring(1), AccountLevel.Moderator);
             return;
         }
