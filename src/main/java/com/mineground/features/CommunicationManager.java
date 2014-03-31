@@ -20,6 +20,7 @@ import java.util.List;
 import org.bukkit.entity.Player;
 
 import com.mineground.account.Account;
+import com.mineground.account.AccountLevel;
 import com.mineground.base.Color;
 import com.mineground.base.FeatureBase;
 import com.mineground.base.FeatureInitParams;
@@ -93,7 +94,8 @@ public class CommunicationManager extends FeatureBase {
                 mStaffOfflineMessage.send(player, Color.ACTION_REQUIRED);
             }
             
-            // TODO: Send this message to IRC so that folks there can read.
+         // TODO: Format IRC messages using a Message instance.
+            getIrcManager().echoMessage("05*** 07Admin " + player.getName() + "05: " + message.substring(1), AccountLevel.Moderator);
             return;
         }
 
@@ -111,9 +113,12 @@ public class CommunicationManager extends FeatureBase {
         messageBuilder.append("> ");
         messageBuilder.append(message);
         
+        final String messageStr = messageBuilder.toString();
+        for (Player p : getServer().getOnlinePlayers())
+            p.sendMessage(messageStr);
         
-        
-        getServer().broadcastMessage(messageBuilder.toString());
+        // TODO: Format IRC messages using a Message instance.
+        getIrcManager().echoMessage("07" + player.getName() + ": " + message);
     }
 
 }
