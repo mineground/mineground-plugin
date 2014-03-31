@@ -137,6 +137,22 @@ public class PlayerSessionMessages extends FeatureBase {
             mWelcomeFirstTimeMessage.setString("nickname", nickname);
             mWelcomeFirstTimeMessage.send(player, Color.YELLOW);
         }
+        
+        // TODO: Convert this to use a Message instance instead.
+        StringBuilder message = new StringBuilder();
+        message.append("03*** ");
+        message.append(nickname);
+        message.append(" joined Mineground");
+        
+        if (AccountLevel.isStaff(account.getLevel())) {
+            message.append(" 10(");
+            message.append(AccountLevel.toString(account.getLevel()));
+            message.append(")");
+        }
+        
+        message.append(".");
+        
+        getIrcManager().echoMessage(message.toString());
     }
     
     /**
@@ -186,6 +202,9 @@ public class PlayerSessionMessages extends FeatureBase {
 
         mPlayerQuitAnnouncement.setString("nickname", player.getName());
         mPlayerQuitAnnouncement.send(getServer().getOnlinePlayers(), Color.PLAYER_EVENT);
+        
+        // TODO: Convert this to use a Message instance instead.
+        getIrcManager().echoMessage("03*** " + player.getName() + " has disconnected from Mineground.");
     }
     
     /**

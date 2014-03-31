@@ -25,6 +25,7 @@ import org.bukkit.scheduler.BukkitScheduler;
 
 import com.mineground.CommandManager;
 import com.mineground.CommandObserver;
+import com.mineground.account.AccountLevel;
 import com.mineground.remote.IrcConnection.ConnectionParams;
 
 /**
@@ -98,6 +99,45 @@ public class IrcManager implements CommandObserver, IrcEventListener {
     }
     
     /**
+     * Distributes <code>message</code> to the configured IRC echo channel. <code>level</code> is
+     * used to select the audience which will be receiving this message on IRC.
+     * 
+     * @param message   The message which should be echo'ed to IRC.
+     * @param level     Required level in order to be able to read the message.
+     */
+    public void echoMessage(String message, AccountLevel level) {
+        if (mConnection == null)
+            return;
+        
+        String prefix = "";
+        switch (level) {
+            case Management:
+                prefix = "&";
+                break;
+            case Administrator:
+                prefix = "@";
+                break;
+            case Moderator:
+                prefix = "%";
+                break;
+            case VIP:
+                prefix = "+";
+                break;
+        }
+
+        mConnection.send("PRIVMSG " + prefix + "#Mineground :" + message);
+    }
+    
+    /**
+     * Distributes <code>message</code> to the configured IRC echo channel.
+     * 
+     * @param message   The message which should be echo'ed to IRC.
+     */
+    public void echoMessage(String message) {
+        echoMessage(message, AccountLevel.Guest);
+    }
+    
+    /**
      * Disconnects the connection with IRC if it has been established. It's important that we shut
      * down the connection in a clean way when the module is being unloaded.
      */
@@ -147,6 +187,10 @@ public class IrcManager implements CommandObserver, IrcEventListener {
     public void onMessageReceived(IrcUser user, String destination, String message) {
         if (!message.startsWith(IRC_COMMAND_PREFIX))
             return;  // this message isn't executing a command.
+        
+        // TODO: Move this behavior to the IrcUser class instead.
+        if (!user.hasPermission("mineground.builder"))
+            user.addAttachment(mPlugin, "mineground.builder", true);
 
         final String[] parts = message.split(" ", 2);
         final String command = parts[0].substring(IRC_COMMAND_PREFIX.length());

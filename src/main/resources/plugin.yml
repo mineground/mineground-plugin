@@ -10,13 +10,13 @@ permissions:
     # Permission groups
     # ----------------------------------------------------------------------------------------------
     mineground.guest:
-        description: All permissions available for guests.
+        description: "All permissions available for guests."
         children:
             # Permissions to grant to all the players:
             command.report: true
             command.spawn: true
     mineground.builder:
-        description: All permission available for builders.
+        description: "All permission available for builders and anyone on IRC."
         children:
             mineground.guest: true
             # Permissions to grant to builders:
@@ -29,20 +29,20 @@ permissions:
             warp.teleport: true
             warp.remove: true
     mineground.sbuilder:
-        description: All permissions available for sbuilders.
+        description: "All permissions available for sbuilders."
         children:
             mineground.builder: true
             # Permissions to grant to super-builders:
             command.fly: true
     mineground.vip:
-        description: All permissions available for VIPs.
+        description: "All permissions available for VIPs."
         children:
             mineground.sbuilder: true
             # Permissions to grant to VIPs:
             command.time: true
             command.weather: true
     mineground.moderator:
-        description: All permissions available for moderators.
+        description: "All permissions available for moderators and % (+h) on IRC."
         children:
             mineground.vip: true
             # Permissions to grant to moderators:
@@ -53,7 +53,7 @@ permissions:
             wrap.teleport_no_password: true
             warp.remove_all: true
     mineground.administrator:
-        description: All permissions available for administrators.
+        description: "All permissions available for administrators and @ (+o) on IRC."
         children:
             mineground.moderator: true
             # Permissions to grant to administrators:
@@ -61,7 +61,7 @@ permissions:
             world.list: true
             world.warp: true
     mineground.management:
-        description: All permissions available for Management members.
+        description: "All permissions available for Management members and & (+a) on IRC."
         children:
             mineground.administrator: true
             # Permissions to grant to Management members:

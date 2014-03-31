@@ -111,6 +111,8 @@ public class CommunicationManager extends FeatureBase {
         messageBuilder.append("> ");
         messageBuilder.append(message);
         
+        
+        
         getServer().broadcastMessage(messageBuilder.toString());
     }
 
