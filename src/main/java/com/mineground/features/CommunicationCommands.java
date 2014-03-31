@@ -135,11 +135,11 @@ public class CommunicationCommands extends FeatureComponent<CommunicationManager
     /**
      * Sends a private message from <code>sender</code> to <code>destination</code>.
      * 
-     * @param sender        The player to distribute the private message from.
-     * @param destination   The player who should receive the message.
+     * @param sender        The person to distribute the private message from.
+     * @param destination   The person who should receive the message.
      * @param message       The message to be distributed.
      */
-    private void sendPrivateMessage(Player sender, Player destination, String message) {
+    private void sendPrivateMessage(CommandSender sender, CommandSender destination, String message) {
         // TODO: Distribute this message to administrators.
         
         mPrivateMessageSentMessage.setString("sender", sender.getName());
@@ -161,32 +161,32 @@ public class CommunicationCommands extends FeatureComponent<CommunicationManager
      * @param sender    The player who's sending a private message.
      * @param arguments The message's destination and content.
      */
-    @CommandHandler("pm")
+    @CommandHandler(value = "pm", remote = true)
     public void onPrivateMessageCommand(CommandSender sender, String[] arguments) {
-        final Player player = (Player) sender;
-        if (!player.hasPermission("command.pm")) {
-            displayCommandError(player, "You don't have permission to send a private message.");
+        if (!sender.hasPermission("command.pm")) {
+            displayCommandError(sender, "You don't have permission to send a private message.");
             return;
         }
         
         if (arguments.length < 2) {
-            displayCommandUsage(player, "/pm [player] [message]");
+            displayCommandUsage(sender, "/pm [player] [message]");
             return;
         }
 
         final Player destination = getServer().getPlayer(arguments[0]);
         if (destination == null) {
-            displayCommandError(player, "No one named **" + arguments[0] + "** is on Mineground now.");
+            displayCommandError(sender, "No one named **" + arguments[0] + "** is on Mineground now.");
             return;
         }
         
-        if (destination == player) {
-            displayCommandError(player, "You can't send a message to yourself, silly!");
+        if (destination == sender) {
+            displayCommandError(sender, "You can't send a message to yourself, silly!");
             return;
         }
         
-        sendPrivateMessage(player, destination, StringUtils.join(arguments, " ", 1));
-        mLastCommunicationMap.put(player, destination.getName());
+        sendPrivateMessage(sender, destination, StringUtils.join(arguments, " ", 1));
+        if (sender instanceof Player)
+            mLastCommunicationMap.put((Player) sender, destination.getName());
     }
     
     /**
