@@ -234,4 +234,43 @@ public class CommunicationCommands extends FeatureComponent<CommunicationManager
         
         sendPrivateMessage(player, destination, StringUtils.join(arguments));
     }
+    
+    /**
+     * Implements the "msg" (message) command, which is accessible for people communicating with the
+     * server remotely. The primary audience for this command are people watching on IRC.
+     * 
+     * @param sender    The remote sender who wants to say something in-game.
+     * @param arguments The message they want to be distributed to players.
+     */
+    @CommandHandler(value = "msg", ingame = false, console = true, remote = true)
+    public void onMessageCommand(CommandSender sender, String[] arguments) {
+        if (!sender.hasPermission("command.msg")) {
+            displayCommandError(sender, "You don't have permission to reply to private messages.");
+            return;
+        }
+        
+        if (arguments.length == 0) {
+            displayCommandUsage(sender, "/msg [message]");
+            return;
+        }
+        
+        final String message = StringUtils.join(arguments);
+        
+        // TODO: Even for remote senders, we know whether they are a VIP member, a moderator, an
+        //       administrator or a Management member. This should be reflected in the |[IRC]|
+        //       prefix their message has. Perhaps we should show |[Admin-IRC]|?
+        
+        StringBuilder messageBuilder = new StringBuilder();
+        messageBuilder.append("[IRC] <");
+        messageBuilder.append(sender.getName());
+        messageBuilder.append("> ");
+        messageBuilder.append(message);
+        
+        final String messageStr = messageBuilder.toString();
+        for (Player player : getServer().getOnlinePlayers())
+            player.sendMessage(messageStr);
+        
+        // TODO: Format IRC messages using a Message instance.
+        getIrcManager().echoMessage("07" + sender.getName() + ": " + message);
+    }
 }

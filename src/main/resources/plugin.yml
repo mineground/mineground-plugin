@@ -23,6 +23,7 @@ permissions:
             command.classic: true
             command.creative: true
             command.pm: true
+            command.msg: true
             command.reply: true
             command.survival: true
             warp.create: true
@@ -96,6 +97,9 @@ permissions:
     # ----------------------------------------------------------------------------------------------
     command.pm:
         description: Allows you to use the /pm command.
+        default: op
+    command.msg:
+        description: Allows you to use the msg command from remote sources.
         default: op
     command.reply:
         description: Allows you to quickly reply to a previously received message.
@@ -235,6 +239,9 @@ commands:
     pm:
         description: Sends a private message to another player.
         usage: /pm [player] [message]
+    msg:
+        description: Sends a message to all in-game players. Only accessible remotely.
+        usage: /msg [message]
     reply:
         description: Replies to the player who last sent you a message.
         usage: /reply [message]
