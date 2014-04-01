@@ -23,10 +23,11 @@ public interface CommandObserver {
      * Invoked when a command has been registered with the Command Manager.
      * 
      * @param name      Name of the newly registered command.
+     * @param ingame    Whether the command is executable from in-game.
      * @param console   Whether the command is executable from the console.
      * @param remote    Whether the command is executable from remote sources.
      */
-    public void onCommandRegistered(String name, boolean console, boolean remote);
+    public void onCommandRegistered(String name, boolean ingame, boolean console, boolean remote);
     
     /**
      * Invoked when a command has been removed from the Command Manager.

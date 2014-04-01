@@ -46,6 +46,14 @@ public @interface CommandHandler {
     String[] aliases() default {};
     
     /**
+     * Whether this command may be executed by players in-game. This is useful when certain commands
+     * ("!msg" being the prime example) don't make sense to be executed in-game.
+     * 
+     * @return Whether this command may be executed by in-game players.
+     */
+    boolean ingame() default true;
+    
+    /**
      * Whether this command may be executed from the console. Because most commands won't make sense
      * to be executed on the console, this defaults to false.
      *

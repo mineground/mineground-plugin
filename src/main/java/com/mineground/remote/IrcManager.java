@@ -212,11 +212,12 @@ public class IrcManager implements CommandObserver, IrcEventListener {
      * executes the !<code>name</code> command.
      * 
      * @param name      Name of the command which has been created.
+     * @param ingame    Whether this command can be executed from in-game.
      * @param console   Whether this command can be executed from the console.
      * @param remote    Whether this command can be executed from remote sources.
      */
     @Override
-    public void onCommandRegistered(String name, boolean console, boolean remote) {
+    public void onCommandRegistered(String name, boolean ingame, boolean console, boolean remote) {
         if (!remote)
             return;
         

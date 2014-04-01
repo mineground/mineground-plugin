@@ -52,13 +52,15 @@ public class CommandManager implements TabCompleter {
         private WeakReference<Object> instance;
         private Method autocomplete;
         private Method method;
+        private boolean ingame;
         private boolean console;
         private boolean remote;
         
-        private CommandHandlerRef(Object instance_, Method method_, boolean console_, boolean remote_) {
+        private CommandHandlerRef(Object instance_, Method method_, boolean ingame_, boolean console_, boolean remote_) {
             instance = new WeakReference<Object>(instance_);
             autocomplete = null;
             method = method_;
+            ingame = ingame_;
             console = console_;
             remote = remote_;
         }
@@ -67,6 +69,7 @@ public class CommandManager implements TabCompleter {
             instance = new WeakReference<Object>(instance_);
             autocomplete = autocomplete_;
             method = null;
+            ingame = true;
             console = false;
             remote = false;
         }
@@ -130,6 +133,7 @@ public class CommandManager implements TabCompleter {
                     }
                     
                     handler.method = method;
+                    handler.ingame = command.ingame();
                     handler.console = command.console();
                     handler.remote = command.remote();
                     continue;
@@ -138,9 +142,9 @@ public class CommandManager implements TabCompleter {
                 for (String alias : command.aliases())
                     mCommandAliasMap.put(alias, command.value());
                 
-                mCommandMap.put(command.value(), new CommandHandlerRef(instance, method, command.console(), command.remote()));
+                mCommandMap.put(command.value(), new CommandHandlerRef(instance, method, command.ingame(), command.console(), command.remote()));
                 for (CommandObserver observer : mCommandObservers)
-                    observer.onCommandRegistered(command.value(), command.console(), command.remote());
+                    observer.onCommandRegistered(command.value(), command.ingame(), command.console(), command.remote());
                 
                 continue;
             }
@@ -237,7 +241,8 @@ public class CommandManager implements TabCompleter {
                 sender.sendMessage("The command /" + command.getName() + " is not available from the console.");
                 return true;
             }
-        }
+        } else if (handler.ingame == false)
+            return true;  // the command is not available for in-game players.
         
         // Execute the command by invoking the method, and returning the return value (which should
         // be a boolean) to the caller of onCommand.
