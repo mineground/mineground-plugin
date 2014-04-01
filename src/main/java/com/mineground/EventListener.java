@@ -18,6 +18,8 @@ package com.mineground;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -28,6 +30,7 @@ import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
@@ -282,6 +285,28 @@ public class EventListener implements Listener {
 
         event.setCancelled(true);
         mEventDispatcher.onPlayerChat(event.getPlayer(), event.getMessage());
+    }
+    
+    /**
+     * Invoked when an entity dies. The entity does not have to be the player, it can be a monster,
+     * an NPC or a normal animal as well. This is used for gathering statistics.
+     * 
+     * @param event The Bukkit EntityDeathEvent object.
+     */
+    public void onEntityDeath(EntityDeathEvent event) {
+        final Entity entity = event.getEntity();
+        
+        final EntityDamageEvent damageEvent = entity.getLastDamageCause();
+        if (damageEvent == null || !(damageEvent instanceof EntityDamageByEntityEvent))
+            return;
+
+        if (damageEvent.getEntityType() != EntityType.PLAYER)
+            return;
+        
+        final Player killer = (Player) damageEvent.getEntity();
+        final Account account = mAccountManager.getAccountForPlayer(killer);
+        
+        // TODO: Increment the "entities killed" statistic for |account|.
     }
     
     /**
