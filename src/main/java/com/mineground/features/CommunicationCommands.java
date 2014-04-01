@@ -22,6 +22,7 @@ import java.util.Map;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import com.mineground.account.AccountLevel;
 import com.mineground.base.Color;
 import com.mineground.base.CommandHandler;
 import com.mineground.base.DisconnectReason;
@@ -151,6 +152,10 @@ public class CommunicationCommands extends FeatureComponent<CommunicationManager
         mPrivateMessageReceivedMessage.setString("destination", destination.getName());
         mPrivateMessageReceivedMessage.setString("message", message);
         mPrivateMessageReceivedMessage.send(destination, Color.PRIVATE_MESSAGE);
+        
+        // TODO: This should be generalized elsewhere.
+        getIrcManager().echoMessage("07PM from 05" + sender.getName() + " 07to 05" + destination.getName() + "07: 05" + message,
+                AccountLevel.Moderator);
     }
     
     /**
