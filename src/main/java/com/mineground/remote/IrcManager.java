@@ -142,6 +142,8 @@ public class IrcManager implements CommandObserver, IrcEventListener {
      * down the connection in a clean way when the module is being unloaded.
      */
     public void disconnect() {
+        echoMessage("04*** The Mineground plugin is being unloaded.");
+        
         getScheduler().cancelTask(mSchedulerTaskId);
         mSchedulerTaskId = -1;
         

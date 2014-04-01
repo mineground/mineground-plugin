@@ -165,6 +165,10 @@ public class Mineground extends JavaPlugin {
     
     @Override
     public void onDisable() {
+        // Disconnect IRC first, since not disconnecting from there could leave a stray thread and
+        // connection (which are really hard to get rid of without restarting the server).
+        mIrcManager.disconnect();
+
         // If there still are players on the server, inform the account manager and all the features
         // as if they're all leaving the server at the same time right now.
         for (Player player : getServer().getOnlinePlayers()) {
@@ -174,7 +178,7 @@ public class Mineground extends JavaPlugin {
         
         // Fire the onMinegroundUnloaded event, telling all features that they must clean up.
         mEventDispatcher.onMinegroundUnloaded();
-
+        
         // Close the database connection first, since that may depend on other instances which (at
         // this point) are still alive, and GC wise Java seems to have some trouble with that.
         mDatabase.disconnect();
@@ -186,7 +190,6 @@ public class Mineground extends JavaPlugin {
         // close open connections, so that we can leave with a clear conscience.
         mFeatureManager = null;
         
-        mIrcManager.disconnect();
         mIrcManager = null;
 
         mCommandManager = null;
