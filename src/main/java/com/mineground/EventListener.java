@@ -18,8 +18,6 @@ package com.mineground;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -31,7 +29,6 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -294,33 +291,7 @@ public class EventListener implements Listener {
      * @param event The Bukkit EntityDeathEvent object.
      */
     public void onEntityDeath(EntityDeathEvent event) {
-        final Entity entity = event.getEntity();
-        
-        final EntityDamageEvent damageEvent = entity.getLastDamageCause();
-        if (damageEvent == null || !(damageEvent instanceof EntityDamageByEntityEvent))
-            return;
-
-        if (damageEvent.getEntityType() != EntityType.PLAYER)
-            return;
-        
-        final Player killer = (Player) damageEvent.getEntity();
-        final Account account = mAccountManager.getAccountForPlayer(killer);
-        
-        // TODO: Increment the "entities killed" statistic for |account|.
-    }
-    
-    /**
-     * Invoked when a player dies. The reason is not directly included in the event, but it should
-     * be available when reading the cause of the last damage occurred to the player. 
-     * 
-     * @param event The Bukkit PlayerDeathEvent object.
-     */
-    public void onPlayerDeath(PlayerDeathEvent event) {
-        event.setDeathMessage(null);
-        
-        // TODO: There would be too many parameters (4 or 5) to pass along if we weren't passing the
-        //       Bukkit event directly. Should we just do this everywhere? Only if it makes sense?
-        mEventDispatcher.onPlayerDeath(event);
+        mEventDispatcher.onEntityDeath(event);
     }
     
     /**

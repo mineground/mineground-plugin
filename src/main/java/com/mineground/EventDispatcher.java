@@ -25,7 +25,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 
 import com.mineground.base.DisconnectReason;
 
@@ -58,10 +58,10 @@ public class EventDispatcher {
         PlayerChatEvent("onPlayerChat"),
         
         /**
-         * Invoked when a player has died. The reason of their death is not immediately included in
+         * Invoked when an entity has died. The reason of their death is not immediately included in
          * the event, but can be retrieved by reading the cause of their last damage.
          */
-        PlayerDeathEvent("onPlayerDeath"),
+        EntityDeathEvent("onEntityDeath"),
         
         /**
          * Invoked when a player disconnects from Mineground. Their account information is still
@@ -175,6 +175,6 @@ public class EventDispatcher {
     
     public void onPlayerJoined(Player player) { dispatch(EventTypes.PlayerJoinedEvent, player); }
     public void onPlayerChat(Player player, String message) { dispatch(EventTypes.PlayerChatEvent, player, message); }
-    public void onPlayerDeath(PlayerDeathEvent event) { dispatch(EventTypes.PlayerDeathEvent, event); }
+    public void onEntityDeath(EntityDeathEvent event) { dispatch(EventTypes.EntityDeathEvent, event); }
     public void onPlayerDisconnect(Player player, DisconnectReason reason) { dispatch(EventTypes.PlayerDisconnectEvent, player, reason); }
 }

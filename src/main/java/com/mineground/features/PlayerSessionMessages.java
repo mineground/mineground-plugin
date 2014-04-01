@@ -22,7 +22,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 
 import com.mineground.account.Account;
 import com.mineground.account.AccountLevel;
@@ -161,8 +161,13 @@ public class PlayerSessionMessages extends FeatureBase {
      * 
      * @param event The Bukkit PlayerDeathEvent event.
      */
-    public void onPlayerDeath(PlayerDeathEvent event) {
-        final Player player = event.getEntity();
+    public void onEntityDeath(EntityDeathEvent event) {
+        System.out.println("OMGFOO");
+        
+        if (event.getEntityType() != EntityType.PLAYER)
+            return;
+        
+        final Player player = (Player) event.getEntity();
         final EntityDamageEvent damageEvent = player.getLastDamageCause();
         String reason = "";
         
