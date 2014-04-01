@@ -26,6 +26,7 @@ import com.mineground.account.AccountLevel;
 import com.mineground.base.Color;
 import com.mineground.base.CommandHandler;
 import com.mineground.base.DisconnectReason;
+import com.mineground.base.EntityUtils;
 import com.mineground.base.FeatureComponent;
 import com.mineground.base.FeatureInitParams;
 import com.mineground.base.Message;
@@ -143,10 +144,14 @@ public class CommunicationCommands extends FeatureComponent<CommunicationManager
     private void sendPrivateMessage(CommandSender sender, CommandSender destination, String message) {
         // TODO: Distribute this message to administrators.
         
-        mPrivateMessageSentMessage.setString("sender", sender.getName());
-        mPrivateMessageSentMessage.setString("destination", destination.getName());
-        mPrivateMessageSentMessage.setString("message", message);
-        mPrivateMessageSentMessage.send(sender, Color.PRIVATE_MESSAGE);
+        if (!EntityUtils.isRemoteCommandSender(sender)) {
+            mPrivateMessageSentMessage.setString("sender", sender.getName());
+            mPrivateMessageSentMessage.setString("destination", destination.getName());
+            mPrivateMessageSentMessage.setString("message", message);
+            mPrivateMessageSentMessage.send(sender, Color.PRIVATE_MESSAGE);
+        } else {
+            displayCommandSuccess(sender, "Your message has been sent to **" + destination.getName() + "**!");
+        }
         
         mPrivateMessageReceivedMessage.setString("sender", sender.getName());
         mPrivateMessageReceivedMessage.setString("destination", destination.getName());
