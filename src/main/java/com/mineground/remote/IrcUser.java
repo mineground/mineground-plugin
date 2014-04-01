@@ -51,6 +51,6 @@ public class IrcUser extends RemoteCommandSender {
 
     @Override
     public void sendMessage(String message) {
-        mConnection.send("PRIVMSG " + mDestination + " :" + mOrigin.getNickname() + ": " + message);
+        mConnection.send("PRIVMSG " + mDestination + " :" + message);
     }
 }

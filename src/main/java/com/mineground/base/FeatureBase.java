@@ -67,7 +67,11 @@ public class FeatureBase implements Feature {
      * @param message       The description of the executed command.
      */
     protected void displayCommandDescription(CommandSender destination, String message) {
-        destination.sendMessage("§f" + message);
+        if (EntityUtils.isRemoteCommandSender(destination)) {
+            destination.sendMessage("10» " + message);
+        } else {
+            destination.sendMessage("§f" + message);
+        }
     }
     
     /**
@@ -78,7 +82,11 @@ public class FeatureBase implements Feature {
      * @param usage         The proper way to use the executed command.
      */
     protected void displayCommandUsage(CommandSender destination, String usage) {
-        destination.sendMessage("§2Usage§r: " + usage);
+        if (EntityUtils.isRemoteCommandSender(destination)) {
+            destination.sendMessage("10» Usage: " + usage.replaceFirst("^/", "!"));
+        } else {
+            destination.sendMessage("§2Usage§r: " + usage);
+        }
     }
     
     /**
@@ -92,7 +100,11 @@ public class FeatureBase implements Feature {
      * @param message       The message to share with them.
      */
     protected void displayCommandSuccess(CommandSender destination, String message) {
-        destination.sendMessage("§2" + message.replaceAll("\\*\\*(.+?)\\*\\*", "§a$1§2"));
+        if (EntityUtils.isRemoteCommandSender(destination)) {
+            destination.sendMessage("03» " + message.replaceAll("\\*\\*(.+?)\\*\\*", "10$103"));
+        } else {
+            destination.sendMessage("§2" + message.replaceAll("\\*\\*(.+?)\\*\\*", "§a$1§2"));
+        }
     }
     
     /**
@@ -107,7 +119,11 @@ public class FeatureBase implements Feature {
      * @param message       The error which occurred while running this command.
      */
     protected void displayCommandError(CommandSender destination, String message) {
-        destination.sendMessage("§c" + message.replaceAll("\\*\\*(.+?)\\*\\*", "§4$1§c"));
+        if (EntityUtils.isRemoteCommandSender(destination)) {
+            destination.sendMessage("04» " + message.replaceAll("\\*\\*(.+?)\\*\\*", "05$104"));
+        } else {
+            destination.sendMessage("§c" + message.replaceAll("\\*\\*(.+?)\\*\\*", "§4$1§c"));
+        }
     }
     
     /* ****************************************************************************************** *
