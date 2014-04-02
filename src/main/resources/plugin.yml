@@ -31,6 +31,7 @@ permissions:
             warp.remove: true
             # TODO: Move this elsewhere.
             command.admin: true
+            command.players: true
     mineground.sbuilder:
         description: "All permissions available for sbuilders."
         children:
@@ -199,6 +200,9 @@ permissions:
     command.mode:
         description: Allows you to change your game mode regardless of where you are.
         default: op
+    command.players:
+        description: Allows you to display a list of online players on Mineground.
+        default: op
     command.time:
         description: Allows you to change the time in your current world using the /time command.
         default: op
@@ -299,6 +303,9 @@ commands:
     mode:
         description: Enables you to change your current gamemode.
         usage: /mode [player] [adventure, creative, survival]
+    players:
+        description: Displays a list of online players. Only usable from remote sources.
+        usage: /players
     rules:
         description: Displays a list of Mineground's rules to you.
         usage: /rules

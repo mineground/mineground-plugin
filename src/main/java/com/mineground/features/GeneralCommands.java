@@ -398,4 +398,39 @@ public class GeneralCommands extends FeatureBase {
         mTimeChangeMessage.setString("time", arguments[0]);
         mTimeChangeMessage.send(players, Color.PLAYER_EVENT);
     }
+    
+    /**
+     * Displays a list of the players who are currently playing on Mineground. If no players are
+     * on the server right now, that will be communicated clearly as well.
+     * 
+     * @param sender    The remote command sender who wants to know about online players.
+     * @param arguments Further passed arguments. Ignored.
+     */
+    @CommandHandler(value = "players", ingame = false, console = true, remote = true)
+    public void onPlayersCommand(CommandSender sender, String[] arguments) {
+        if (!sender.hasPermission("command.players")) {
+            displayCommandError(sender, "You don't have permission to get a list of all online players.");
+            return;
+        }
+
+        final Player[] players = getServer().getOnlinePlayers();
+        final StringBuilder builder = new StringBuilder();
+        
+        builder.append("07Online players (");
+        builder.append(players.length);
+        builder.append("): ");
+        
+        // TODO: Color each' player entry depending on their level. This requires us to have some
+        //       kind of in-game color to remote-target-color conversion method.
+
+        for (Player player : players)
+            builder.append(player.getName()).append(", ");
+        
+        if (players.length > 0)
+            builder.setLength(builder.length() - 2);
+        else
+            builder.append("There currently are no players online on Mineground...");
+        
+        sender.sendMessage(builder.toString());
+    }
 }
