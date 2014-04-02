@@ -29,6 +29,8 @@ permissions:
             warp.create: true
             warp.teleport: true
             warp.remove: true
+            # TODO: Move this elsewhere.
+            command.admin: true
     mineground.sbuilder:
         description: "All permissions available for sbuilders."
         children:
@@ -95,6 +97,9 @@ permissions:
     # ----------------------------------------------------------------------------------------------
     # Communication Manager - allows players to communicate with staff and other players.
     # ----------------------------------------------------------------------------------------------
+    command.admin:
+        description: Allows you to use the admin command from remote sources.
+        default: op
     command.pm:
         description: Allows you to use the /pm command.
         default: op
@@ -236,6 +241,9 @@ commands:
     # ----------------------------------------------------------------------------------------------
     # Feature: Communication Manager
     # ----------------------------------------------------------------------------------------------
+    admin:
+        description: Sends a message to all in-game admins. Only accessible remotely.
+        usage: /admin [message]
     pm:
         description: Sends a private message to another player.
         usage: /pm [player] [message]

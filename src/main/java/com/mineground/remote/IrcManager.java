@@ -162,7 +162,7 @@ public class IrcManager implements CommandObserver, IrcEventListener {
      */
     private boolean executeCommand(IrcUser user, String command, String[] arguments) {
         PluginCommand pluginCommand = mPlugin.getServer().getPluginCommand(command);
-        if (pluginCommand.getPlugin() != mPlugin)
+        if (pluginCommand == null || pluginCommand.getPlugin() != mPlugin)
             return false;  // only execute commands owned by Mineground.
         
         try {

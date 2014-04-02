@@ -64,6 +64,11 @@ public class CommunicationCommands extends FeatureComponent<CommunicationManager
     private final Message mPrivateMessageSentMessage;
     
     /**
+     * Message containing the format in which staff chat will be displayed.
+     */
+    private final Message mStaffChatMessage;
+    
+    /**
      * Map between a player and the last person they received a private message from.
      */
     private final Map<Player, String> mLastCommunicationMap;
@@ -74,6 +79,7 @@ public class CommunicationCommands extends FeatureComponent<CommunicationManager
         mStaffReportMessage = Message.Load("report_format");
         mStaffNotifiedMessage = Message.Load("staff_notified");
         mStaffOfflineMessage = Message.Load("no_staff_online");
+        mStaffChatMessage = Message.Load("staff_chat_format");
         
         mPrivateMessageReceivedMessage = Message.Load("private_message_received");
         mPrivateMessageSentMessage = Message.Load("private_message_sent");
@@ -245,7 +251,7 @@ public class CommunicationCommands extends FeatureComponent<CommunicationManager
     @CommandHandler(value = "msg", ingame = false, console = true, remote = true)
     public void onMessageCommand(CommandSender sender, String[] arguments) {
         if (!sender.hasPermission("command.msg")) {
-            displayCommandError(sender, "You don't have permission to reply to private messages.");
+            displayCommandError(sender, "You don't have permission to display messages in-game.");
             return;
         }
         
@@ -272,5 +278,37 @@ public class CommunicationCommands extends FeatureComponent<CommunicationManager
         
         // TODO: Format IRC messages using a Message instance.
         getIrcManager().echoMessage("07" + sender.getName() + ": " + message);
+    }
+    
+    /**
+     * Implements the !admin command for IRC, as well as the "admin" command from console and other
+     * remote sources. Output will only be visible to other members of the staff.
+     * 
+     * @param sender    The remote sender who wants to say something to in-game staff.
+     * @param arguments The message they want to be distributed to administrators.
+     */
+    @CommandHandler(value = "admin", ingame = false, console = true, remote = true)
+    public void onAdminCommand(CommandSender sender, String[] arguments) {
+        if (!sender.hasPermission("command.admin")) {
+            displayCommandError(sender, "You don't have permission to send messages to administrators.");
+            return;
+        }
+        
+        if (arguments.length == 0) {
+            displayCommandUsage(sender, "/admin [message]");
+            return;
+        }
+        
+        final String message = StringUtils.join(arguments);
+        
+        List<Player> staff = getAccountManager().getOnlineStaff();
+        if (staff.size() > 0) {
+            mStaffChatMessage.setString("nickname", sender.getName());
+            mStaffChatMessage.setString("message", message);
+            mStaffChatMessage.send(staff, Color.PLAYER_EVENT);
+        }
+        
+        // TODO: Format IRC messages using a Message instance.
+        getIrcManager().echoMessage("05*** 07Admin " + sender.getName() + "05: " + message, AccountLevel.Moderator);
     }
 }
