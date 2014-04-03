@@ -25,6 +25,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import com.mineground.account.Account;
+import com.mineground.account.AccountLevel;
 import com.mineground.account.PlayerLog;
 import com.mineground.account.PlayerLog.RecordType;
 import com.mineground.base.CommandCompletionHandler;
@@ -333,6 +334,9 @@ public class LocationCommands extends FeatureComponent<LocationManager> {
                 
                 // Records that the player teleported to |location|.
                 PlayerLog.record(RecordType.WARP_TELEPORTED, getUserId(player), location.location_id);
+                
+                // Displays on IRC that the player has teleported to a location.
+                getIrcManager().echoMessage("05*06 " + player.getName() + "05 has been warped to06 " + destination + "05.", AccountLevel.Moderator);
                 
                 displayCommandSuccess(player, "You have been teleported to " + destination + "!");
                 player.teleport(location.toBukkitLocation(getServer().getWorlds()));
