@@ -290,7 +290,7 @@ public class CommunicationCommands extends FeatureComponent<CommunicationManager
     @CommandHandler(value = "admin", ingame = false, console = true, remote = true)
     public void onAdminCommand(CommandSender sender, String[] arguments) {
         if (!sender.hasPermission("command.admin")) {
-            displayCommandError(sender, "You don't have permission to send messages to administrators.");
+            displayCommandError(sender, "You don't have permission to send messages to in-game administrators.");
             return;
         }
         
