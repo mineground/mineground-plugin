@@ -41,7 +41,7 @@ public class LocationCommands extends FeatureComponent<LocationManager> {
      * Maximum number of characters on a single line when listing a player's warps using the "/warp
      * list" command. We should try to avoid wrapping here.
      */
-    private static final int MAX_WARP_LIST_LINE_LENGTH = 50;
+    private static final int MAX_WARP_LIST_LINE_LENGTH = 60;
     
     public LocationCommands(LocationManager manager, FeatureInitParams params) {
         super(manager, params);
