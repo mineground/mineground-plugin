@@ -39,7 +39,10 @@ public @interface CommandHandler {
     String value();
     
     /**
-     * Returns a list of aliases which this command handler is also responsible for.
+     * Returns a list of aliases which this command handler is also responsible for. Aliases will
+     * only be available when executing a command from either in-game or from the command line.
+     * 
+     * TODO: Should we also make aliases available for remote commands, e.g. IRC?
      * 
      * @return A list of aliases this command should also listen to.
      */
